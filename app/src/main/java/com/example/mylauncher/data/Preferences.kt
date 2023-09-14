@@ -31,11 +31,11 @@ class Preferences(private val context: Context) {
     private val fontSizeKey = intPreferencesKey("fontSize")
     private val fontSizeFlow: Flow<TextUnit> =
         context.preferencesDataStore.data.map { preferences ->
-            preferences[fontSizeKey]?.sp ?: Companion.fontSizeDefault
+            preferences[fontSizeKey]?.sp ?: fontSizeDefault
         }
 
     @Composable
-    fun getFontSize(): State<TextUnit> = fontSizeFlow.collectAsState(Companion.fontSizeDefault)
+    fun getFontSize(): State<TextUnit> = fontSizeFlow.collectAsState(fontSizeDefault)
     suspend fun setFontSize(value: Int) {
         context.preferencesDataStore.edit { preferences ->
             preferences[fontSizeKey] = value
@@ -46,11 +46,11 @@ class Preferences(private val context: Context) {
     private val spacingKey = intPreferencesKey("fontSize")
     private val spacingFlow: Flow<Dp> =
         context.preferencesDataStore.data.map { preferences ->
-            preferences[spacingKey]?.dp ?: Companion.spacingDefault
+            preferences[spacingKey]?.dp ?: spacingDefault
         }
 
     @Composable
-    fun getSpacing(): State<TextUnit> = fontSizeFlow.collectAsState(Companion.fontSizeDefault)
+    fun getSpacing(): State<TextUnit> = fontSizeFlow.collectAsState(fontSizeDefault)
     suspend fun setSpacing(value: Int) {
         context.preferencesDataStore.edit { preferences ->
             preferences[fontSizeKey] = value
@@ -61,11 +61,11 @@ class Preferences(private val context: Context) {
     private val indentKey = intPreferencesKey("fontSize")
     private val indentFlow: Flow<Dp> =
         context.preferencesDataStore.data.map { preferences ->
-            preferences[indentKey]?.dp ?: Companion.indentDefault
+            preferences[indentKey]?.dp ?: indentDefault
         }
 
     @Composable
-    fun getIndent(): State<TextUnit> = fontSizeFlow.collectAsState(Companion.fontSizeDefault)
+    fun getIndent(): State<TextUnit> = fontSizeFlow.collectAsState(fontSizeDefault)
     suspend fun setIndent(value: Int) {
         context.preferencesDataStore.edit { preferences ->
             preferences[fontSizeKey] = value
