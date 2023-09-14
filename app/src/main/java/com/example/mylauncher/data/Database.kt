@@ -1,5 +1,6 @@
 package com.example.mylauncher.data
 
+import android.content.pm.LauncherActivityInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -82,29 +83,30 @@ interface NodeDao {
     suspend fun insertAllApps(vararg app: App)
 
     @Transaction
-    suspend fun insertNewApps(appModels: List<AppModel>) {
+    suspend fun insertNewApps(activityInfos: List<LauncherActivityInfo>) {
         val defaultNode = getDefaultNode()
         val apps = getAllApps()
 
-        appModels.filter { model -> apps.find { app -> app.appName == model.appName } == null }
-            .forEach { model ->
+        activityInfos.filter { activityInfo -> apps.find { app -> app.appName == activityInfo.label.toString() } == null }
+            .forEach { activityInfo ->
+                val appName = activityInfo.label.toString()
                 val node = Node(
                     nodeId = 0,
                     parentId = defaultNode.nodeId,
                     dataId = null,
                     kind = NodeKind.App,
-                    label = model.appName
+                    label = appName
                 )
-                insertAllNodes(node)
-
                 val app = App(
                     appId = 0,
                     nodeId = getLastNodeId(),
-                    appName = model.appName,
-                    packageName = model.appPackageName,
-                    activityClassName = model.activityClassName,
-                    userHandle = model.userHandle.toString()
+                    appName = appName,
+                    packageName = activityInfo.applicationInfo.packageName,
+                    activityClassName = activityInfo.componentName.className,
+                    userHandle = activityInfo.user.toString()
                 )
+
+                insertAllNodes(node)
                 insertAllApps(app)
             }
     }

@@ -18,7 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.mylauncher.data.AppDatabase
-import com.example.mylauncher.helper.getAppList
+import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
 import com.example.mylauncher.ui.util.Fade
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // Check for new apps
-            val appsFlow = flow { emit(getAppList(applicationContext)) }
+            val appsFlow = flow { emit(getActivityInfos(applicationContext)) }
             LaunchedEffect(Unit) {
                 appsFlow.collect {
                     db.nodeDao()
