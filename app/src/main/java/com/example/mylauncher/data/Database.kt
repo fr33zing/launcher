@@ -89,24 +89,20 @@ interface NodeDao {
 
         activityInfos.filter { activityInfo -> apps.find { app -> app.appName == activityInfo.label.toString() } == null }
             .forEach { activityInfo ->
-                val appName = activityInfo.label.toString()
                 val node = Node(
                     nodeId = 0,
                     parentId = defaultNode.nodeId,
                     dataId = null,
                     kind = NodeKind.App,
-                    label = appName
+                    label = activityInfo.label.toString()
                 )
+                insertAllNodes(node)
+
                 val app = App(
                     appId = 0,
                     nodeId = getLastNodeId(),
-                    appName = appName,
-                    packageName = activityInfo.applicationInfo.packageName,
-                    activityClassName = activityInfo.componentName.className,
-                    userHandle = activityInfo.user.toString()
+                    activityInfo = activityInfo,
                 )
-
-                insertAllNodes(node)
                 insertAllApps(app)
             }
     }
@@ -147,7 +143,16 @@ data class App(
     val packageName: String,
     val activityClassName: String?,
     val userHandle: String,
-)
+) {
+    constructor(appId: Int, nodeId: Int, activityInfo: LauncherActivityInfo) : this(
+        appId = appId,
+        nodeId = nodeId,
+        appName = activityInfo.label.toString(),
+        packageName = activityInfo.applicationInfo.packageName,
+        activityClassName = activityInfo.componentName.className,
+        userHandle = activityInfo.user.toString()
+    )
+}
 
 @Dao
 interface AppDao {
