@@ -149,11 +149,6 @@ data class App(
     val userHandle: String,
 )
 
-//data class NodeApp(
-//    @Embedded val node: Node,
-//    @Relation(parentColumn = "nodeId", entityColumn = "dataId") val app: App,
-//)
-
 @Dao
 interface AppDao {
     @Insert
@@ -168,39 +163,3 @@ interface AppDao {
     @Query("SELECT * FROM App WHERE nodeId == :nodeId")
     suspend fun getApp(nodeId: Int): App
 }
-
-//
-// Helper functions
-//
-
-//suspend fun addNewApps(db: AppDatabase, appModels: List<AppModel>) {
-//    db.runInTransaction({
-//        val defaultNode = db.nodeDao()
-//            .getDefaultNode()
-//        val apps = db.appDao()
-//            .getAll()
-//
-//        appModels.filter { model -> apps.find { app -> app.appName == model.appName } != null }
-//            .forEach { model ->
-//                val node = Node(
-//                    nodeId = 0,
-//                    parentId = defaultNode.nodeId,
-//                    dataId = null,
-//                    kind = NodeKind.App,
-//                    label = model.appName
-//                )
-//                db.nodeDao()
-//                    .insertAll(node)
-//
-//                val app = App(
-//                    appId = 0,
-//                    nodeId = node.nodeId,
-//                    appName = model.appName,
-//                    packageName = model.appPackageName,
-//                    activityClassName = model.activityClassName
-//                )
-//                db.appDao()
-//                    .insertAll(app)
-//            }
-//    })
-//}
