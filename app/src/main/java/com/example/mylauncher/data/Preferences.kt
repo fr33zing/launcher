@@ -22,9 +22,9 @@ val Context.preferencesDataStore: DataStore<Preferences> by preferencesDataStore
 
 class Preferences(private val context: Context) {
     companion object {
-        val fontSizeDefault = 22.sp
-        val spacingDefault = 22.dp
-        val indentDefault = 30.dp
+        private val fontSizeDefault = 22.sp
+        private val spacingDefault = 22.dp
+        private val indentDefault = 30.dp
     }
 
     // Font size
@@ -44,10 +44,9 @@ class Preferences(private val context: Context) {
 
     // Spacing
     private val spacingKey = intPreferencesKey("spacing")
-    private val spacingFlow: Flow<Dp> =
-        context.preferencesDataStore.data.map { preferences ->
-            preferences[spacingKey]?.dp ?: spacingDefault
-        }
+    private val spacingFlow: Flow<Dp> = context.preferencesDataStore.data.map { preferences ->
+        preferences[spacingKey]?.dp ?: spacingDefault
+    }
 
     @Composable
     fun getSpacing(): State<Dp> = spacingFlow.collectAsState(spacingDefault)
@@ -59,10 +58,9 @@ class Preferences(private val context: Context) {
 
     // Indent
     private val indentKey = intPreferencesKey("indent")
-    private val indentFlow: Flow<Dp> =
-        context.preferencesDataStore.data.map { preferences ->
-            preferences[indentKey]?.dp ?: indentDefault
-        }
+    private val indentFlow: Flow<Dp> = context.preferencesDataStore.data.map { preferences ->
+        preferences[indentKey]?.dp ?: indentDefault
+    }
 
     @Composable
     fun getIndent(): State<Dp> = indentFlow.collectAsState(indentDefault)
