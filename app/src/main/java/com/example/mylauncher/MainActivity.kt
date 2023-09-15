@@ -21,10 +21,10 @@ import com.example.mylauncher.data.AppDatabase
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
-import com.example.mylauncher.ui.util.Fade
 import com.example.mylauncher.ui.pages.EditNode
 import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.theme.MyLauncherTheme
+import com.example.mylauncher.ui.util.Fade
 import kotlinx.coroutines.flow.flow
 
 class MainActivity : ComponentActivity() {
