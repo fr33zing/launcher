@@ -3,7 +3,10 @@ package com.example.mylauncher.ui.components
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -38,16 +41,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +65,7 @@ import com.example.mylauncher.data.Node
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.Preferences
+import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.util.nodeColor
 import com.example.mylauncher.ui.util.nodeIcon
 import com.example.mylauncher.ui.util.nodeIndent
@@ -75,68 +83,67 @@ fun NodeRow(
     onTapped: () -> Unit,
     onLongPressed: () -> Unit,
 ) {
+    val preferences = Preferences(LocalContext.current)
+    val localDensity = LocalDensity.current
+
+    val fontSize by preferences.getFontSize()
+    val spacing by preferences.getSpacing()
+    val indent by preferences.getIndent()
+    val lineHeight = with(localDensity) { fontSize.toDp() }
+
+    val pressing = remember { mutableStateOf(false) }
+
     with(row) {
-        val pressing = remember { mutableStateOf(false) }
-        val visible = !((parent?.collapsed?.value) ?: false)
+        val visible by remember { derivedStateOf { !((parent?.collapsed?.value) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
-        val fontSize = Preferences.fontSizeDefault
-        val spacing = Preferences.spacingDefault
-        val indent = Preferences.indentDefault
-        val lineHeight = with(LocalDensity.current) { fontSize.toDp() }
-
-        val tapColor = nodeColor(row.node.kind, row.collapsed.value).copy(alpha = 0.15f)
+        val tapColor = nodeColor(node.kind, collapsed.value).copy(alpha = 0.15f)
         val tapColorAnimated by animateColorAsState(
             if (pressing.value) tapColor else Color.Transparent,
             animationSpec = if (pressing.value) snap() else tween(1000),
             label = "node tap alpha"
         )
 
-        AnimatedVisibility(
-            visible,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
-        ) {
-            Column {
-                AddNodeButton(
-                    fontSize,
-                    lineHeight,
-                    spacing,
-                    indent,
-                    depth,
-                    visible = showOptions,
-                    below = false,
-                    text = "Add item above",
-                )
+        Column {
+            AddNodeButton(
+                fontSize,
+                lineHeight,
+                spacing,
+                indent,
+                depth,
+                visible = showOptions,
+                below = false,
+                text = "Add item above",
+            )
 
-                Box(Modifier.background(tapColorAnimated)) {
-                    Node(
-                        node = node,
-                        collapsed = collapsed.value,
-                        fontSize = fontSize,
-                        lineHeight = lineHeight,
-                        spacing = spacing,
-                        indent = indent,
-                        depth = depth,
-                        showOptions = showOptions,
-                        pressing = pressing,
-                        onTapped = onTapped,
-                        onLongPressed = onLongPressed,
-                    )
-                }
-
-                val isDir = node.kind == NodeKind.Directory
-                AddNodeButton(
-                    fontSize,
-                    lineHeight,
-                    spacing,
-                    indent,
-                    depth = if (isDir) depth + 1 else depth,
-                    visible = showOptions,
-                    below = true,
-                    text = if (isDir) "Add item within" else "Add item below",
+            AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
+                Node(
+                    node = node,
+                    visible = visible,
+                    collapsed = collapsed.value,
+                    fontSize = fontSize,
+                    lineHeight = lineHeight,
+                    spacing = spacing,
+                    indent = indent,
+                    depth = depth,
+                    showOptions = showOptions,
+                    pressing = pressing,
+                    onTapped = onTapped,
+                    onLongPressed = onLongPressed,
                 )
             }
+
+            val isDir = node.kind == NodeKind.Directory
+            AddNodeButton(
+                fontSize,
+                lineHeight,
+                spacing,
+                indent,
+                depth = if (isDir) depth + 1 else depth,
+                visible = showOptions,
+                below = true,
+                text = if (isDir) "Add item within" else "Add item below",
+            )
         }
     }
 }
@@ -144,6 +151,7 @@ fun NodeRow(
 @Composable
 fun Node(
     node: Node,
+    visible: Boolean,
     collapsed: Boolean,
     fontSize: TextUnit,
     lineHeight: Dp,
@@ -166,28 +174,30 @@ fun Node(
                 .fillMaxWidth()
                 .padding(vertical = spacing / 2)
                 .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = true)
-                        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-                        val heldButtonJob = scope.launch {
-                            delay(25)
-                            pressing.value = true
-                            delay(getLongPressTimeout().toLong() - 25)
-                            // Long press
-                            pressing.value = false
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onLongPressed()
-                        }
-                        waitForUpOrCancellation()?.run {
-                            // Tap
-                            if (pressing.value) {
+                .conditional(visible) {
+                    pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = true)
+                            val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+                            val heldButtonJob = scope.launch {
+                                delay(25)
+                                pressing.value = true
+                                delay(getLongPressTimeout().toLong() - 25)
+                                // Long press
+                                pressing.value = false
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onTapped()
+                                onLongPressed()
                             }
+                            waitForUpOrCancellation()?.run {
+                                // Tap
+                                if (pressing.value) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onTapped()
+                                }
+                            }
+                            heldButtonJob.cancel()
+                            pressing.value = false
                         }
-                        heldButtonJob.cancel()
-                        pressing.value = false
                     }
                 }
                 .then(modifier)
@@ -280,7 +290,12 @@ private fun AddNodeButton(
 }
 
 @Composable
-private fun NodeOptionButtons(visible: Boolean, fontSize: TextUnit, lineHeight: Dp, node: Node) {
+private fun NodeOptionButtons(
+    visible: Boolean,
+    fontSize: TextUnit,
+    lineHeight: Dp,
+    node: Node,
+) {
     AnimatedVisibility(
         visible,
         enter = fadeIn(),
@@ -303,7 +318,12 @@ private fun NodeOptionButtons(visible: Boolean, fontSize: TextUnit, lineHeight: 
 }
 
 @Composable
-private fun NodeOptionButton(fontSize: TextUnit, lineHeight: Dp, icon: ImageVector, text: String) {
+private fun NodeOptionButton(
+    fontSize: TextUnit,
+    lineHeight: Dp,
+    icon: ImageVector,
+    text: String,
+) {
     Column(
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -314,7 +334,7 @@ private fun NodeOptionButton(fontSize: TextUnit, lineHeight: Dp, icon: ImageVect
 }
 
 @Composable
-fun NodeOptionButtonsLayout(
+private fun NodeOptionButtonsLayout(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -327,6 +347,45 @@ fun NodeOptionButtonsLayout(
                     y = 0
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun AnimatedNodeVisibility(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val transformOriginTop = TransformOrigin.Center.copy(pivotFractionY = 0f)
+    val scaleYAmount = 0.4f
+
+    val visibleAsFloat = if (visible) 1f else 0f
+    val animatedHeight by animateFloatAsState(
+        targetValue = visibleAsFloat,
+        animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
+        label = "node visibility: height"
+    )
+    val animatedAlpha by animateFloatAsState(
+        targetValue = visibleAsFloat,
+        animationSpec = spring(stiffness = if (visible) Spring.StiffnessVeryLow else Spring.StiffnessLow),
+        label = "node visibility: alpha"
+    )
+
+    Layout(modifier = Modifier.then(modifier), content = {
+        Box(Modifier.graphicsLayer {
+            alpha = animatedAlpha
+            scaleY = animatedAlpha * scaleYAmount + (1f - scaleYAmount)
+            transformOrigin = transformOriginTop
+        }) { content() }
+    }) { measurables, constraints ->
+        val child = measurables[0].measure(constraints)
+        val contentHeight = child.height
+        val containerHeight = (contentHeight * animatedHeight).toInt()
+        val containerWidth = constraints.maxWidth
+
+        layout(containerWidth, containerHeight) {
+            child.placeRelative(0, 0)
         }
     }
 }
