@@ -120,35 +120,6 @@ interface NodeDao {
 // Generic node
 //
 
-enum class NodeKind {
-    /** Like a symbolic link */
-    Reference,
-
-    /** A list of nodes, not a filesystem directory */
-    Directory,
-
-    /** Launches an application */
-    Application,
-
-    /** Opens the browser */
-    WebLink,
-
-    /** Opens a specific file */
-    File,
-
-    /** Opens navigation directions to a specific location */
-    Location,
-
-    /** Just some user-editable text */
-    Note,
-
-    /** User-toggleable checkbox */
-    Checkbox,
-
-    /** A time/date alert, optionally recurring */
-    Reminder,
-}
-
 @Entity
 data class Node(
     @PrimaryKey(autoGenerate = true) val nodeId: Int,

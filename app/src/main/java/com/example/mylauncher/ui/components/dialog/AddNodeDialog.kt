@@ -29,9 +29,6 @@ import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.Preferences
 import com.example.mylauncher.ui.components.NodeIconAndText
 import com.example.mylauncher.ui.theme.DialogBackground
-import com.example.mylauncher.ui.util.nodeColor
-import com.example.mylauncher.ui.util.nodeIcon
-import com.example.mylauncher.ui.util.nodeKindName
 
 data class NewNodePosition(
     val adjacentIndex: Int,
@@ -93,9 +90,9 @@ private fun Option(
         NodeIconAndText(
             fontSize = fontSize,
             lineHeight = lineHeight,
-            label = nodeKindName(nodeKind),
-            color = nodeColor(nodeKind),
-            icon = nodeIcon(nodeKind),
+            label = nodeKind.label,
+            color = nodeKind.color,
+            icon = nodeKind.icon,
             softWrap = false,
         )
     }

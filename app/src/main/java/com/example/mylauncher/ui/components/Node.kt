@@ -67,12 +67,10 @@ import com.example.mylauncher.data.Node
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.Preferences
+import com.example.mylauncher.data.nodeIndent
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.dialog.AddNodeDialog
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
-import com.example.mylauncher.ui.util.nodeColor
-import com.example.mylauncher.ui.util.nodeIcon
-import com.example.mylauncher.ui.util.nodeIndent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -103,7 +101,8 @@ fun NodeRow(
         val visible by remember { derivedStateOf { !((parent?.collapsed?.value) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
-        val tapColor = nodeColor(node.kind, collapsed.value).copy(alpha = 0.15f)
+        val tapColor = node.kind.color(collapsed.value)
+            .copy(alpha = 0.15f)
         val tapColorAnimated by animateColorAsState(
             if (pressing.value) tapColor else Color.Transparent,
             animationSpec = if (pressing.value) snap() else tween(1000),
@@ -175,8 +174,8 @@ fun Node(
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
-    val icon = nodeIcon(node.kind, collapsed)
-    val color = nodeColor(node.kind, collapsed)
+    val icon = node.kind.icon(collapsed)
+    val color = node.kind.color(collapsed)
 
     Box(Modifier.height(IntrinsicSize.Min)) {
         Row(verticalAlignment = Alignment.CenterVertically,
