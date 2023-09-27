@@ -1,6 +1,7 @@
 package com.example.mylauncher.ui.components
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,16 +25,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.example.mylauncher.data.AppDatabase
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.flattenNodes
 import com.example.mylauncher.helper.launchApp
+import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -44,7 +50,6 @@ fun NodeList(db: AppDatabase) {
         WindowInsets.statusBars.getTop(LocalDensity.current)
             .toDp()
     }
-
     val paddingBottom = with(LocalDensity.current) {
         WindowInsets.navigationBars.getBottom(LocalDensity.current)
             .toDp()
@@ -54,6 +59,7 @@ fun NodeList(db: AppDatabase) {
     val listState = rememberLazyListState()
     val nodes = remember { mutableStateListOf<NodeRow>() }
     var nodeOptionsVisibleIndex by remember { mutableStateOf<Int?>(null) }
+    var newNodePosition by remember { mutableStateOf<NewNodePosition?>(null) }
 
     // Populate list
     LaunchedEffect(Unit) { nodes.addAll(flattenNodes(db)) }
@@ -70,12 +76,29 @@ fun NodeList(db: AppDatabase) {
             item { Spacer(Modifier.height(paddingTop)) }
 
             itemsIndexed(nodes) { index, row ->
-                NodeRow(row, nodeOptionsVisibleIndex, index, onTapped = {
-                    nodeOptionsVisibleIndex = null
-                    onNodeRowTapped(db, context, row)
-                }, onLongPressed = {
-                    nodeOptionsVisibleIndex = index
-                })
+                NewNodePositionIndicator(newNodePosition, index, above = true)
+
+                NodeRow(
+                    row,
+                    nodeOptionsVisibleIndex,
+                    index,
+                    onTapped = {
+                        nodeOptionsVisibleIndex = null
+                        onNodeRowTapped(db, context, row)
+                    },
+                    onLongPressed = {
+                        nodeOptionsVisibleIndex = index
+                    },
+                    onAddNodeDialogOpened = {
+                        nodeOptionsVisibleIndex = null
+                        newNodePosition = it
+                    },
+                    onAddNodeDialogClosed = {
+                        newNodePosition = null
+                    },
+                )
+
+                NewNodePositionIndicator(newNodePosition, index, above = false)
             }
 
             item { Spacer(Modifier.height(paddingBottom)) }
@@ -85,11 +108,43 @@ fun NodeList(db: AppDatabase) {
     }
 }
 
+@Composable
+private fun NewNodePositionIndicator(
+    newNodePosition: NewNodePosition?,
+    index: Int,
+    above: Boolean,
+) {
+    val visible = newNodePosition?.adjacentIndex == index && newNodePosition.above == above
+    val density = LocalDensity.current
+    val strokeWidth = with(density) { (2.dp).toPx() }
+    val dashInterval = with(density) { (8.dp).toPx() }
+    val width = animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        label = "new node position indicator width",
+    )
+
+    if (visible) Box(
+        Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawLine(
+                    color = Color.White,
+                    strokeWidth = strokeWidth,
+                    start = Offset(0f, 0f),
+                    end = Offset(this.size.width * width.value, 0f),
+                    pathEffect = PathEffect.dashPathEffect(
+                        intervals = floatArrayOf(dashInterval, dashInterval),
+                        phase = 0f,
+                    )
+                )
+            })
+}
+
 @OptIn(DelicateCoroutinesApi::class)
 private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
     if (nodeRow.node.kind == NodeKind.Directory) {
         nodeRow.collapsed.value = !nodeRow.collapsed.value
-    } else if (nodeRow.node.kind == NodeKind.App) {
+    } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
             val app = db.nodeDao()
                 .getApp(nodeRow.node.nodeId)

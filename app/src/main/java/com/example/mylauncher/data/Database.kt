@@ -69,7 +69,15 @@ interface NodeDao {
         val defaultNode = getNodeByLabel(DEFAULT_NODE_LABEL)
         if (defaultNode != null) return defaultNode
 
-        insertAllNodes(Node(0, null, null, NodeKind.Directory, DEFAULT_NODE_LABEL))
+        insertAllNodes(
+            Node(
+                nodeId = 0,
+                parentId = null,
+                dataId = null,
+                kind = NodeKind.Directory,
+                label = DEFAULT_NODE_LABEL
+            )
+        )
         return getLastNode()
     }
 
@@ -93,7 +101,7 @@ interface NodeDao {
                     nodeId = 0,
                     parentId = defaultNode.nodeId,
                     dataId = null,
-                    kind = NodeKind.App,
+                    kind = NodeKind.Application,
                     label = activityInfo.label.toString()
                 )
                 insertAllNodes(node)
@@ -113,7 +121,32 @@ interface NodeDao {
 //
 
 enum class NodeKind {
-    Reference, Directory, App,
+    /** Like a symbolic link */
+    Reference,
+
+    /** A list of nodes, not a filesystem directory */
+    Directory,
+
+    /** Launches an application */
+    Application,
+
+    /** Opens the browser */
+    WebLink,
+
+    /** Opens a specific file */
+    File,
+
+    /** Opens navigation directions to a specific location */
+    Location,
+
+    /** Just some user-editable text */
+    Note,
+
+    /** User-toggleable checkbox */
+    Checkbox,
+
+    /** A time/date alert, optionally recurring */
+    Reminder,
 }
 
 @Entity

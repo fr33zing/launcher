@@ -15,6 +15,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -66,6 +68,8 @@ import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.Preferences
 import com.example.mylauncher.helper.conditional
+import com.example.mylauncher.ui.components.dialog.AddNodeDialog
+import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import com.example.mylauncher.ui.util.nodeColor
 import com.example.mylauncher.ui.util.nodeIcon
 import com.example.mylauncher.ui.util.nodeIndent
@@ -82,6 +86,8 @@ fun NodeRow(
     index: Int,
     onTapped: () -> Unit,
     onLongPressed: () -> Unit,
+    onAddNodeDialogOpened: (NewNodePosition) -> Unit,
+    onAddNodeDialogClosed: () -> Unit,
 ) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
@@ -114,22 +120,24 @@ fun NodeRow(
                 visible = showOptions,
                 below = false,
                 text = "Add item above",
+                onDialogOpened = { onAddNodeDialogOpened(NewNodePosition(index, true)) },
+                onDialogClosed = onAddNodeDialogClosed,
             )
 
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
                 Node(
-                    node = node,
-                    visible = visible,
-                    collapsed = collapsed.value,
-                    fontSize = fontSize,
-                    lineHeight = lineHeight,
-                    spacing = spacing,
-                    indent = indent,
-                    depth = depth,
-                    showOptions = showOptions,
-                    pressing = pressing,
-                    onTapped = onTapped,
-                    onLongPressed = onLongPressed,
+                    node,
+                    visible,
+                    collapsed.value,
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth,
+                    showOptions,
+                    pressing,
+                    onTapped,
+                    onLongPressed,
                 )
             }
 
@@ -143,6 +151,8 @@ fun NodeRow(
                 visible = showOptions,
                 below = true,
                 text = if (isDir) "Add item within" else "Add item below",
+                onDialogOpened = { onAddNodeDialogOpened(NewNodePosition(index, false)) },
+                onDialogClosed = onAddNodeDialogClosed,
             )
         }
     }
@@ -211,14 +221,15 @@ fun Node(
 }
 
 @Composable
-private fun NodeIconAndText(
+fun NodeIconAndText(
     fontSize: TextUnit,
     lineHeight: Dp,
     label: String,
     color: Color,
     icon: ImageVector?,
+    softWrap: Boolean = true,
 ) {
-    val iconSize = 1.1f
+    val iconSize = 0.9f
     if (icon != null) {
         Icon(
             icon,
@@ -241,10 +252,14 @@ private fun NodeIconAndText(
     }
 
     Text(
-        label,
-        Modifier
+        text = label,
+        modifier = Modifier
             .offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
-            .padding(horizontal = lineHeight * 0.4f), color, fontSize
+            .absolutePadding(left = lineHeight * 0.5f),
+        color = color,
+        fontSize = fontSize,
+        softWrap = softWrap,
+        overflow = TextOverflow.Visible
     )
 }
 
@@ -258,18 +273,22 @@ private fun AddNodeButton(
     visible: Boolean,
     below: Boolean,
     text: String,
+    onDialogOpened: () -> Unit,
+    onDialogClosed: () -> Unit,
 ) {
+
     val color = Color.White.copy(alpha = 0.5f)
     val extraSpacing = lineHeight * 0.8f
     val expandFrom = if (below) Alignment.Bottom else Alignment.Top
+
+    val dialogVisible = remember { mutableStateOf(false) }
 
     AnimatedVisibility(
         visible = visible,
         enter = expandVertically(expandFrom = expandFrom) + fadeIn(),
         exit = shrinkVertically(shrinkTowards = expandFrom) + fadeOut(),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Row(verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(vertical = spacing / 2)
                 .absolutePadding(
@@ -277,7 +296,12 @@ private fun AddNodeButton(
                     top = if (below) extraSpacing else 0.dp,
                     bottom = if (!below) extraSpacing else 0.dp
                 )
-        ) {
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        dialogVisible.value = true
+                        onDialogOpened()
+                    })
+                }) {
             NodeIconAndText(
                 fontSize = fontSize,
                 lineHeight = lineHeight,
@@ -287,6 +311,8 @@ private fun AddNodeButton(
             )
         }
     }
+
+    AddNodeDialog(visible = dialogVisible, onDismissRequest = onDialogClosed)
 }
 
 @Composable
@@ -310,7 +336,7 @@ private fun NodeOptionButtons(
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder")
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit")
 
-            if (node.kind == NodeKind.App) {
+            if (node.kind == NodeKind.Application) {
                 NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info")
             }
         }

@@ -22,9 +22,9 @@ val Context.preferencesDataStore: DataStore<Preferences> by preferencesDataStore
 
 class Preferences(private val context: Context) {
     companion object {
-        private val fontSizeDefault = 22.sp
-        private val spacingDefault = 22.dp
-        private val indentDefault = 30.dp
+        val fontSizeDefault = 22.sp
+        val spacingDefault = 22.dp
+        val indentDefault = 30.dp
     }
 
     // Font size

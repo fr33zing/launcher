@@ -7,17 +7,26 @@ import android.os.UserManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.mylauncher.data.AppDatabase
+import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
@@ -26,6 +35,9 @@ import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.theme.MyLauncherTheme
 import com.example.mylauncher.ui.util.Fade
 import kotlinx.coroutines.flow.flow
+
+lateinit var dialogVisible: MutableState<Boolean>
+const val blurDialogBackdrop = false
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +53,15 @@ class MainActivity : ComponentActivity() {
             .build()
 
         setContent {
+            // Setup dialog backdrop blur
+            // TODO determine why this animation is slow only the first time it runs
+            dialogVisible = remember { mutableStateOf(false) }
+            val dialogBackdropBlurRadius by animateDpAsState(
+                targetValue = if (dialogVisible.value) 2.dp else 0.dp,
+                animationSpec = snap(80),
+                label = "dialog backdrop blur radius"
+            )
+
             // Check for new apps
             val appsFlow = flow { emit(getActivityInfos(applicationContext)) }
             LaunchedEffect(Unit) {
@@ -52,7 +73,9 @@ class MainActivity : ComponentActivity() {
 
             MyLauncherTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .conditional(blurDialogBackdrop) { blur(dialogBackdropBlurRadius) },
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     Main(db)
