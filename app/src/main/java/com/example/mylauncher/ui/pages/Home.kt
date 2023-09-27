@@ -9,5 +9,5 @@ import com.example.mylauncher.ui.components.NodeList
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(db: AppDatabase, navController: NavController) {
-    NodeList(db)
+    NodeList(db, navController)
 }

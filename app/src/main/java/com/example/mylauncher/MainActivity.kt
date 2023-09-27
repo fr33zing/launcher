@@ -9,6 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,10 +34,9 @@ import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
-import com.example.mylauncher.ui.pages.EditNode
+import com.example.mylauncher.ui.pages.Edit
 import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.theme.MyLauncherTheme
-import com.example.mylauncher.ui.util.Fade
 import kotlinx.coroutines.flow.flow
 
 lateinit var dialogVisible: MutableState<Boolean>
@@ -73,10 +76,10 @@ class MainActivity : ComponentActivity() {
 
             MyLauncherTheme {
                 Surface(
+                    color = MaterialTheme.colorScheme.background,
                     modifier = Modifier
                         .fillMaxSize()
                         .conditional(blurDialogBackdrop) { blur(dialogBackdropBlurRadius) },
-                    color = MaterialTheme.colorScheme.background,
                 ) {
                     Main(db)
                 }
@@ -90,12 +93,16 @@ class MainActivity : ComponentActivity() {
 private fun Main(db: AppDatabase) {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "home") {
-        composable("home") { Fade { Home(db, navController) } }
-        composable("edit/node/{uuid}") { backStackEntry ->
-            val uuid = backStackEntry.arguments?.getString("uuid")
-                ?: throw Exception("No value provided for navigation argument: filename")
-            Fade { EditNode(db, navController, uuid) }
+    NavHost(
+        navController,
+        startDestination = "home",
+        enterTransition = { slideInHorizontally() + fadeIn() },
+        exitTransition = { slideOutHorizontally() + fadeOut() },
+    ) {
+        composable("home") { Home(db, navController) }
+        composable("edit/{nodeId}") { backStackEntry ->
+            val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+            Edit(db, navController, nodeId.toInt())
         }
     }
 }

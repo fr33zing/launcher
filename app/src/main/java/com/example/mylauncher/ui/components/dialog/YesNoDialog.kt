@@ -1,6 +1,7 @@
 package com.example.mylauncher.ui.components.dialog
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -22,21 +23,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.Preferences
 import com.example.mylauncher.ui.components.NodeIconAndText
 import com.example.mylauncher.ui.theme.DialogBackground
 
-data class NewNodePosition(
-    val adjacentIndex: Int,
-    val above: Boolean,
-)
-
 @Composable
-fun AddNodeDialog(visible: MutableState<Boolean>, onDismissRequest: () -> Unit) {
+fun YesNoDialog(
+    visible: MutableState<Boolean>,
+    yesText: String,
+    yesColor: Color,
+    yesIcon: ImageVector,
+    noText: String,
+    noColor: Color,
+    noIcon: ImageVector,
+    onDismissRequest: () -> Unit = {},
+    onYes: () -> Unit = {},
+    onNo: () -> Unit = {},
+) {
     val localDensity = LocalDensity.current
     val fontSize = Preferences.fontSizeDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
@@ -45,8 +53,8 @@ fun AddNodeDialog(visible: MutableState<Boolean>, onDismissRequest: () -> Unit) 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.clip(CircleShape)) {
                 Icon(
-                    Icons.Filled.Add,
-                    contentDescription = "plus symbol",
+                    Icons.Filled.QuestionMark,
+                    contentDescription = "question mark",
                     tint = Color.White,
                     modifier = Modifier
                         .background(DialogBackground)
@@ -60,17 +68,10 @@ fun AddNodeDialog(visible: MutableState<Boolean>, onDismissRequest: () -> Unit) 
             BaseDialogCard {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(lineHeight * 0.8f),
-                    modifier = Modifier.width(IntrinsicSize.Min)
+                    modifier = Modifier.width(IntrinsicSize.Max)
                 ) {
-                    Option(fontSize, lineHeight, NodeKind.Reference)
-                    Option(fontSize, lineHeight, NodeKind.Directory)
-                    Option(fontSize, lineHeight, NodeKind.Application)
-                    Option(fontSize, lineHeight, NodeKind.WebLink)
-                    Option(fontSize, lineHeight, NodeKind.File)
-                    Option(fontSize, lineHeight, NodeKind.Location)
-                    Option(fontSize, lineHeight, NodeKind.Note)
-                    Option(fontSize, lineHeight, NodeKind.Checkbox)
-                    Option(fontSize, lineHeight, NodeKind.Reminder)
+                    Option(visible, fontSize, lineHeight, noText, noColor, noIcon, onNo)
+                    Option(visible, fontSize, lineHeight, yesText, yesColor, yesIcon, onYes)
                 }
             }
         }
@@ -79,20 +80,29 @@ fun AddNodeDialog(visible: MutableState<Boolean>, onDismissRequest: () -> Unit) 
 
 @Composable
 private fun Option(
+    visible: MutableState<Boolean>,
     fontSize: TextUnit,
     lineHeight: Dp,
-    nodeKind: NodeKind,
+    text: String,
+    color: Color,
+    icon: ImageVector,
+    onClick: () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Row(verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    visible.value = false
+                    onClick()
+                })
+            }) {
         NodeIconAndText(
             fontSize = fontSize,
             lineHeight = lineHeight,
-            label = nodeKind.label,
-            color = nodeKind.color,
-            icon = nodeKind.icon,
+            label = text,
+            color = color,
+            icon = icon,
             softWrap = false,
         )
     }

@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.mylauncher.data.AppDatabase
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
@@ -45,7 +46,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun NodeList(db: AppDatabase) {
+fun NodeList(db: AppDatabase, navController: NavController) {
     val paddingTop = with(LocalDensity.current) {
         WindowInsets.statusBars.getTop(LocalDensity.current)
             .toDp()
@@ -79,6 +80,7 @@ fun NodeList(db: AppDatabase) {
                 NewNodePositionIndicator(newNodePosition, index, above = true)
 
                 NodeRow(
+                    navController,
                     row,
                     nodeOptionsVisibleIndex,
                     index,

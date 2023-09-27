@@ -7,6 +7,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -18,6 +20,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+
+@Composable
+fun Slide(content: @Composable AnimatedVisibilityScope.() -> Unit) {
+    val visible by remember { mutableStateOf(true) }
+    AnimatedVisibility(
+        visible = visible, enter = slideInHorizontally(), exit = slideOutHorizontally()
+    ) {
+        content()
+    }
+}
 
 @Composable
 fun Fade(content: @Composable AnimatedVisibilityScope.() -> Unit) {

@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.mylauncher.data.Node
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
@@ -79,6 +81,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun NodeRow(
+    navController: NavController,
     row: NodeRow,
     nodeOptionsVisibleIndex: Int?,
     index: Int,
@@ -125,6 +128,7 @@ fun NodeRow(
 
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
                 Node(
+                    navController,
                     node,
                     visible,
                     collapsed.value,
@@ -159,6 +163,7 @@ fun NodeRow(
 
 @Composable
 fun Node(
+    navController: NavController,
     node: Node,
     visible: Boolean,
     collapsed: Boolean,
@@ -215,7 +220,7 @@ fun Node(
             NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
         }
 
-        NodeOptionButtons(showOptions, fontSize, lineHeight, node)
+        NodeOptionButtons(navController, showOptions, fontSize, lineHeight, node)
     }
 }
 
@@ -316,6 +321,7 @@ private fun AddNodeButton(
 
 @Composable
 private fun NodeOptionButtons(
+    navController: NavController,
     visible: Boolean,
     fontSize: TextUnit,
     lineHeight: Dp,
@@ -330,13 +336,16 @@ private fun NodeOptionButtons(
             Modifier
                 .fillMaxHeight()
                 .background(Color.Black.copy(alpha = 0.75f))
+                .clickable(onClick = { /* Prevent tapping node underneath */ })
         ) {
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete")
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder")
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit")
+            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete") {}
+            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {}
+            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
+                navController.navigate("edit/${node.nodeId}")
+            }
 
             if (node.kind == NodeKind.Application) {
-                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info")
+                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {}
             }
         }
     }
@@ -348,13 +357,22 @@ private fun NodeOptionButton(
     lineHeight: Dp,
     icon: ImageVector,
     text: String,
+    onClick: () -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.SpaceAround,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .padding(horizontal = lineHeight * 0.5f)
+            .clickable(onClick = onClick)
     ) {
-        Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f))
-        Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold)
+        Column(
+            verticalArrangement = Arrangement.SpaceAround,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+        ) {
+            Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f))
+            Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold)
+        }
     }
 }
 

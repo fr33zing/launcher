@@ -7,6 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -38,9 +39,8 @@ val DarkColorScheme = with(Catppuccin.Mocha) {
         //scrim =
         //secondary =
         secondaryContainer = yellow,
-        surface = surface0,
+        surface = Color(0xFF111111),
         //surfaceBright =
-        //surfaceContainer =
         //surfaceContainerHigh =
         //surfaceContainerHighest =
         //surfaceContainerLow =

@@ -40,6 +40,9 @@ interface NodeDao {
     @Query("SELECT * FROM Node")
     suspend fun getAllNodes(): List<Node>
 
+    @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
+    suspend fun getNodeById(nodeId: Int): Node?
+
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
 
