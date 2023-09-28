@@ -3,8 +3,7 @@ plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
 
-    id("org.jetbrains.kotlin.kapt")
-//    id("com.google.protobuf") version "0.9.1"
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -72,32 +71,13 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
 
-//    implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
 
-    implementation("androidx.room:room-runtime:2.5.2")
-    kapt("androidx.room:room-compiler:2.5.2")
-    implementation("androidx.room:room-ktx:2.5.2")
-
-//    implementation(libs.protobuf.javalite)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.navigation.compose)
-
 }
-
-//protobuf {
-//    protoc {
-//        artifact = "com.google.protobuf:protoc:3.21.7"
-//    }
-//    generateProtoTasks {
-//        all().forEach {
-//            it.builtins {
-//                create("java") {
-//                    option("lite")
-//                }
-//            }
-//        }
-//    }
-//}
