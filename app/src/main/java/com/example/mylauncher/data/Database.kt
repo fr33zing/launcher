@@ -12,6 +12,7 @@ import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.mylauncher.ui.util.UserEditable
 import kotlinx.coroutines.flow.Flow
 
@@ -34,6 +35,9 @@ abstract class AppDatabase : RoomDatabase() {
 interface NodeDao {
     @Insert
     suspend fun insertAllNodes(vararg nodes: Node)
+
+    @Update
+    suspend fun update(node: Node)
 
     @Delete
     suspend fun delete(node: Node)
