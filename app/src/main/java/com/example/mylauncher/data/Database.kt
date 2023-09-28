@@ -12,6 +12,7 @@ import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import com.example.mylauncher.ui.util.UserEditable
 import kotlinx.coroutines.flow.Flow
 
 //
@@ -129,7 +130,7 @@ data class Node(
     val parentId: Int?,
     val dataId: Int?,
     val kind: NodeKind,
-    val label: String,
+    @UserEditable(label = "Label") var label: String,
 )
 
 data class NodeWithChildren(

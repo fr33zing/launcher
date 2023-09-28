@@ -80,4 +80,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.navigation.compose)
+
+    implementation(kotlin("reflect"))
 }
