@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
 import com.example.mylauncher.ui.theme.Catppuccin
+import com.example.mylauncher.ui.theme.Foreground
 
 private val directoryColor = Catppuccin.Current.sapphire
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
@@ -55,7 +56,7 @@ enum class NodeKind {
     fun color(collapsed: Boolean = false): Color = when (this) {
         Reference -> Catppuccin.Current.mauve
         Directory -> if (collapsed) collapsedDirectoryColor else directoryColor
-        Application -> Color.White
+        Application -> Foreground
         WebLink -> Catppuccin.Current.yellow
         File -> Catppuccin.Current.peach
         Location -> Catppuccin.Current.lavender

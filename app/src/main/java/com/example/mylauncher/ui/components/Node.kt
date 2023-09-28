@@ -73,6 +73,8 @@ import com.example.mylauncher.data.nodeIndent
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.dialog.AddNodeDialog
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
+import com.example.mylauncher.ui.theme.Background
+import com.example.mylauncher.ui.theme.Foreground
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -281,7 +283,7 @@ private fun AddNodeButton(
     onDialogClosed: () -> Unit,
 ) {
 
-    val color = Color.White.copy(alpha = 0.5f)
+    val color = Foreground.copy(alpha = 0.5f)
     val extraSpacing = lineHeight * 0.8f
     val expandFrom = if (below) Alignment.Bottom else Alignment.Top
 
@@ -335,7 +337,7 @@ private fun NodeOptionButtons(
         NodeOptionButtonsLayout(
             Modifier
                 .fillMaxHeight()
-                .background(Color.Black.copy(alpha = 0.75f))
+                .background(Background.copy(alpha = 0.75f))
                 .clickable(onClick = { /* Prevent tapping node underneath */ })
         ) {
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete") {}

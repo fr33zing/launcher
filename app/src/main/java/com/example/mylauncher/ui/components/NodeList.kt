@@ -41,6 +41,8 @@ import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.flattenNodes
 import com.example.mylauncher.helper.launchApp
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
+import com.example.mylauncher.ui.theme.Background
+import com.example.mylauncher.ui.theme.Foreground
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -130,7 +132,7 @@ private fun NewNodePositionIndicator(
             .fillMaxWidth()
             .drawBehind {
                 drawLine(
-                    color = Color.White,
+                    color = Foreground,
                     strokeWidth = strokeWidth,
                     start = Offset(0f, 0f),
                     end = Offset(this.size.width * width.value, 0f),
@@ -169,10 +171,10 @@ private fun TopAndBottomShades(
             .fillMaxWidth(), onDraw = {
             drawRect(
                 Brush.verticalGradient(
-                    0.0f to Color.Black,
+                    0.0f to Background,
                     1.0f to Color.Transparent,
                     startY = 80.0f,
-                    endY = 140.0f
+                    endY = 140.0f,
                 )
             )
         })
@@ -183,7 +185,10 @@ private fun TopAndBottomShades(
             .fillMaxWidth(), onDraw = {
             drawRect(
                 Brush.verticalGradient(
-                    0.0f to Color.Transparent, 1.0f to Color.Black, startY = 0.0f, endY = 60.0f
+                    0.0f to Color.Transparent,
+                    1.0f to Background,
+                    startY = 0.0f,
+                    endY = 60.0f,
                 )
             )
         })
