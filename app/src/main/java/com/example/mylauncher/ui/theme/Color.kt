@@ -2,11 +2,6 @@ package com.example.mylauncher.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Black = Color(0xFF000000)
-val White = Color(0xFFFFFFFF)
-
-val DialogBackground = Color(0xE8363636)
-
 class Catppuccin {
     companion object {
         val Latte = LattePalette()

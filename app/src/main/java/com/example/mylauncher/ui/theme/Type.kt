@@ -20,7 +20,7 @@ private val fontFamily = FontFamily(
 
 // Set of Material typography styles to start with
 val defaultTypography = Typography()
-val Typography = Typography(
+val typography = Typography(
     displayLarge = defaultTypography.displayLarge.copy(fontFamily = fontFamily),
     displayMedium = defaultTypography.displayMedium.copy(fontFamily = fontFamily),
     displaySmall = defaultTypography.displaySmall.copy(fontFamily = fontFamily),
