@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.example.mylauncher.data.NodeKind
-import com.example.mylauncher.data.Preferences
+import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.components.NodeIconAndText
 
 data class NewNodePosition(

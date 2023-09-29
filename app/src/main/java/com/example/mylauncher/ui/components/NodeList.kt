@@ -35,16 +35,18 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mylauncher.data.AppDatabase
+import com.example.mylauncher.NewAppsAdded
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.flattenNodes
+import com.example.mylauncher.data.persistent.AppDatabase
 import com.example.mylauncher.helper.launchApp
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 @Composable
@@ -65,7 +67,14 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     var newNodePosition by remember { mutableStateOf<NewNodePosition?>(null) }
 
     // Populate list
-    LaunchedEffect(Unit) { nodes.addAll(flattenNodes(db)) }
+    LaunchedEffect(Unit) {
+        nodes.addAll(flattenNodes(db))
+
+        NewAppsAdded.consumeEach {
+            nodes.clear()
+            nodes.addAll(flattenNodes(db))
+        }
+    }
 
     // Hide node options when scrolling
     LaunchedEffect(listState) {
@@ -150,8 +159,8 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
         nodeRow.collapsed.value = !nodeRow.collapsed.value
     } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
-            val app = db.nodeDao()
-                .getApp(nodeRow.node.nodeId)
+            val app = db.applicationDao()
+                .getByNodeId(nodeRow.node.nodeId)
             launchApp(context, app)
         }
     }

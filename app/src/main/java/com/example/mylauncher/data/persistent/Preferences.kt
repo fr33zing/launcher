@@ -1,4 +1,4 @@
-package com.example.mylauncher.data
+package com.example.mylauncher.data.persistent
 
 import android.content.Context
 import androidx.compose.runtime.Composable

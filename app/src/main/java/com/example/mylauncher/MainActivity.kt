@@ -29,7 +29,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
-import com.example.mylauncher.data.AppDatabase
+import com.example.mylauncher.data.persistent.AppDatabase
+import com.example.mylauncher.data.persistent.createNewApplications
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
@@ -37,10 +38,15 @@ import com.example.mylauncher.helper.userManager
 import com.example.mylauncher.ui.pages.Edit
 import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.theme.MyLauncherTheme
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 
 lateinit var dialogVisible: MutableState<Boolean>
 const val blurDialogBackdrop = false
+
+val NewAppsAdded = Channel<Int>()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,15 +71,6 @@ class MainActivity : ComponentActivity() {
                 label = "dialog backdrop blur radius"
             )
 
-            // Check for new apps
-            val appsFlow = flow { emit(getActivityInfos(applicationContext)) }
-            LaunchedEffect(Unit) {
-                appsFlow.collect {
-                    db.nodeDao()
-                        .insertNewApps(it)
-                }
-            }
-
             MyLauncherTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
@@ -82,27 +79,35 @@ class MainActivity : ComponentActivity() {
                         .conditional(blurDialogBackdrop) { blur(dialogBackdropBlurRadius) },
                 ) {
                     Main(db)
+
+                    // Check for new apps
+                    LaunchedEffect(Unit) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val activityInfos = getActivityInfos(applicationContext)
+                            val newAppsAdded = db.createNewApplications(activityInfos)
+                            if (newAppsAdded > 0) NewAppsAdded.send(newAppsAdded)
+                        }
+                    }
                 }
             }
         }
     }
 
-}
+    @Composable
+    private fun Main(db: AppDatabase) {
+        val navController = rememberNavController()
 
-@Composable
-private fun Main(db: AppDatabase) {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController,
-        startDestination = "home",
-        enterTransition = { slideInHorizontally() + fadeIn() },
-        exitTransition = { slideOutHorizontally() + fadeOut() },
-    ) {
-        composable("home") { Home(db, navController) }
-        composable("edit/{nodeId}") { backStackEntry ->
-            val nodeId = backStackEntry.arguments?.getString("nodeId")!!
-            Edit(db, navController, nodeId.toInt())
+        NavHost(
+            navController,
+            startDestination = "home",
+            enterTransition = { slideInHorizontally() + fadeIn() },
+            exitTransition = { slideOutHorizontally() + fadeOut() },
+        ) {
+            composable("home") { Home(db, navController) }
+            composable("edit/{nodeId}") { backStackEntry ->
+                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                Edit(db, navController, nodeId.toInt())
+            }
         }
     }
 }

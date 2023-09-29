@@ -65,10 +65,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mylauncher.data.Node
+import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
-import com.example.mylauncher.data.Preferences
+import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.data.nodeIndent
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.dialog.AddNodeDialog

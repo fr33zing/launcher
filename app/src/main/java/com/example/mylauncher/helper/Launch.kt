@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.UserHandle
 import android.os.UserManager
-import com.example.mylauncher.data.App
+import com.example.mylauncher.data.persistent.Application
 
 lateinit var launcherApps: LauncherApps
 lateinit var userManager: UserManager
@@ -17,7 +17,7 @@ fun getUserHandle(userHandleString: String): UserHandle {
         ?: android.os.Process.myUserHandle()
 }
 
-fun launchApp(context: Context, app: App) {
+fun launchApp(context: Context, app: Application) {
     val userHandle = getUserHandle(app.userHandle)
     val activityList = launcherApps.getActivityList(app.packageName, userHandle)
     val componentName = ComponentName(app.packageName, activityList[activityList.size - 1].name)

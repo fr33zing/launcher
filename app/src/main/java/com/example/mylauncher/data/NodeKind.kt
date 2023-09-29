@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
+import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
 
