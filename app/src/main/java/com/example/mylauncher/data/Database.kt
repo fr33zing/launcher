@@ -146,6 +146,8 @@ data class NodeWithChildren(
 // Extended node data types
 //
 
+// TODO create abstract class ExtendedNodeData and generic CRUD functions in DAO
+
 // App
 @Entity
 data class App(

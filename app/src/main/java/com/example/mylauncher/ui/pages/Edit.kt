@@ -37,11 +37,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.room.withTransaction
 import com.example.mylauncher.data.AppDatabase
 import com.example.mylauncher.data.Node
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.util.getUserEditableAnnotation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.reflect.KMutableProperty0
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +72,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             noText = "Continue editing",
             noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
-            onYes = { navController.popBackStack() },
+            onYes = { onCancelChanges(navController) },
         )
 
         YesNoDialog(
@@ -80,7 +84,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             noText = "Continue editing",
             noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
-            onYes = { navController.popBackStack() },
+            onYes = { onSaveChanges(navController, db, node!!) },
         )
 
         Scaffold(topBar = {
@@ -117,9 +121,21 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     }
 }
 
-@Composable
-private fun EditForm(node: Node) {
-    NodePropertyTextField(node::label)
+private fun onCancelChanges(navController: NavController) {
+    navController.popBackStack()
+}
+
+private fun onSaveChanges(navController: NavController, db: AppDatabase, node: Node) {
+    CoroutineScope(Dispatchers.Main).launch {
+        db.withTransaction {
+            db.nodeDao()
+                .update(node)
+
+            // TODO update kind-specific data
+        }
+
+        navController.popBackStack()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -154,4 +170,9 @@ private fun NodePropertyTextField(
         } else null,
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+@Composable
+private fun EditForm(node: Node) {
+    NodePropertyTextField(node::label)
 }
