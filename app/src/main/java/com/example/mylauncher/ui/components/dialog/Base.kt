@@ -39,10 +39,12 @@ fun BaseDialog(
     content: @Composable () -> Unit = {},
 ) {
     if (visible.value) {
-        Dialog(onDismissRequest = {
-            visible.value = false
-            onDismissRequest()
-        }) {
+        Dialog(
+            onDismissRequest = {
+                visible.value = false
+                onDismissRequest()
+            }
+        ) {
             (LocalView.current.parent as DialogWindowProvider).window.setDimAmount(0.7f)
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -53,20 +55,21 @@ fun BaseDialog(
     }
 }
 
-fun Modifier.baseDialogStyles(shape: Shape) = this
-    .background(baseDialogBackgroundColor, shape)
-    .border(baseDialogBorderWidth, baseDialogBorderColor, shape)
+fun Modifier.baseDialogStyles(shape: Shape) =
+    this.background(baseDialogBackgroundColor, shape)
+        .border(baseDialogBorderWidth, baseDialogBorderColor, shape)
 
 @Composable
-private fun BaseDialogCard(content: @Composable() (ColumnScope.() -> Unit) = {}) = Column(
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.spacedBy(8.dp),
-    content = content,
-    modifier = Modifier
-        .baseDialogStyles(MaterialTheme.shapes.large)
-        .padding(36.dp)
-        .width(IntrinsicSize.Min),
-)
+private fun BaseDialogCard(content: @Composable() (ColumnScope.() -> Unit) = {}) =
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        content = content,
+        modifier =
+            Modifier.baseDialogStyles(MaterialTheme.shapes.large)
+                .padding(36.dp)
+                .width(IntrinsicSize.Min),
+    )
 
 @Composable
 private fun BaseDialogIcon(icon: ImageVector) {
@@ -74,13 +77,8 @@ private fun BaseDialogIcon(icon: ImageVector) {
         icon,
         contentDescription = "plus symbol",
         tint = Foreground,
-        modifier = Modifier
-            .baseDialogStyles(CircleShape)
-            .padding(12.dp)
-            .size(32.dp)
+        modifier = Modifier.baseDialogStyles(CircleShape).padding(12.dp).size(32.dp)
     )
 
     Spacer(Modifier.height(28.dp))
 }
-
-

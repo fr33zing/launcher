@@ -19,16 +19,10 @@ suspend fun flattenNodes(db: AppDatabase): List<NodeRow> {
         val row = NodeRow(node, parent, depth)
         result.add(row)
 
-        db.nodeDao()
-            .getChildNodes(node.nodeId)
-            .forEach {
-                add(it, row, depth + 1)
-            }
+        db.nodeDao().getChildNodes(node.nodeId).forEach { add(it, row, depth + 1) }
     }
 
-    db.nodeDao()
-        .getTopLevelNodes()
-        .forEach { add(it, null, 0) }
+    db.nodeDao().getTopLevelNodes().forEach { add(it, null, 0) }
 
     return result
 }

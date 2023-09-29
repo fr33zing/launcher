@@ -14,7 +14,11 @@ class Application(
     val activityClassName: String?,
     val userHandle: String,
 ) : Payload(payloadId, nodeId) {
-    constructor(payloadId: Int, nodeId: Int, activityInfo: LauncherActivityInfo) : this(
+    constructor(
+        payloadId: Int,
+        nodeId: Int,
+        activityInfo: LauncherActivityInfo
+    ) : this(
         payloadId = payloadId,
         nodeId = nodeId,
         appName = activityInfo.label.toString(),
@@ -26,8 +30,7 @@ class Application(
 
 @Dao
 abstract class ApplicationDao : PayloadDao<Application> {
-    @Query("SELECT * FROM Application")
-    abstract override fun getAll(): List<Application>
+    @Query("SELECT * FROM Application") abstract override fun getAll(): List<Application>
 
     @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
     abstract override fun getByNodeId(nodeId: Int): Application

@@ -51,14 +51,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun NodeList(db: AppDatabase, navController: NavController) {
-    val paddingTop = with(LocalDensity.current) {
-        WindowInsets.statusBars.getTop(LocalDensity.current)
-            .toDp()
-    }
-    val paddingBottom = with(LocalDensity.current) {
-        WindowInsets.navigationBars.getBottom(LocalDensity.current)
-            .toDp()
-    }
+    val paddingTop =
+        with(LocalDensity.current) { WindowInsets.statusBars.getTop(LocalDensity.current).toDp() }
+    val paddingBottom =
+        with(LocalDensity.current) {
+            WindowInsets.navigationBars.getBottom(LocalDensity.current).toDp()
+        }
 
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -78,9 +76,8 @@ fun NodeList(db: AppDatabase, navController: NavController) {
 
     // Hide node options when scrolling
     LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }.collect {
-            if (it) nodeOptionsVisibleIndex = null
-        }
+        snapshotFlow { listState.isScrollInProgress }
+            .collect { if (it) nodeOptionsVisibleIndex = null }
     }
 
     Box {
@@ -99,16 +96,12 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                         nodeOptionsVisibleIndex = null
                         onNodeRowTapped(db, context, row)
                     },
-                    onLongPressed = {
-                        nodeOptionsVisibleIndex = index
-                    },
+                    onLongPressed = { nodeOptionsVisibleIndex = index },
                     onAddNodeDialogOpened = {
                         nodeOptionsVisibleIndex = null
                         newNodePosition = it
                     },
-                    onAddNodeDialogClosed = {
-                        newNodePosition = null
-                    },
+                    onAddNodeDialogClosed = { newNodePosition = null },
                 )
 
                 NewNodePositionIndicator(newNodePosition, index, above = false)
@@ -131,26 +124,28 @@ private fun NewNodePositionIndicator(
     val density = LocalDensity.current
     val strokeWidth = with(density) { (2.dp).toPx() }
     val dashInterval = with(density) { (8.dp).toPx() }
-    val width = animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        label = "new node position indicator width",
-    )
+    val width =
+        animateFloatAsState(
+            targetValue = if (visible) 1f else 0f,
+            label = "new node position indicator width",
+        )
 
-    if (visible) Box(
-        Modifier
-            .fillMaxWidth()
-            .drawBehind {
+    if (visible)
+        Box(
+            Modifier.fillMaxWidth().drawBehind {
                 drawLine(
                     color = Foreground,
                     strokeWidth = strokeWidth,
                     start = Offset(0f, 0f),
                     end = Offset(this.size.width * width.value, 0f),
-                    pathEffect = PathEffect.dashPathEffect(
-                        intervals = floatArrayOf(dashInterval, dashInterval),
-                        phase = 0f,
-                    )
+                    pathEffect =
+                        PathEffect.dashPathEffect(
+                            intervals = floatArrayOf(dashInterval, dashInterval),
+                            phase = 0f,
+                        )
                 )
-            })
+            }
+        )
 }
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -159,8 +154,7 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
         nodeRow.collapsed.value = !nodeRow.collapsed.value
     } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
-            val app = db.applicationDao()
-                .getByNodeId(nodeRow.node.nodeId)
+            val app = db.applicationDao().getByNodeId(nodeRow.node.nodeId)
             launchApp(context, app)
         }
     }
@@ -172,35 +166,33 @@ private fun TopAndBottomShades(
     paddingTop: Dp,
     paddingBottom: Dp,
 ) {
-    Column(
-        Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Canvas(modifier = Modifier
-            .height(paddingTop)
-            .fillMaxWidth(), onDraw = {
-            drawRect(
-                Brush.verticalGradient(
-                    0.0f to Background,
-                    1.0f to Color.Transparent,
-                    startY = 80.0f,
-                    endY = 140.0f,
+    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+        Canvas(
+            modifier = Modifier.height(paddingTop).fillMaxWidth(),
+            onDraw = {
+                drawRect(
+                    Brush.verticalGradient(
+                        0.0f to Background,
+                        1.0f to Color.Transparent,
+                        startY = 80.0f,
+                        endY = 140.0f,
+                    )
                 )
-            )
-        })
+            }
+        )
 
-        Canvas(modifier = Modifier
-            .weight(1f, false)
-            .height(paddingBottom)
-            .fillMaxWidth(), onDraw = {
-            drawRect(
-                Brush.verticalGradient(
-                    0.0f to Color.Transparent,
-                    1.0f to Background,
-                    startY = 0.0f,
-                    endY = 60.0f,
+        Canvas(
+            modifier = Modifier.weight(1f, false).height(paddingBottom).fillMaxWidth(),
+            onDraw = {
+                drawRect(
+                    Brush.verticalGradient(
+                        0.0f to Color.Transparent,
+                        1.0f to Background,
+                        startY = 0.0f,
+                        endY = 60.0f,
+                    )
                 )
-            )
-        })
+            }
+        )
     }
 }
-

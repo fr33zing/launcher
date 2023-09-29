@@ -30,23 +30,17 @@ data class NodeWithChildren(
 
 @Dao
 interface NodeDao {
-    @Insert
-    suspend fun insert(node: Node)
+    @Insert suspend fun insert(node: Node)
 
-    @Insert
-    suspend fun insertAllNodes(vararg nodes: Node)
+    @Insert suspend fun insertAllNodes(vararg nodes: Node)
 
-    @Update
-    suspend fun update(node: Node)
+    @Update suspend fun update(node: Node)
 
-    @Delete
-    suspend fun delete(node: Node)
+    @Delete suspend fun delete(node: Node)
 
-    @Query("SELECT * FROM Node")
-    suspend fun getAllNodes(): List<Node>
+    @Query("SELECT * FROM Node") suspend fun getAllNodes(): List<Node>
 
-    @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
-    suspend fun getNodeById(nodeId: Int): Node?
+    @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
 
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
@@ -55,17 +49,13 @@ interface NodeDao {
     @Query("SELECT * FROM Node")
     suspend fun getNodesWithChildren(): List<NodeWithChildren>
 
-    @Query("SELECT * FROM Node ORDER BY nodeID DESC LIMIT 1")
-    fun getLastNode(): Node
+    @Query("SELECT * FROM Node ORDER BY nodeID DESC LIMIT 1") fun getLastNode(): Node
 
-    @Query("SELECT nodeId FROM Node ORDER BY nodeID DESC LIMIT 1")
-    fun getLastNodeId(): Int
+    @Query("SELECT nodeId FROM Node ORDER BY nodeID DESC LIMIT 1") fun getLastNodeId(): Int
 
-    @Query("SELECT * FROM Node WHERE parentId IS null")
-    suspend fun getTopLevelNodes(): List<Node>
+    @Query("SELECT * FROM Node WHERE parentId IS null") suspend fun getTopLevelNodes(): List<Node>
 
-    @Query("SELECT * FROM Node WHERE parentId IS null")
-    fun getTopLevelNodesFlow(): Flow<List<Node>>
+    @Query("SELECT * FROM Node WHERE parentId IS null") fun getTopLevelNodesFlow(): Flow<List<Node>>
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId")
     suspend fun getChildNodes(nodeId: Int?): List<Node>

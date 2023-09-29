@@ -159,4 +159,3 @@ class Catppuccin {
         override val crust = Color(0xFF11111b)
     }
 }
-

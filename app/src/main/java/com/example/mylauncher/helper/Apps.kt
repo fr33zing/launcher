@@ -12,8 +12,9 @@ suspend fun getActivityInfos(context: Context): List<LauncherActivityInfo> {
         val userManager = context.getSystemService(Context.USER_SERVICE) as UserManager
         val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
 
-        userManager.userProfiles.map { launcherApps.getActivityList(null, it) }
+        userManager.userProfiles
+            .map { launcherApps.getActivityList(null, it) }
             .reduce { acc, activityInfos -> acc + activityInfos }
-            .sortedBy { it.label.toString() } //as ArrayList<LauncherActivityInfo>
+            .sortedBy { it.label.toString() } // as ArrayList<LauncherActivityInfo>
     }
 }

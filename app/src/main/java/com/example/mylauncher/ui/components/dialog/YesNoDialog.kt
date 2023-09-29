@@ -59,15 +59,18 @@ private fun Option(
     icon: ImageVector,
     onClick: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    visible.value = false
-                    onClick()
-                })
-            }) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            Modifier.fillMaxWidth().pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        visible.value = false
+                        onClick()
+                    }
+                )
+            }
+    ) {
         NodeIconAndText(
             fontSize = fontSize,
             lineHeight = lineHeight,

@@ -54,45 +54,53 @@ enum class NodeKind {
     /** A time/date alert, optionally recurring */
     Reminder;
 
-    fun color(collapsed: Boolean = false): Color = when (this) {
-        Reference -> Catppuccin.Current.mauve
-        Directory -> if (collapsed) collapsedDirectoryColor else directoryColor
-        Application -> Foreground
-        WebLink -> Catppuccin.Current.yellow
-        File -> Catppuccin.Current.peach
-        Location -> Catppuccin.Current.lavender
-        Note -> Catppuccin.Current.pink
-        Checkbox -> Catppuccin.Current.green
-        Reminder -> Catppuccin.Current.red
-    }
+    fun color(collapsed: Boolean = false): Color =
+        when (this) {
+            Reference -> Catppuccin.Current.mauve
+            Directory -> if (collapsed) collapsedDirectoryColor else directoryColor
+            Application -> Foreground
+            WebLink -> Catppuccin.Current.yellow
+            File -> Catppuccin.Current.peach
+            Location -> Catppuccin.Current.lavender
+            Note -> Catppuccin.Current.pink
+            Checkbox -> Catppuccin.Current.green
+            Reminder -> Catppuccin.Current.red
+        }
 
-    fun icon(collapsed: Boolean = false): ImageVector = when (this) {
-        Reference -> Icons.Filled.East
-        Directory -> if (collapsed) Icons.Outlined.Folder else Icons.Filled.Folder
-        Application -> Icons.Filled.Launch
-        WebLink -> Icons.Filled.Link
-        File -> Icons.Filled.Description
-        Location -> Icons.Filled.LocationOn
-        Note -> Icons.Filled.Notes
-        Checkbox -> Icons.Filled.CheckBoxOutlineBlank
-        Reminder -> Icons.Filled.Notifications
-    }
+    fun icon(collapsed: Boolean = false): ImageVector =
+        when (this) {
+            Reference -> Icons.Filled.East
+            Directory -> if (collapsed) Icons.Outlined.Folder else Icons.Filled.Folder
+            Application -> Icons.Filled.Launch
+            WebLink -> Icons.Filled.Link
+            File -> Icons.Filled.Description
+            Location -> Icons.Filled.LocationOn
+            Note -> Icons.Filled.Notes
+            Checkbox -> Icons.Filled.CheckBoxOutlineBlank
+            Reminder -> Icons.Filled.Notifications
+        }
 
-    fun label(): String = when (this) {
-        Reference -> "Reference"
-        Directory -> "Directory"
-        Application -> "Application"
-        WebLink -> "Web link"
-        File -> "File opener"
-        Location -> "Location"
-        Note -> "Text note"
-        Checkbox -> "Checkbox"
-        Reminder -> "Reminder"
-    }
+    fun label(): String =
+        when (this) {
+            Reference -> "Reference"
+            Directory -> "Directory"
+            Application -> "Application"
+            WebLink -> "Web link"
+            File -> "File opener"
+            Location -> "Location"
+            Note -> "Text note"
+            Checkbox -> "Checkbox"
+            Reminder -> "Reminder"
+        }
 
-    val color get() = color()
-    val icon get() = icon()
-    val label get() = label()
+    val color
+        get() = color()
+
+    val icon
+        get() = icon()
+
+    val label
+        get() = label()
 }
 
 fun nodeIndent(

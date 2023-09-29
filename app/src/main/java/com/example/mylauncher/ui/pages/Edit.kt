@@ -43,10 +43,10 @@ import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.util.getUserEditableAnnotation
+import kotlin.reflect.KMutableProperty0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.reflect.KMutableProperty0
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,10 +55,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        node = db.nodeDao()
-            .getNodeById(nodeId)
-    }
+    LaunchedEffect(Unit) { node = db.nodeDao().getNodeById(nodeId) }
 
     if (node == null) {
         Text(text = "Node does not exist!")
@@ -87,32 +84,33 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             onYes = { onSaveChanges(navController, db, node!!) },
         )
 
-        Scaffold(topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.smallTopAppBarColors(),
-                title = {
-                    Text(text = buildAnnotatedString {
-                        append("Editing ")
-                        withStyle(SpanStyle(color = node!!.kind.color)) {
-                            append(node!!.kind.label)
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.smallTopAppBarColors(),
+                    title = {
+                        Text(
+                            buildAnnotatedString {
+                                append("Editing ")
+                                withStyle(SpanStyle(color = node!!.kind.color)) {
+                                    append(node!!.kind.label)
+                                }
+                            }
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = { cancelDialogVisible.value = true }) {
+                            Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
                         }
-                    })
-                },
-                actions = {
-                    IconButton(onClick = { cancelDialogVisible.value = true }) {
-                        Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
-                    }
-                    IconButton(onClick = { saveDialogVisible.value = true }) {
-                        Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
-                    }
-                },
-            )
-        }) { innerPadding ->
+                        IconButton(onClick = { saveDialogVisible.value = true }) {
+                            Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
+                        }
+                    },
+                )
+            }
+        ) { innerPadding ->
             Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(16.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(innerPadding).padding(16.dp).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 EditForm(node!!)
@@ -128,8 +126,7 @@ private fun onCancelChanges(navController: NavController) {
 private fun onSaveChanges(navController: NavController, db: AppDatabase, node: Node) {
     CoroutineScope(Dispatchers.Main).launch {
         db.withTransaction {
-            db.nodeDao()
-                .update(node)
+            db.nodeDao().update(node)
 
             // TODO update kind-specific data
         }
@@ -151,23 +148,29 @@ private fun NodePropertyTextField(
 
     OutlinedTextField(
         value = state,
-        onValueChange = { state = it; property.set(it) },
-        keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.None,
-            autoCorrect = false,
-            imeAction = imeAction,
-            keyboardType = KeyboardType.Text,
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                focusManager.clearFocus()
-                keyboardController?.hide()
-            },
-        ),
+        onValueChange = {
+            state = it
+            property.set(it)
+        },
+        keyboardOptions =
+            KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                autoCorrect = false,
+                imeAction = imeAction,
+                keyboardType = KeyboardType.Text,
+            ),
+        keyboardActions =
+            KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                },
+            ),
         label = { Text(annotation.label) },
-        supportingText = if (annotation.supportingText.isNotEmpty()) {
-            { Text(annotation.supportingText) }
-        } else null,
+        supportingText =
+            if (annotation.supportingText.isNotEmpty()) {
+                { Text(annotation.supportingText) }
+            } else null,
         modifier = Modifier.fillMaxWidth(),
     )
 }

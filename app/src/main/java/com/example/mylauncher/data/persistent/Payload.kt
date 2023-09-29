@@ -15,24 +15,19 @@ abstract class Payload(
 
 @Dao
 interface PayloadDao<T> {
-    @Insert
-    fun insert(entity: T)
+    @Insert fun insert(entity: T)
 
-    @Insert
-    fun insertMany(vararg entities: T)
+    @Insert fun insertMany(vararg entities: T)
 
-    @Update
-    fun update(entity: T)
+    @Update fun update(entity: T)
 
-    @Update
-    fun updateMany(vararg entities: T)
+    @Update fun updateMany(vararg entities: T)
 
-    @Delete
-    fun delete(entity: T)
+    @Delete fun delete(entity: T)
 
-    @Delete
-    fun deleteMany(vararg entities: T)
+    @Delete fun deleteMany(vararg entities: T)
 
     fun getAll(): List<T>
+
     fun getByNodeId(nodeId: Int): T
 }

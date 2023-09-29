@@ -65,11 +65,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
-import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.data.nodeIndent
+import com.example.mylauncher.data.persistent.Node
+import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.dialog.AddNodeDialog
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
@@ -106,13 +106,13 @@ fun NodeRow(
         val visible by remember { derivedStateOf { !((parent?.collapsed?.value) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
-        val tapColor = node.kind.color(collapsed.value)
-            .copy(alpha = 0.15f)
-        val tapColorAnimated by animateColorAsState(
-            if (pressing.value) tapColor else Color.Transparent,
-            animationSpec = if (pressing.value) snap() else tween(1000),
-            label = "node tap alpha"
-        )
+        val tapColor = node.kind.color(collapsed.value).copy(alpha = 0.15f)
+        val tapColorAnimated by
+            animateColorAsState(
+                if (pressing.value) tapColor else Color.Transparent,
+                animationSpec = if (pressing.value) snap() else tween(1000),
+                label = "node tap alpha"
+            )
 
         Column {
             AddNodeButton(
@@ -185,39 +185,40 @@ fun Node(
     val color = node.kind.color(collapsed)
 
     Box(Modifier.height(IntrinsicSize.Min)) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = spacing / 2)
-                .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
-                .conditional(visible) {
-                    pointerInput(Unit) {
-                        awaitEachGesture {
-                            awaitFirstDown(requireUnconsumed = true)
-                            val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-                            val heldButtonJob = scope.launch {
-                                delay(25)
-                                pressing.value = true
-                                delay(getLongPressTimeout().toLong() - 25)
-                                // Long press
-                                pressing.value = false
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onLongPressed()
-                            }
-                            waitForUpOrCancellation()?.run {
-                                // Tap
-                                if (pressing.value) {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onTapped()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(vertical = spacing / 2)
+                    .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
+                    .conditional(visible) {
+                        pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = true)
+                                val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+                                val heldButtonJob =
+                                    scope.launch {
+                                        delay(25)
+                                        pressing.value = true
+                                        delay(getLongPressTimeout().toLong() - 25)
+                                        // Long press
+                                        pressing.value = false
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onLongPressed()
+                                    }
+                                waitForUpOrCancellation()?.run {
+                                    // Tap
+                                    if (pressing.value) {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onTapped()
+                                    }
                                 }
+                                heldButtonJob.cancel()
+                                pressing.value = false
                             }
-                            heldButtonJob.cancel()
-                            pressing.value = false
                         }
                     }
-                }
-                .then(modifier)
-
+                    .then(modifier)
         ) {
             NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
         }
@@ -259,9 +260,9 @@ fun NodeIconAndText(
 
     Text(
         text = label,
-        modifier = Modifier
-            .offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
-            .absolutePadding(left = lineHeight * 0.5f),
+        modifier =
+            Modifier.offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
+                .absolutePadding(left = lineHeight * 0.5f),
         color = color,
         fontSize = fontSize,
         softWrap = softWrap,
@@ -294,20 +295,24 @@ private fun AddNodeButton(
         enter = expandVertically(expandFrom = expandFrom) + fadeIn(),
         exit = shrinkVertically(shrinkTowards = expandFrom) + fadeOut(),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(vertical = spacing / 2)
-                .absolutePadding(
-                    left = nodeIndent(depth, indent, lineHeight),
-                    top = if (below) extraSpacing else 0.dp,
-                    bottom = if (!below) extraSpacing else 0.dp
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        dialogVisible.value = true
-                        onDialogOpened()
-                    })
-                }) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.padding(vertical = spacing / 2)
+                    .absolutePadding(
+                        left = nodeIndent(depth, indent, lineHeight),
+                        top = if (below) extraSpacing else 0.dp,
+                        bottom = if (!below) extraSpacing else 0.dp
+                    )
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                dialogVisible.value = true
+                                onDialogOpened()
+                            }
+                        )
+                    }
+        ) {
             NodeIconAndText(
                 fontSize = fontSize,
                 lineHeight = lineHeight,
@@ -335,10 +340,9 @@ private fun NodeOptionButtons(
         exit = fadeOut(),
     ) {
         NodeOptionButtonsLayout(
-            Modifier
-                .fillMaxHeight()
+            Modifier.fillMaxHeight()
                 .background(Background.copy(alpha = 0.75f))
-                .clickable(onClick = { /* Prevent tapping node underneath */ })
+                .clickable(onClick = { /* Prevent tapping node underneath */})
         ) {
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete") {}
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {}
@@ -363,9 +367,7 @@ private fun NodeOptionButton(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .padding(horizontal = lineHeight * 0.5f)
-            .clickable(onClick = onClick)
+        modifier = Modifier.padding(horizontal = lineHeight * 0.5f).clickable(onClick = onClick)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
@@ -388,7 +390,10 @@ private fun NodeOptionButtonsLayout(
         layout(constraints.maxWidth, constraints.minHeight) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
-                    x = ((constraints.maxWidth / placeables.size * (index + 0.5f)) - placeable.width / 2).toInt(),
+                    x =
+                        ((constraints.maxWidth / placeables.size * (index + 0.5f)) -
+                                placeable.width / 2)
+                            .toInt(),
                     y = 0
                 )
             }
@@ -406,31 +411,39 @@ private fun AnimatedNodeVisibility(
     val scaleYAmount = 0.4f
 
     val visibleAsFloat = if (visible) 1f else 0f
-    val animatedHeight by animateFloatAsState(
-        targetValue = visibleAsFloat,
-        animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
-        label = "node visibility: height"
-    )
-    val animatedAlpha by animateFloatAsState(
-        targetValue = visibleAsFloat,
-        animationSpec = spring(stiffness = if (visible) Spring.StiffnessVeryLow else Spring.StiffnessLow),
-        label = "node visibility: alpha"
-    )
+    val animatedHeight by
+        animateFloatAsState(
+            targetValue = visibleAsFloat,
+            animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
+            label = "node visibility: height"
+        )
+    val animatedAlpha by
+        animateFloatAsState(
+            targetValue = visibleAsFloat,
+            animationSpec =
+                spring(stiffness = if (visible) Spring.StiffnessVeryLow else Spring.StiffnessLow),
+            label = "node visibility: alpha"
+        )
 
-    Layout(modifier = Modifier.then(modifier), content = {
-        Box(Modifier.graphicsLayer {
-            alpha = animatedAlpha
-            scaleY = animatedAlpha * scaleYAmount + (1f - scaleYAmount)
-            transformOrigin = transformOriginTop
-        }) { content() }
-    }) { measurables, constraints ->
+    Layout(
+        modifier = Modifier.then(modifier),
+        content = {
+            Box(
+                Modifier.graphicsLayer {
+                    alpha = animatedAlpha
+                    scaleY = animatedAlpha * scaleYAmount + (1f - scaleYAmount)
+                    transformOrigin = transformOriginTop
+                }
+            ) {
+                content()
+            }
+        }
+    ) { measurables, constraints ->
         val child = measurables[0].measure(constraints)
         val contentHeight = child.height
         val containerHeight = (contentHeight * animatedHeight).toInt()
         val containerWidth = constraints.maxWidth
 
-        layout(containerWidth, containerHeight) {
-            child.placeRelative(0, 0)
-        }
+        layout(containerWidth, containerHeight) { child.placeRelative(0, 0) }
     }
 }

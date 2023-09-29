@@ -46,8 +46,8 @@ class MainActivity : ComponentActivity() {
         window.setDecorFitsSystemWindows(false)
         window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
-        val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database")
-            .build()
+        val db =
+            Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
 
         setContent {
             MyLauncherTheme {
