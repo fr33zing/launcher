@@ -7,8 +7,6 @@ import android.os.UserManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -18,20 +16,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.mylauncher.data.persistent.AppDatabase
 import com.example.mylauncher.data.persistent.createNewApplications
-import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
@@ -42,9 +33,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-
-lateinit var dialogVisible: MutableState<Boolean>
-const val blurDialogBackdrop = false
 
 val NewAppsAdded = Channel<Int>()
 
@@ -62,21 +50,10 @@ class MainActivity : ComponentActivity() {
             .build()
 
         setContent {
-            // Setup dialog backdrop blur
-            // TODO determine why this animation is slow only the first time it runs
-            dialogVisible = remember { mutableStateOf(false) }
-            val dialogBackdropBlurRadius by animateDpAsState(
-                targetValue = if (dialogVisible.value) 2.dp else 0.dp,
-                animationSpec = snap(80),
-                label = "dialog backdrop blur radius"
-            )
-
             MyLauncherTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .conditional(blurDialogBackdrop) { blur(dialogBackdropBlurRadius) },
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Main(db)
 
