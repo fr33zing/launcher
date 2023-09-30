@@ -1,9 +1,5 @@
 package com.example.mylauncher.ui.pages
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -21,12 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.room.withTransaction
 import com.example.mylauncher.data.persistent.AppDatabase
@@ -112,12 +106,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
                 )
             }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier.padding(innerPadding).padding(16.dp).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                EditForm(node!!, payload)
-            }
+            EditForm(innerPadding, node!!, payload)
         }
     }
 }
