@@ -154,7 +154,9 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
         nodeRow.collapsed.value = !nodeRow.collapsed.value
     } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
-            val app = db.applicationDao().getByNodeId(nodeRow.node.nodeId)
+            val app =
+                db.applicationDao().getByNodeId(nodeRow.node.nodeId)
+                    ?: throw Exception("Tried to launch null application")
             launchApp(context, app)
         }
     }

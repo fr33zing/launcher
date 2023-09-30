@@ -14,7 +14,7 @@ abstract class Payload(
 )
 
 @Dao
-interface PayloadDao<T> {
+interface PayloadDao<T> where T : Payload {
     @Insert fun insert(entity: T)
 
     @Insert fun insertMany(vararg entities: T)
@@ -29,5 +29,5 @@ interface PayloadDao<T> {
 
     fun getAll(): List<T>
 
-    fun getByNodeId(nodeId: Int): T
+    fun getByNodeId(nodeId: Int): T?
 }

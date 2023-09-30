@@ -19,9 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
+import com.example.mylauncher.data.persistent.Application
 import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
+import kotlin.reflect.KClass
 
 private val directoryColor = Catppuccin.Current.sapphire
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
@@ -53,6 +55,12 @@ enum class NodeKind {
 
     /** A time/date alert, optionally recurring */
     Reminder;
+
+    fun payloadClass(): KClass<*>? =
+        when (this) {
+            Application -> com.example.mylauncher.data.persistent.Application::class
+            else -> null
+        }
 
     fun color(collapsed: Boolean = false): Color =
         when (this) {
@@ -92,6 +100,9 @@ enum class NodeKind {
             Checkbox -> "Checkbox"
             Reminder -> "Reminder"
         }
+
+    val payloadClass
+        get() = payloadClass()
 
     val color
         get() = color()

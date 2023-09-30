@@ -11,6 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.example.mylauncher.ui.util.mix
 
 private val catppuccinDark = Catppuccin.Frappe
 private val catppuccinLight = Catppuccin.Latte
@@ -39,6 +40,8 @@ fun colorScheme(darkTheme: Boolean): ColorScheme {
             primaryContainer = mauve,
             secondaryContainer = yellow,
             surface = Background,
+            onSurface = Foreground,
+            onSurfaceVariant = Foreground.mix(Background, 0.25f),
             tertiaryContainer = teal,
             outline = Foreground,
         )
