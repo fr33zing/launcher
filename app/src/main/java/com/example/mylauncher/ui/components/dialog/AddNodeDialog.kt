@@ -1,7 +1,9 @@
 package com.example.mylauncher.ui.components.dialog
 
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -26,7 +28,12 @@ fun AddNodeDialog(visible: MutableState<Boolean>, onDismissRequest: () -> Unit) 
     val fontSize = Preferences.fontSizeDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
-    BaseDialog(visible, Icons.Filled.Add, onDismissRequest) {
+    BaseDialog(
+        visible,
+        Icons.Filled.Add,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.width(IntrinsicSize.Min)
+    ) {
         Option(fontSize, lineHeight, NodeKind.Reference)
         Option(fontSize, lineHeight, NodeKind.Directory)
         Option(fontSize, lineHeight, NodeKind.Application)

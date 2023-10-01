@@ -38,7 +38,7 @@ fun YesNoDialog(
     val fontSize = Preferences.fontSizeDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
-    BaseDialog(visible, icon, onDismissRequest) {
+    BaseDialog(visible, icon, onDismissRequest = onDismissRequest) {
         Column(
             verticalArrangement = Arrangement.spacedBy(lineHeight * 0.8f),
             modifier = Modifier.width(IntrinsicSize.Max)

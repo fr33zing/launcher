@@ -90,7 +90,15 @@ private fun ApplicationEditForm(
     val density = LocalDensity.current
 
     val application = payload as Application
+    val appPickerVisible = remember { mutableStateOf(false) }
 
+    FuzzyPickerDialog(
+        visible = appPickerVisible,
+        items = listOf("abcd", "cdefghi", "ghijklm"),
+        itemText = { it },
+        onItemPicked = { enableNormalImePadding.value = true },
+        onDismissRequest = { enableNormalImePadding.value = true }
+    )
 
     EditFormColumn(innerPadding) {
         Column(
@@ -108,7 +116,10 @@ private fun ApplicationEditForm(
             val buttonFontSize = remember { with(density) { buttonFontSizeDp.toSp() } }
 
             Button(
-                onClick = { /*TODO*/},
+                onClick = {
+                    appPickerVisible.value = true
+                    enableNormalImePadding.value = false
+                },
                 shape = CircleShape,
                 colors =
                     ButtonDefaults.buttonColors(
