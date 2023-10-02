@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontVariation
 import com.example.mylauncher.R
 
 @OptIn(ExperimentalTextApi::class)
-private val fontFamily =
+val MainFontFamily =
     FontFamily(
         Font(
             R.font.roboto_flex,
@@ -24,19 +24,19 @@ private val fontFamily =
 val defaultTypography = Typography()
 val typography =
     Typography(
-        displayLarge = defaultTypography.displayLarge.copy(fontFamily = fontFamily),
-        displayMedium = defaultTypography.displayMedium.copy(fontFamily = fontFamily),
-        displaySmall = defaultTypography.displaySmall.copy(fontFamily = fontFamily),
-        headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = fontFamily),
-        headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = fontFamily),
-        headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = fontFamily),
-        titleLarge = defaultTypography.titleLarge.copy(fontFamily = fontFamily),
-        titleMedium = defaultTypography.titleMedium.copy(fontFamily = fontFamily),
-        titleSmall = defaultTypography.titleSmall.copy(fontFamily = fontFamily),
-        bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = fontFamily),
-        bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = fontFamily),
-        bodySmall = defaultTypography.bodySmall.copy(fontFamily = fontFamily),
-        labelLarge = defaultTypography.labelLarge.copy(fontFamily = fontFamily),
-        labelMedium = defaultTypography.labelMedium.copy(fontFamily = fontFamily),
-        labelSmall = defaultTypography.labelSmall.copy(fontFamily = fontFamily)
+        displayLarge = defaultTypography.displayLarge.copy(fontFamily = MainFontFamily),
+        displayMedium = defaultTypography.displayMedium.copy(fontFamily = MainFontFamily),
+        displaySmall = defaultTypography.displaySmall.copy(fontFamily = MainFontFamily),
+        headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = MainFontFamily),
+        headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = MainFontFamily),
+        headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = MainFontFamily),
+        titleLarge = defaultTypography.titleLarge.copy(fontFamily = MainFontFamily),
+        titleMedium = defaultTypography.titleMedium.copy(fontFamily = MainFontFamily),
+        titleSmall = defaultTypography.titleSmall.copy(fontFamily = MainFontFamily),
+        bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = MainFontFamily),
+        bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = MainFontFamily),
+        bodySmall = defaultTypography.bodySmall.copy(fontFamily = MainFontFamily),
+        labelLarge = defaultTypography.labelLarge.copy(fontFamily = MainFontFamily),
+        labelMedium = defaultTypography.labelMedium.copy(fontFamily = MainFontFamily),
+        labelSmall = defaultTypography.labelSmall.copy(fontFamily = MainFontFamily)
     )

@@ -48,8 +48,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.mylauncher.helper.verticalScrollShadows
+import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
+import com.example.mylauncher.ui.theme.MainFontFamily
+import com.example.mylauncher.ui.util.mix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -114,31 +117,45 @@ fun <T> FuzzyPickerDialog(
                     tint = Foreground,
                     modifier = Modifier.size(iconSize)
                 )
+                Box(Modifier.weight(1f)) {
+                    if (query.isEmpty()) {
+                        Text(
+                            "Begin typing to search...",
+                            fontSize = fontSize,
+                            color = Foreground.mix(Background, 0.666f),
+                        )
+                    }
 
-                BasicTextField(
-                    value = query,
-                    onValueChange = {
-                        query = it
-                        CoroutineScope(Dispatchers.Main).launch { scrollState.scrollTo(0) }
-                    },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrect = false,
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Text,
-                        ),
-                    keyboardActions =
-                        KeyboardActions(
-                            onDone = {
-                                focusRequester.freeFocus()
-                                focusManager.clearFocus(true)
-                            }
-                        ),
-                    textStyle = TextStyle(color = Foreground, fontSize = fontSize),
-                    cursorBrush = SolidColor(Foreground),
-                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
-                )
+                    BasicTextField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            CoroutineScope(Dispatchers.Main).launch { scrollState.scrollTo(0) }
+                        },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                capitalization = KeyboardCapitalization.None,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done,
+                                keyboardType = KeyboardType.Text,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(
+                                onDone = {
+                                    focusRequester.freeFocus()
+                                    focusManager.clearFocus(true)
+                                }
+                            ),
+                        textStyle =
+                            TextStyle(
+                                color = Foreground,
+                                fontSize = fontSize,
+                                fontFamily = MainFontFamily
+                            ),
+                        cursorBrush = SolidColor(Foreground),
+                        modifier = Modifier.focusRequester(focusRequester),
+                    )
+                }
 
                 val clearButtonColor by
                     animateColorAsState(
