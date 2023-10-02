@@ -1,6 +1,7 @@
 [versions]
 agp = "8.1.1"
 datastore = "1.0.0"
+fuzzywuzzy = "1.4.0"
 material-icons-extended = "1.5.0"
 navigation-compose = "2.7.2"
 org-jetbrains-kotlin-android = "1.8.10"
@@ -24,6 +25,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room-run
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room-runtime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room-runtime" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzywuzzy" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
