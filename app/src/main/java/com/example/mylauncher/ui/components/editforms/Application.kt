@@ -31,7 +31,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -43,6 +42,7 @@ import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.ui.components.EditFormColumn
 import com.example.mylauncher.ui.components.NodePropertyTextField
 import com.example.mylauncher.ui.components.dialog.FuzzyPickerDialog
+import com.example.mylauncher.ui.components.refreshNodePropertyTextFields
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
 import com.example.mylauncher.ui.util.mix
@@ -61,7 +61,16 @@ fun ApplicationEditForm(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f).fillMaxWidth()
         ) {
-            PickAppButton()
+            PickAppButton {
+                with(application) {
+                    appName = it.label.toString()
+                    packageName = it.applicationInfo.packageName
+                    activityClassName = it.componentName.className
+                    userHandle = it.user.toString()
+                }
+                node.label = application.appName
+                refreshNodePropertyTextFields()
+            }
         }
 
         NodePropertyTextField(node::label, defaultValue = application.appName, userCanRevert = true)
@@ -73,7 +82,7 @@ fun ApplicationEditForm(
 }
 
 @Composable
-private fun PickAppButton() {
+private fun PickAppButton(onAppPicked: (LauncherActivityInfo) -> Unit) {
     val appPickerVisible = remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
@@ -136,7 +145,6 @@ private fun PickAppButton() {
 
     val context = LocalContext.current
     val activityInfos = remember { mutableListOf<LauncherActivityInfo>() }
-    val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) { getActivityInfos(context).forEach { activityInfos.add(it) } }
 
     FuzzyPickerDialog(
@@ -144,7 +152,7 @@ private fun PickAppButton() {
         items = activityInfos,
         itemToString = { it.label.toString() },
         itemToAnnotatedString = {
-            val split = it.componentName.packageName.split(".")
+            val split = it.applicationInfo.packageName.split(".")
             val path = split.take(split.size - 1).joinToString(".")
             val name = split.last()
 
@@ -154,6 +162,6 @@ private fun PickAppButton() {
             }
         },
         showAnnotatedString = { _, distinct -> !distinct },
-        onItemPicked = { focusManager.clearFocus(true) },
+        onItemPicked = onAppPicked,
     )
 }

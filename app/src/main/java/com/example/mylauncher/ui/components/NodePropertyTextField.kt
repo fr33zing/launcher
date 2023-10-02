@@ -1,5 +1,6 @@
 package com.example.mylauncher.ui.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -13,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,11 +33,18 @@ import com.example.mylauncher.ui.theme.DisabledTextFieldColor
 import com.example.mylauncher.ui.theme.Foreground
 import com.example.mylauncher.ui.theme.outlinedTextFieldColors
 import com.example.mylauncher.ui.util.getUserEditableAnnotation
+import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlin.reflect.KMutableProperty0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private val refresh = PublishSubject.create<Unit>()
+
+fun refreshNodePropertyTextFields() {
+    refresh.onNext(Unit)
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -49,7 +58,7 @@ fun NodePropertyTextField(
     val keyboardController = LocalSoftwareKeyboardController.current
     val annotation = remember { property.getUserEditableAnnotation() }
     val input = remember { mutableStateOf(property.get()) }
-    val initialValue = remember { defaultValue ?: input.value }
+    var initialValue by remember { mutableStateOf(defaultValue ?: input.value) }
     val locked = remember { mutableStateOf(annotation.locked) }
     var enabled by remember { mutableStateOf(true) }
 
@@ -68,6 +77,18 @@ fun NodePropertyTextField(
             delay(25)
             enabled = true
         }
+    }
+
+    DisposableEffect(Unit) {
+        val subscription =
+            refresh.subscribe {
+                input.value = property.get()
+                initialValue = input.value
+                locked.value = annotation.locked
+                Log.e("NEW", input.value)
+            }
+
+        onDispose { subscription.dispose() }
     }
 
     OutlinedTextField(
