@@ -14,27 +14,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.persistent.Payload
-import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.editforms.ApplicationEditForm
 import com.example.mylauncher.ui.components.editforms.DefaultEditForm
 
 private val extraPadding = 16.dp
 private val spacing = 16.dp
 
-lateinit var enableNormalImePadding: MutableState<Boolean>
-
 @Composable
 fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload?) {
-    enableNormalImePadding = remember { mutableStateOf(true) }
-
     if (payload != null)
         when (node.kind) {
             NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
@@ -47,7 +39,7 @@ fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload?) {
 fun EditFormColumn(innerPadding: PaddingValues, content: @Composable (ColumnScope.() -> Unit)) {
     val scrollState = rememberScrollState()
 
-    Box(Modifier.conditional(enableNormalImePadding.value) { imePadding() }.fillMaxHeight()) {
+    Box(Modifier.imePadding().fillMaxHeight()) {
         Box(Modifier.fillMaxSize().verticalScroll(scrollState).height(IntrinsicSize.Max)) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(spacing),

@@ -1,5 +1,10 @@
 package com.example.mylauncher.ui.components.editforms
 
+import android.content.pm.LauncherActivityInfo
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,22 +19,33 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.mylauncher.data.persistent.Application
 import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.persistent.Payload
+import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.ui.components.EditFormColumn
 import com.example.mylauncher.ui.components.NodePropertyTextField
 import com.example.mylauncher.ui.components.dialog.FuzzyPickerDialog
-import com.example.mylauncher.ui.components.enableNormalImePadding
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
+import com.example.mylauncher.ui.util.mix
 
 @Composable
 fun ApplicationEditForm(
@@ -69,19 +85,41 @@ private fun PickAppButton() {
     val buttonIconTextSpacing = remember { screenMin * -0.02f }
     val buttonFontSizeDp = remember { screenMin * 0.045f }
     val buttonFontSize = remember { with(density) { buttonFontSizeDp.toSp() } }
+    val buttonColor by
+        animateColorAsState(
+            if (!appPickerVisible.value) Foreground else Foreground.mix(Background, 0.75f),
+            label = "app picker button container color"
+        )
+
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (pressed) 0.70f else 1f, label = "app picker button scale")
 
     Button(
-        onClick = {
-            appPickerVisible.value = true
-            enableNormalImePadding.value = false
-        },
+        onClick = { appPickerVisible.value = true },
         shape = CircleShape,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = Foreground,
+                containerColor = buttonColor,
                 contentColor = Background,
             ),
-        modifier = Modifier.requiredSize(buttonSize)
+        modifier =
+            Modifier.requiredSize(buttonSize)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .pointerInput(pressed) {
+                    awaitPointerEventScope {
+                        pressed =
+                            if (pressed) {
+                                waitForUpOrCancellation()
+                                false
+                            } else {
+                                awaitFirstDown(false)
+                                true
+                            }
+                    }
+                }
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(buttonIconTextSpacing),
@@ -96,11 +134,26 @@ private fun PickAppButton() {
         }
     }
 
+    val context = LocalContext.current
+    val activityInfos = remember { mutableListOf<LauncherActivityInfo>() }
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) { getActivityInfos(context).forEach { activityInfos.add(it) } }
+
     FuzzyPickerDialog(
         visible = appPickerVisible,
-        items = listOf("abcd", "cdefghi", "ghijklm"),
-        itemText = { it },
-        onItemPicked = { enableNormalImePadding.value = true },
-        onDismissRequest = { enableNormalImePadding.value = true }
+        items = activityInfos,
+        itemToString = { it.label.toString() },
+        itemToAnnotatedString = {
+            val split = it.componentName.packageName.split(".")
+            val path = split.take(split.size - 1).joinToString(".")
+            val name = split.last()
+
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Foreground.mix(Background, 0.4f))) { append("$path.") }
+                withStyle(SpanStyle(color = Foreground)) { append(name) }
+            }
+        },
+        showAnnotatedString = { _, distinct -> !distinct },
+        onItemPicked = { focusManager.clearFocus(true) },
     )
 }
