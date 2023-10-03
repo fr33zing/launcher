@@ -150,15 +150,18 @@ private fun PickAppButton(onAppPicked: (LauncherActivityInfo) -> Unit) {
     FuzzyPickerDialog(
         visible = appPickerVisible,
         items = activityInfos,
-        itemToString = { it.label.toString() },
-        itemToAnnotatedString = {
-            val split = it.applicationInfo.packageName.split(".")
-            val path = split.take(split.size - 1).joinToString(".")
-            val name = split.last()
-
+        itemToString = { app -> app.label.toString() },
+        itemToAnnotatedString = { app, fontSize, color ->
             buildAnnotatedString {
-                withStyle(SpanStyle(color = Foreground.mix(Background, 0.4f))) { append("$path.") }
-                withStyle(SpanStyle(color = Foreground)) { append(name) }
+                val labelStyle = SpanStyle(color = color, fontSize = fontSize)
+                val packageNameStyle =
+                    SpanStyle(
+                        color = Foreground.mix(Background, 0.4f),
+                        fontSize = fontSize * 0.65f,
+                    )
+
+                withStyle(labelStyle) { append("${app.label} ") }
+                withStyle(packageNameStyle) { append("(${app.applicationInfo.packageName})") }
             }
         },
         showAnnotatedString = { _, distinct -> !distinct },
