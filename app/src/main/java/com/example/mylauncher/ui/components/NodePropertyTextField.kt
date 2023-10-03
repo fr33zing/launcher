@@ -1,6 +1,5 @@
 package com.example.mylauncher.ui.components
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -85,7 +84,6 @@ fun NodePropertyTextField(
                 input.value = property.get()
                 initialValue = input.value
                 locked.value = annotation.locked
-                Log.e("NEW", input.value)
             }
 
         onDispose { subscription.dispose() }
