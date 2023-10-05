@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.UserManager
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,16 +27,14 @@ import com.example.mylauncher.data.persistent.createNewApplications
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
+import com.example.mylauncher.ui.components.refreshNodeList
 import com.example.mylauncher.ui.pages.Edit
 import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.pages.Reorder
 import com.example.mylauncher.ui.theme.MyLauncherTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-
-val NewAppsAdded = Channel<Int>()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +62,10 @@ class MainActivity : ComponentActivity() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val activityInfos = getActivityInfos(applicationContext)
                             val newAppsAdded = db.createNewApplications(activityInfos)
-                            if (newAppsAdded > 0) NewAppsAdded.send(newAppsAdded)
+                            if (newAppsAdded > 0) {
+                                Log.d("", "Added $newAppsAdded new apps")
+                                refreshNodeList()
+                            }
                         }
                     }
                 }

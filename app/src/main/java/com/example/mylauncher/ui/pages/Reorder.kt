@@ -73,11 +73,12 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
             // Parent node is added as the first element in the list due to a bug with the
             // reorderable modifier implementation which prevents the first element from being
             // animated properly. See here: https://github.com/aclassen/ComposeReorderable#Notes
-            nodes.value = listOf(parentNode!!) + db.nodeDao().getChildNodes(nodeId)
+            nodes.value =
+                listOf(parentNode!!) + db.nodeDao().getChildNodes(nodeId).sortedBy { it.order }
         }
     }
 
-    if (parentNode == null) return
+    if (parentNode == null || nodes.value == null) return
 
     YesNoDialog(
         visible = cancelDialogVisible,
@@ -100,7 +101,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue reordering",
         noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
-        onYes = {},
+        onYes = { onSave(db, nodes.value!!) },
     )
 
     Scaffold(
@@ -134,11 +135,17 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                 .padding(horizontal = extraPadding)
                 .verticalScrollShadows(Preferences.spacingDefault)
         ) {
-            if (nodes.value != null) {
-                ReorderableList(parentNode!!, nodes)
-            }
+            ReorderableList(parentNode!!, nodes)
         }
     }
+}
+
+private fun onSave(db: AppDatabase, nodes: List<Node>) {
+    // Discard first element due to the aforementioned bug.
+    val fixedNodes = nodes.subList(1, nodes.size)
+
+    fixedNodes.forEachIndexed { index, node -> node.order = index }
+    CoroutineScope(Dispatchers.IO).launch { db.nodeDao().updateMany(fixedNodes) }
 }
 
 @Composable
@@ -193,8 +200,8 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
                     }
                 } else {
                     // Display nothing for the parent node (first element) due to the aforementioned
-                    // bug in aclassen/ComposeReorderable. A spacer must be used because zero-height
-                    // ReorderableItems cause problems.
+                    // bug. A spacer must be used because zero-height ReorderableItems cause
+                    // problems.
                     Spacer(Modifier.height(1.dp))
                 }
             }

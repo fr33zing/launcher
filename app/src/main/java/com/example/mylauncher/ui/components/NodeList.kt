@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -35,7 +36,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mylauncher.NewAppsAdded
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.flattenNodes
@@ -44,10 +44,18 @@ import com.example.mylauncher.helper.launchApp
 import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
+import io.reactivex.rxjava3.subjects.PublishSubject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+
+private val nodesUpdated = PublishSubject.create<Unit>()
+
+fun refreshNodeList() {
+    nodesUpdated.onNext(Unit)
+}
 
 @Composable
 fun NodeList(db: AppDatabase, navController: NavController) {
@@ -64,14 +72,19 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     var nodeOptionsVisibleIndex by remember { mutableStateOf<Int?>(null) }
     var newNodePosition by remember { mutableStateOf<NewNodePosition?>(null) }
 
-    // Populate list
-    LaunchedEffect(Unit) {
-        nodes.addAll(flattenNodes(db))
+    // Populate list and listen for changes
+    LaunchedEffect(Unit) { nodes.addAll(flattenNodes(db)) }
+    DisposableEffect(Unit) {
+        val subscription =
+            nodesUpdated.subscribe {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val flatNodes = flattenNodes(db)
+                    nodes.clear()
+                    nodes.addAll(flatNodes)
+                }
+            }
 
-        NewAppsAdded.consumeEach {
-            nodes.clear()
-            nodes.addAll(flattenNodes(db))
-        }
+        onDispose { subscription.dispose() }
     }
 
     // Hide node options when scrolling

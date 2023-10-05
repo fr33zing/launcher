@@ -33,9 +33,9 @@ data class NodeWithChildren(
 interface NodeDao {
     @Insert suspend fun insert(node: Node)
 
-    @Insert suspend fun insertAllNodes(vararg nodes: Node)
-
     @Update suspend fun update(node: Node)
+
+    @Transaction @Update suspend fun updateMany(nodes: List<Node>)
 
     @Delete suspend fun delete(node: Node)
 
@@ -68,7 +68,7 @@ interface NodeDao {
         val defaultNode = getNodeByLabel(DEFAULT_NODE_LABEL)
         if (defaultNode != null) return defaultNode
 
-        insertAllNodes(
+        insert(
             Node(
                 nodeId = 0,
                 parentId = null,
