@@ -73,5 +73,7 @@ dependencies {
 
     implementation(libs.fuzzywuzzy)
 
+    implementation(libs.reorderable)
+
     implementation(kotlin("reflect"))
 }

@@ -13,7 +13,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                 app.appName == activityInfo.label.toString()
             } == null
         }
-        .forEach { activityInfo ->
+        .forEachIndexed { index, activityInfo ->
             nodeDao()
                 .insert(
                     Node(
@@ -21,6 +21,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                         parentId = nodeDao().getDefaultNode().nodeId,
                         dataId = null,
                         kind = NodeKind.Application,
+                        order = index,
                         label = activityInfo.label.toString()
                     )
                 )

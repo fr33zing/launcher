@@ -235,6 +235,8 @@ fun NodeIconAndText(
     color: Color,
     icon: ImageVector?,
     softWrap: Boolean = true,
+    overflow: TextOverflow = TextOverflow.Visible,
+    textModifier: Modifier = Modifier
 ) {
     val iconSize = 0.9f
     if (icon != null) {
@@ -262,11 +264,12 @@ fun NodeIconAndText(
         text = label,
         modifier =
             Modifier.offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
-                .absolutePadding(left = lineHeight * 0.5f),
+                .absolutePadding(left = lineHeight * 0.5f)
+                .then(textModifier),
         color = color,
         fontSize = fontSize,
         softWrap = softWrap,
-        overflow = TextOverflow.Visible
+        overflow = overflow,
     )
 }
 
@@ -345,7 +348,9 @@ private fun NodeOptionButtons(
                 .clickable(onClick = { /* Prevent tapping node underneath */})
         ) {
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete") {}
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {}
+            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {
+                navController.navigate("reorder/${node.parentId}")
+            }
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
                 navController.navigate("edit/${node.nodeId}")
             }
