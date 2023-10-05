@@ -70,6 +70,9 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             parentNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Parent node is null")
+            // Parent node is added as the first element in the list due to a bug with the
+            // reorderable modifier implementation which prevents the first element from being
+            // animated properly. See here: https://github.com/aclassen/ComposeReorderable#Notes
             nodes.value = listOf(parentNode!!) + db.nodeDao().getChildNodes(nodeId)
         }
     }
@@ -189,6 +192,9 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
                         }
                     }
                 } else {
+                    // Display nothing for the parent node (first element) due to the aforementioned
+                    // bug in aclassen/ComposeReorderable. A spacer must be used because zero-height
+                    // ReorderableItems cause problems.
                     Spacer(Modifier.height(1.dp))
                 }
             }
