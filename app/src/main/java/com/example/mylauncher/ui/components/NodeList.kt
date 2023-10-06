@@ -117,7 +117,10 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                         newNodePosition = it
                     },
                     onAddNodeDialogClosed = { newNodePosition = null },
-                    onNewNodeKindChosen = { onAddNode(db, newNodePosition!!, it) }
+                    onNewNodeKindChosen = {
+                        nodeOptionsVisibleIndex = null
+                        onAddNode(db, navController, newNodePosition!!, it)
+                    }
                 )
 
                 NewNodePositionIndicator(newNodePosition, index, above = false)
@@ -144,10 +147,15 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
     }
 }
 
-private fun onAddNode(db: AppDatabase, position: RelativeNodePosition, nodeKind: NodeKind) {
+private fun onAddNode(
+    db: AppDatabase,
+    navController: NavController,
+    position: RelativeNodePosition,
+    nodeKind: NodeKind
+) {
     CoroutineScope(Dispatchers.IO).launch {
-        db.createNode(position, nodeKind)
-        refreshNodeList()
+        val nodeId = db.createNode(position, nodeKind)
+        CoroutineScope(Dispatchers.Main).launch { navController.navigate("create/$nodeId") }
     }
 }
 

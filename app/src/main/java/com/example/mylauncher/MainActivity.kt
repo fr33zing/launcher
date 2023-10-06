@@ -28,6 +28,7 @@ import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.helper.launcherApps
 import com.example.mylauncher.helper.userManager
 import com.example.mylauncher.ui.components.refreshNodeList
+import com.example.mylauncher.ui.pages.Create
 import com.example.mylauncher.ui.pages.Edit
 import com.example.mylauncher.ui.pages.Home
 import com.example.mylauncher.ui.pages.Reorder
@@ -87,6 +88,10 @@ class MainActivity : ComponentActivity() {
             composable("edit/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")!!
                 Edit(db, navController, nodeId.toInt())
+            }
+            composable("create/{nodeId}") { backStackEntry ->
+                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                Create(db, navController, nodeId.toInt())
             }
             composable("reorder/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")!!

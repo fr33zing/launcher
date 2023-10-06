@@ -345,7 +345,10 @@ private fun AddNodeButton(
     AddNodeDialog(
         visible = dialogVisible,
         onDismissRequest = onDialogClosed,
-        onKindChosen = onKindChosen
+        onKindChosen = {
+            dialogVisible.value = false
+            onKindChosen(it)
+        }
     )
 }
 
