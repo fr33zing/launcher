@@ -26,7 +26,7 @@ tasks {
                 database(databaseVersion, payloadClasses, nodeKindToPayloadClassMap),
                 allPayloadDaos(payloadClasses),
             )
-        val text = textParts.joinToString("\n\n")
+        val text = textParts.joinToString("\n\n") + "\n"
 
         val f = file("$dir/$fileName")
         f.createNewFile()
@@ -93,7 +93,7 @@ fun database(
     @Database(entities = [${payloadClasses.joinToString(", ") { "$it::class" }}], version = $databaseVersion)
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}
-        
+
 ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}
 
         suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
@@ -118,17 +118,6 @@ fun writeFunction(types: List<String>, name: String, many: Boolean) =
 
 fun bothWriteFunctions(name: String, types: List<String>) =
     writeFunction(types, name, false) + "\n\n" + writeFunction(types, "${name}Many", true)
-
-fun readFunction(name: String, nodeKindToPayloadClassMap: Map<String, String>) =
-    """
-    suspend fun $name(nodeKind: NodeKind, nodeId: Int): Payload? {
-        when (nodeKind) {
-            ${nodeKindToPayloadClassMap.map { "${it.key} -> ${daoCall(it.value)}.$name(nodeId)" }.joinToString("\n")}
-            else -> throw Exception("Invalid entity type")
-        }
-    }
-    """
-        .replaceIndent(indent(2))
 
 fun indent(n: Int) = "    ".repeat(n)
 
