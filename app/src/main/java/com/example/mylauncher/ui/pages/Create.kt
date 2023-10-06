@@ -62,7 +62,7 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
             noText = "Continue editing",
             noIcon = Icons.Filled.ArrowBack,
             backAction = YesNoDialogBackAction.Yes,
-            onYes = { onCancelChanges(navController) },
+            onYes = { onCancelCreation(navController, db, node!!, payload) },
         )
 
         YesNoDialog(
@@ -108,8 +108,21 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
     }
 }
 
-private fun onCancelChanges(navController: NavController) {
-    navController.popBackStack()
+private fun onCancelCreation(
+    navController: NavController,
+    db: AppDatabase,
+    node: Node,
+    payload: Payload?
+) {
+    CoroutineScope(Dispatchers.Main).launch {
+        db.withTransaction {
+            db.delete(node)
+            payload?.let { db.delete(it) }
+        }
+
+        refreshNodeList()
+        navController.popBackStack()
+    }
 }
 
 private fun onSaveChanges(
