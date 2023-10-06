@@ -38,3 +38,39 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 
     return newApps
 }
+
+enum class RelativeNodePosition(val orderOffset: Int) {
+    Above(-1),
+    Within(0),
+    Below(1),
+}
+
+/**
+ * Create a new node (and its payload, if applicable) relative to another node. Returns the new
+ * node's id.
+ */
+suspend fun AppDatabase.createNode(
+    relativeToNodeId: Int,
+    position: RelativeNodePosition,
+    newNodeKind: NodeKind
+): Int {
+    val relativeToNode =
+        nodeDao().getNodeById(relativeToNodeId) ?: throw Exception("Node does not exist")
+    val parentId =
+        if (position == RelativeNodePosition.Within) relativeToNodeId else relativeToNode.parentId
+
+    insert(
+        Node(
+            nodeId = 0,
+            parentId = parentId,
+            kind = newNodeKind,
+            order = relativeToNode.order + position.orderOffset,
+            label = "New ${newNodeKind.label}"
+        )
+    )
+
+    val lastNodeId = nodeDao().getLastNodeId()
+    createDefaultPayloadForNode(newNodeKind, lastNodeId)?.let { insert(it) }
+
+    return lastNodeId
+}
