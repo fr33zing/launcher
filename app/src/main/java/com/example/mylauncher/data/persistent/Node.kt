@@ -13,6 +13,15 @@ import com.example.mylauncher.ui.util.UserEditable
 
 const val DEFAULT_NODE_LABEL = "Uncategorized"
 
+/**
+ * Ensure that all node order values are unique and sequential. Mutates this List and returns itself
+ * for convenience.
+ */
+fun List<Node>.fixOrder(): List<Node> {
+    sortedBy { it.order }.forEachIndexed { index, node -> node.order = index }
+    return this
+}
+
 @Entity
 data class Node(
     @PrimaryKey(autoGenerate = true) val nodeId: Int,

@@ -1,6 +1,7 @@
 package com.example.mylauncher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
+import androidx.room.withTransaction
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.persistent.payloads.Application
 
@@ -57,16 +58,25 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
     val parentId =
         if (position.offset == RelativeNodeOffset.Within) position.relativeToNodeId
         else relativeToNode.parentId
+    val order =
+        if (position.offset == RelativeNodeOffset.Within) 0
+        else relativeToNode.order + position.offset.orderOffset
 
-    insert(
-        Node(
-            nodeId = 0,
-            parentId = parentId,
-            kind = newNodeKind,
-            order = relativeToNode.order + position.offset.orderOffset,
-            label = "New ${newNodeKind.label}"
+    withTransaction {
+        val siblings = nodeDao().getChildNodes(parentId).fixOrder()
+        siblings.filter { it.order >= order }.forEach { it.order++ }
+        updateMany(siblings)
+
+        insert(
+            Node(
+                nodeId = 0,
+                parentId = parentId,
+                kind = newNodeKind,
+                order = order,
+                label = "New ${newNodeKind.label}"
+            )
         )
-    )
+    }
 
     val lastNodeId = nodeDao().getLastNodeId()
     createDefaultPayloadForNode(newNodeKind, lastNodeId)?.let { insert(it) }
