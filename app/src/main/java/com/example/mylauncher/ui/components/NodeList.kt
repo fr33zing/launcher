@@ -40,8 +40,10 @@ import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.flattenNodes
 import com.example.mylauncher.data.persistent.AppDatabase
+import com.example.mylauncher.data.persistent.RelativeNodeOffset
+import com.example.mylauncher.data.persistent.RelativeNodePosition
+import com.example.mylauncher.data.persistent.createNode
 import com.example.mylauncher.helper.launchApp
-import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
 import io.reactivex.rxjava3.subjects.PublishSubject
@@ -70,7 +72,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     val listState = rememberLazyListState()
     val nodes = remember { mutableStateListOf<NodeRow>() }
     var nodeOptionsVisibleIndex by remember { mutableStateOf<Int?>(null) }
-    var newNodePosition by remember { mutableStateOf<NewNodePosition?>(null) }
+    var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
 
     // Populate list and listen for changes
     LaunchedEffect(Unit) { nodes.addAll(flattenNodes(db)) }
@@ -115,6 +117,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                         newNodePosition = it
                     },
                     onAddNodeDialogClosed = { newNodePosition = null },
+                    onNewNodeKindChosen = { onAddNode(db, newNodePosition!!, it) }
                 )
 
                 NewNodePositionIndicator(newNodePosition, index, above = false)
@@ -127,13 +130,36 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
+private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
+    if (nodeRow.node.kind == NodeKind.Directory) {
+        nodeRow.collapsed.value = !nodeRow.collapsed.value
+    } else if (nodeRow.node.kind == NodeKind.Application) {
+        GlobalScope.launch {
+            val app =
+                db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
+                    ?: throw Exception("Tried to launch null application")
+            launchApp(context, app)
+        }
+    }
+}
+
+private fun onAddNode(db: AppDatabase, position: RelativeNodePosition, nodeKind: NodeKind) {
+    CoroutineScope(Dispatchers.IO).launch {
+        db.createNode(position, nodeKind)
+        refreshNodeList()
+    }
+}
+
 @Composable
 private fun NewNodePositionIndicator(
-    newNodePosition: NewNodePosition?,
+    newNodePosition: RelativeNodePosition?,
     index: Int,
     above: Boolean,
 ) {
-    val visible = newNodePosition?.adjacentIndex == index && newNodePosition.above == above
+    val visible =
+        newNodePosition?.relativeToNodeId == index &&
+            (newNodePosition.offset == RelativeNodeOffset.Above) == above
     val density = LocalDensity.current
     val strokeWidth = with(density) { (2.dp).toPx() }
     val dashInterval = with(density) { (8.dp).toPx() }
@@ -159,20 +185,6 @@ private fun NewNodePositionIndicator(
                 )
             }
         )
-}
-
-@OptIn(DelicateCoroutinesApi::class)
-private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
-    if (nodeRow.node.kind == NodeKind.Directory) {
-        nodeRow.collapsed.value = !nodeRow.collapsed.value
-    } else if (nodeRow.node.kind == NodeKind.Application) {
-        GlobalScope.launch {
-            val app =
-                db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
-                    ?: throw Exception("Tried to launch null application")
-            launchApp(context, app)
-        }
-    }
 }
 
 /** Gradients to prevent content overlapping the system/navigation bars. */

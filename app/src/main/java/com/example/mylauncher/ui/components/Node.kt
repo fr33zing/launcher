@@ -71,9 +71,10 @@ import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.nodeIndent
 import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.persistent.Preferences
+import com.example.mylauncher.data.persistent.RelativeNodeOffset
+import com.example.mylauncher.data.persistent.RelativeNodePosition
 import com.example.mylauncher.helper.conditional
 import com.example.mylauncher.ui.components.dialog.AddNodeDialog
-import com.example.mylauncher.ui.components.dialog.NewNodePosition
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
 import kotlinx.coroutines.CoroutineScope
@@ -90,8 +91,9 @@ fun NodeRow(
     index: Int,
     onTapped: () -> Unit,
     onLongPressed: () -> Unit,
-    onAddNodeDialogOpened: (NewNodePosition) -> Unit,
+    onAddNodeDialogOpened: (RelativeNodePosition) -> Unit,
     onAddNodeDialogClosed: () -> Unit,
+    onNewNodeKindChosen: (NodeKind) -> Unit,
 ) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
@@ -125,8 +127,11 @@ fun NodeRow(
                 visible = showOptions,
                 below = false,
                 text = "Add item above",
-                onDialogOpened = { onAddNodeDialogOpened(NewNodePosition(index, true)) },
+                onDialogOpened = {
+                    onAddNodeDialogOpened(RelativeNodePosition(index, RelativeNodeOffset.Above))
+                },
                 onDialogClosed = onAddNodeDialogClosed,
+                onKindChosen = onNewNodeKindChosen
             )
 
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
@@ -147,18 +152,27 @@ fun NodeRow(
                 )
             }
 
-            val isDir = node.kind == NodeKind.Directory
+            val isExpandedDir = node.kind == NodeKind.Directory && !row.collapsed.value
             AddNodeButton(
                 fontSize,
                 lineHeight,
                 spacing,
                 indent,
-                depth = if (isDir) depth + 1 else depth,
+                depth = if (isExpandedDir) depth + 1 else depth,
                 visible = showOptions,
                 below = true,
-                text = if (isDir) "Add item within" else "Add item below",
-                onDialogOpened = { onAddNodeDialogOpened(NewNodePosition(index, false)) },
+                text = if (isExpandedDir) "Add item within" else "Add item below",
+                onDialogOpened = {
+                    onAddNodeDialogOpened(
+                        RelativeNodePosition(
+                            index,
+                            if (isExpandedDir) RelativeNodeOffset.Within
+                            else RelativeNodeOffset.Below
+                        )
+                    )
+                },
                 onDialogClosed = onAddNodeDialogClosed,
+                onKindChosen = onNewNodeKindChosen
             )
         }
     }
@@ -286,6 +300,7 @@ private fun AddNodeButton(
     text: String,
     onDialogOpened: () -> Unit,
     onDialogClosed: () -> Unit,
+    onKindChosen: (NodeKind) -> Unit,
 ) {
 
     val color = Foreground.copy(alpha = 0.5f)
@@ -327,7 +342,11 @@ private fun AddNodeButton(
         }
     }
 
-    AddNodeDialog(visible = dialogVisible, onDismissRequest = onDialogClosed)
+    AddNodeDialog(
+        visible = dialogVisible,
+        onDismissRequest = onDialogClosed,
+        onKindChosen = onKindChosen
+    )
 }
 
 @Composable
