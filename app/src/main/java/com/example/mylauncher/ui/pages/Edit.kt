@@ -44,8 +44,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             node = db.nodeDao().getNodeById(nodeId)
-            payload =
-                if (node != null) db.payloadDao(node!!.kind)?.getByNodeId(node!!.nodeId) else null
+            payload = if (node != null) db.getPayloadByNodeId(node!!.kind, node!!.nodeId) else null
 
             if (node != null && payload != null && payload!!::class != node!!.kind.payloadClass!!)
                 throw Exception(

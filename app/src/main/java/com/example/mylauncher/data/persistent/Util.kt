@@ -9,7 +9,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 
     activityInfos
         .filter { activityInfo ->
-            applicationDao().getAll().find { app ->
+            applicationDao().getAllPayloads().find { app ->
                 app.appName == activityInfo.label.toString()
             } == null
         }

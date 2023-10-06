@@ -1,9 +1,7 @@
 package com.example.mylauncher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
-import androidx.room.Dao
 import androidx.room.Entity
-import androidx.room.Query
 import com.example.mylauncher.ui.util.UserEditable
 
 @Entity
@@ -28,12 +26,4 @@ class Application(
         activityClassName = activityInfo.componentName.className,
         userHandle = activityInfo.user.toString()
     )
-}
-
-@Dao
-abstract class ApplicationDao : PayloadDao<Application> {
-    @Query("SELECT * FROM Application") abstract override fun getAll(): List<Application>
-
-    @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
-    abstract override fun getByNodeId(nodeId: Int): Application?
 }

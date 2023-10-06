@@ -168,7 +168,7 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
     } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
             val app =
-                db.applicationDao().getByNodeId(nodeRow.node.nodeId)
+                db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
                     ?: throw Exception("Tried to launch null application")
             launchApp(context, app)
         }
