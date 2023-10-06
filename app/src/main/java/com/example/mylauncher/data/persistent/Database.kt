@@ -18,8 +18,8 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.mylauncher.data.NodeKind
-import com.example.mylauncher.data.persistent.payloads.Payload
 import com.example.mylauncher.data.persistent.payloads.Application
+import com.example.mylauncher.data.persistent.payloads.Payload
 
 @Suppress("UNCHECKED_CAST")
 @Database(entities = [Node::class, Application::class], version = 1)

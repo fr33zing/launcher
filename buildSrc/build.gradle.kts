@@ -65,8 +65,7 @@ fun imports(nodeKindPackage: String, payloadsPackage: String, payloadClasses: Li
     import androidx.room.Transaction
     import androidx.room.Update
     import $nodeKindPackage.NodeKind
-    import $payloadsPackage.Payload
-    ${payloadClasses.joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
+    ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     """
         .trimIndent()
 
