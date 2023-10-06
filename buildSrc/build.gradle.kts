@@ -117,11 +117,11 @@ ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(i
                 else -> throw Exception("Invalid NodeKind")
             }
 
-        fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload? {
+        fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
             val payloadClass =
                 when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}::class" }.joinToString("\n")}
-                    else -> return null
+                    else -> throw Exception("Invalid NodeKind")
                 }
             val constructor =
                 payloadClass.constructors.firstOrNull {

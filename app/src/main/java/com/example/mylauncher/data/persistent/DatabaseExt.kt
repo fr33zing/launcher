@@ -62,11 +62,10 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
         if (position.offset == RelativeNodeOffset.Within) 0
         else relativeToNode.order + position.offset.orderOffset
 
-    withTransaction {
+    return withTransaction {
         val siblings = nodeDao().getChildNodes(parentId).fixOrder()
         siblings.filter { it.order >= order }.forEach { it.order++ }
         updateMany(siblings)
-
         insert(
             Node(
                 nodeId = 0,
@@ -76,10 +75,9 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
                 label = "New ${newNodeKind.label}"
             )
         )
+        val lastNodeId = nodeDao().getLastNodeId()
+        insert(createDefaultPayloadForNode(newNodeKind, lastNodeId))
+
+        lastNodeId
     }
-
-    val lastNodeId = nodeDao().getLastNodeId()
-    createDefaultPayloadForNode(newNodeKind, lastNodeId)?.let { insert(it) }
-
-    return lastNodeId
 }

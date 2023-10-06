@@ -84,11 +84,11 @@ abstract class AppDatabase : RoomDatabase() {
             else -> throw Exception("Invalid NodeKind")
         }
 
-    fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload? {
+    fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
         val payloadClass =
             when (nodeKind) {
                 NodeKind.Application -> Application::class
-                else -> return null
+                else -> throw Exception("Invalid NodeKind")
             }
         val constructor =
             payloadClass.constructors.firstOrNull {
