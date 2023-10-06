@@ -13,6 +13,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.example.mylauncher.data.NodeKind
 
+@Suppress("UNCHECKED_CAST")
 @Database(entities = [Node::class, Application::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun nodeDao(): NodeDao
@@ -27,7 +28,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun insertMany(entities: List<Any>) {
         when (entities[0]) {
             is Node -> nodeDao().insertMany(entities as List<Node>)
@@ -44,7 +44,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun updateMany(entities: List<Any>) {
         when (entities[0]) {
             is Node -> nodeDao().updateMany(entities as List<Node>)
@@ -61,7 +60,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun deleteMany(entities: List<Any>) {
         when (entities[0]) {
             is Node -> nodeDao().deleteMany(entities as List<Node>)
