@@ -128,7 +128,9 @@ fun NodeRow(
                 below = false,
                 text = "Add item above",
                 onDialogOpened = {
-                    onAddNodeDialogOpened(RelativeNodePosition(index, RelativeNodeOffset.Above))
+                    onAddNodeDialogOpened(
+                        RelativeNodePosition(row.node.nodeId, RelativeNodeOffset.Above)
+                    )
                 },
                 onDialogClosed = onAddNodeDialogClosed,
                 onKindChosen = onNewNodeKindChosen
@@ -165,7 +167,7 @@ fun NodeRow(
                 onDialogOpened = {
                     onAddNodeDialogOpened(
                         RelativeNodePosition(
-                            index,
+                            row.node.nodeId,
                             if (isExpandedDir) RelativeNodeOffset.Within
                             else RelativeNodeOffset.Below
                         )
