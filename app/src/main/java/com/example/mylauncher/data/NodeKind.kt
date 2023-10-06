@@ -11,19 +11,12 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
-import com.example.mylauncher.data.persistent.payloads.Application
-import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
-import kotlin.reflect.KClass
 
 private val directoryColor = Catppuccin.Current.sapphire
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
@@ -55,12 +48,6 @@ enum class NodeKind {
 
     /** A time/date alert, optionally recurring */
     Reminder;
-
-    fun payloadClass(): KClass<*>? =
-        when (this) {
-            Application -> com.example.mylauncher.data.persistent.payloads.Application::class
-            else -> null
-        }
 
     fun color(collapsed: Boolean = false): Color =
         when (this) {
@@ -101,9 +88,6 @@ enum class NodeKind {
             Reminder -> "Reminder"
         }
 
-    val payloadClass
-        get() = payloadClass()
-
     val color
         get() = color()
 
@@ -119,11 +103,3 @@ fun nodeIndent(
     indent: Dp,
     lineHeight: Dp,
 ) = depth * indent + lineHeight / 2f
-
-@Composable
-fun nodeLineHeight(): Dp {
-    val preferences = Preferences(LocalContext.current)
-    val localDensity = LocalDensity.current
-    val fontSize by preferences.getFontSize()
-    return with(localDensity) { fontSize.toDp() }
-}
