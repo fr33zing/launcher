@@ -15,4 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "My Launcher"
 include(":app")
- 
