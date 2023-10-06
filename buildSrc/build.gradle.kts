@@ -9,7 +9,7 @@ tasks {
         val thisFile = "buildSrc/build.gradle.kts"
         val domain = "com.example.mylauncher"
         val dir = "../app/src/main/java/${domain.replace(".", "/")}/data/persistent"
-        val fileName = "Generated.kt"
+        val fileName = "Database.kt"
         val packageName = "$domain.data.persistent"
         val databaseVersion = "1"
         val payloadClasses = listOf("Node", "Application")
