@@ -19,21 +19,68 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.persistent.payloads.Application
+import com.example.mylauncher.data.persistent.payloads.Checkbox
+import com.example.mylauncher.data.persistent.payloads.Directory
+import com.example.mylauncher.data.persistent.payloads.File
+import com.example.mylauncher.data.persistent.payloads.Location
+import com.example.mylauncher.data.persistent.payloads.Note
 import com.example.mylauncher.data.persistent.payloads.Payload
+import com.example.mylauncher.data.persistent.payloads.Reference
+import com.example.mylauncher.data.persistent.payloads.Reminder
+import com.example.mylauncher.data.persistent.payloads.WebLink
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
 
 @Suppress("UNCHECKED_CAST")
-@Database(entities = [Node::class, Application::class], version = 1)
+@Database(
+    entities =
+        [
+            Node::class,
+            Application::class,
+            Checkbox::class,
+            Directory::class,
+            File::class,
+            Location::class,
+            Note::class,
+            Reference::class,
+            Reminder::class,
+            WebLink::class,
+        ],
+    version = 1
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun nodeDao(): NodeDao
 
     abstract fun applicationDao(): ApplicationDao
 
+    abstract fun checkboxDao(): CheckboxDao
+
+    abstract fun directoryDao(): DirectoryDao
+
+    abstract fun fileDao(): FileDao
+
+    abstract fun locationDao(): LocationDao
+
+    abstract fun noteDao(): NoteDao
+
+    abstract fun referenceDao(): ReferenceDao
+
+    abstract fun reminderDao(): ReminderDao
+
+    abstract fun webLinkDao(): WebLinkDao
+
     suspend fun insert(entity: Any) {
         when (entity) {
             is Node -> nodeDao().insert(entity)
             is Application -> applicationDao().insert(entity)
+            is Checkbox -> checkboxDao().insert(entity)
+            is Directory -> directoryDao().insert(entity)
+            is File -> fileDao().insert(entity)
+            is Location -> locationDao().insert(entity)
+            is Note -> noteDao().insert(entity)
+            is Reference -> referenceDao().insert(entity)
+            is Reminder -> reminderDao().insert(entity)
+            is WebLink -> webLinkDao().insert(entity)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -42,6 +89,14 @@ abstract class AppDatabase : RoomDatabase() {
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().insertMany(entities as List<Node>)
             is Application -> applicationDao().insertMany(entities as List<Application>)
+            is Checkbox -> checkboxDao().insertMany(entities as List<Checkbox>)
+            is Directory -> directoryDao().insertMany(entities as List<Directory>)
+            is File -> fileDao().insertMany(entities as List<File>)
+            is Location -> locationDao().insertMany(entities as List<Location>)
+            is Note -> noteDao().insertMany(entities as List<Note>)
+            is Reference -> referenceDao().insertMany(entities as List<Reference>)
+            is Reminder -> reminderDao().insertMany(entities as List<Reminder>)
+            is WebLink -> webLinkDao().insertMany(entities as List<WebLink>)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -50,6 +105,14 @@ abstract class AppDatabase : RoomDatabase() {
         when (entity) {
             is Node -> nodeDao().update(entity)
             is Application -> applicationDao().update(entity)
+            is Checkbox -> checkboxDao().update(entity)
+            is Directory -> directoryDao().update(entity)
+            is File -> fileDao().update(entity)
+            is Location -> locationDao().update(entity)
+            is Note -> noteDao().update(entity)
+            is Reference -> referenceDao().update(entity)
+            is Reminder -> reminderDao().update(entity)
+            is WebLink -> webLinkDao().update(entity)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -58,6 +121,14 @@ abstract class AppDatabase : RoomDatabase() {
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().updateMany(entities as List<Node>)
             is Application -> applicationDao().updateMany(entities as List<Application>)
+            is Checkbox -> checkboxDao().updateMany(entities as List<Checkbox>)
+            is Directory -> directoryDao().updateMany(entities as List<Directory>)
+            is File -> fileDao().updateMany(entities as List<File>)
+            is Location -> locationDao().updateMany(entities as List<Location>)
+            is Note -> noteDao().updateMany(entities as List<Note>)
+            is Reference -> referenceDao().updateMany(entities as List<Reference>)
+            is Reminder -> reminderDao().updateMany(entities as List<Reminder>)
+            is WebLink -> webLinkDao().updateMany(entities as List<WebLink>)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -66,6 +137,14 @@ abstract class AppDatabase : RoomDatabase() {
         when (entity) {
             is Node -> nodeDao().delete(entity)
             is Application -> applicationDao().delete(entity)
+            is Checkbox -> checkboxDao().delete(entity)
+            is Directory -> directoryDao().delete(entity)
+            is File -> fileDao().delete(entity)
+            is Location -> locationDao().delete(entity)
+            is Note -> noteDao().delete(entity)
+            is Reference -> referenceDao().delete(entity)
+            is Reminder -> reminderDao().delete(entity)
+            is WebLink -> webLinkDao().delete(entity)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -74,6 +153,14 @@ abstract class AppDatabase : RoomDatabase() {
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().deleteMany(entities as List<Node>)
             is Application -> applicationDao().deleteMany(entities as List<Application>)
+            is Checkbox -> checkboxDao().deleteMany(entities as List<Checkbox>)
+            is Directory -> directoryDao().deleteMany(entities as List<Directory>)
+            is File -> fileDao().deleteMany(entities as List<File>)
+            is Location -> locationDao().deleteMany(entities as List<Location>)
+            is Note -> noteDao().deleteMany(entities as List<Note>)
+            is Reference -> referenceDao().deleteMany(entities as List<Reference>)
+            is Reminder -> reminderDao().deleteMany(entities as List<Reminder>)
+            is WebLink -> webLinkDao().deleteMany(entities as List<WebLink>)
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -81,14 +168,28 @@ abstract class AppDatabase : RoomDatabase() {
     suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
         when (nodeKind) {
             NodeKind.Application -> applicationDao().getPayloadByNodeId(nodeId)
-            else -> throw Exception("Invalid NodeKind")
+            NodeKind.Checkbox -> checkboxDao().getPayloadByNodeId(nodeId)
+            NodeKind.Directory -> directoryDao().getPayloadByNodeId(nodeId)
+            NodeKind.File -> fileDao().getPayloadByNodeId(nodeId)
+            NodeKind.Location -> locationDao().getPayloadByNodeId(nodeId)
+            NodeKind.Note -> noteDao().getPayloadByNodeId(nodeId)
+            NodeKind.Reference -> referenceDao().getPayloadByNodeId(nodeId)
+            NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
+            NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
         }
 
     fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
         val payloadClass =
             when (nodeKind) {
                 NodeKind.Application -> Application::class
-                else -> throw Exception("Invalid NodeKind")
+                NodeKind.Checkbox -> Checkbox::class
+                NodeKind.Directory -> Directory::class
+                NodeKind.File -> File::class
+                NodeKind.Location -> Location::class
+                NodeKind.Note -> Note::class
+                NodeKind.Reference -> Reference::class
+                NodeKind.Reminder -> Reminder::class
+                NodeKind.WebLink -> WebLink::class
             }
         val constructor =
             payloadClass.constructors.firstOrNull {
@@ -118,4 +219,164 @@ interface ApplicationDao {
 
     @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Application?
+}
+
+@Dao
+interface CheckboxDao {
+    @Insert suspend fun insert(entity: Checkbox)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Checkbox>)
+
+    @Update suspend fun update(entity: Checkbox)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Checkbox>)
+
+    @Delete suspend fun delete(entity: Checkbox)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Checkbox>)
+
+    @Query("SELECT * FROM Checkbox") suspend fun getAllPayloads(): List<Checkbox>
+
+    @Query("SELECT * FROM Checkbox WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Checkbox?
+}
+
+@Dao
+interface DirectoryDao {
+    @Insert suspend fun insert(entity: Directory)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Directory>)
+
+    @Update suspend fun update(entity: Directory)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Directory>)
+
+    @Delete suspend fun delete(entity: Directory)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Directory>)
+
+    @Query("SELECT * FROM Directory") suspend fun getAllPayloads(): List<Directory>
+
+    @Query("SELECT * FROM Directory WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Directory?
+}
+
+@Dao
+interface FileDao {
+    @Insert suspend fun insert(entity: File)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<File>)
+
+    @Update suspend fun update(entity: File)
+
+    @Transaction @Update suspend fun updateMany(entities: List<File>)
+
+    @Delete suspend fun delete(entity: File)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<File>)
+
+    @Query("SELECT * FROM File") suspend fun getAllPayloads(): List<File>
+
+    @Query("SELECT * FROM File WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): File?
+}
+
+@Dao
+interface LocationDao {
+    @Insert suspend fun insert(entity: Location)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Location>)
+
+    @Update suspend fun update(entity: Location)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Location>)
+
+    @Delete suspend fun delete(entity: Location)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Location>)
+
+    @Query("SELECT * FROM Location") suspend fun getAllPayloads(): List<Location>
+
+    @Query("SELECT * FROM Location WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Location?
+}
+
+@Dao
+interface NoteDao {
+    @Insert suspend fun insert(entity: Note)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Note>)
+
+    @Update suspend fun update(entity: Note)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Note>)
+
+    @Delete suspend fun delete(entity: Note)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Note>)
+
+    @Query("SELECT * FROM Note") suspend fun getAllPayloads(): List<Note>
+
+    @Query("SELECT * FROM Note WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Note?
+}
+
+@Dao
+interface ReferenceDao {
+    @Insert suspend fun insert(entity: Reference)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Reference>)
+
+    @Update suspend fun update(entity: Reference)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Reference>)
+
+    @Delete suspend fun delete(entity: Reference)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Reference>)
+
+    @Query("SELECT * FROM Reference") suspend fun getAllPayloads(): List<Reference>
+
+    @Query("SELECT * FROM Reference WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Reference?
+}
+
+@Dao
+interface ReminderDao {
+    @Insert suspend fun insert(entity: Reminder)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Reminder>)
+
+    @Update suspend fun update(entity: Reminder)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Reminder>)
+
+    @Delete suspend fun delete(entity: Reminder)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Reminder>)
+
+    @Query("SELECT * FROM Reminder") suspend fun getAllPayloads(): List<Reminder>
+
+    @Query("SELECT * FROM Reminder WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Reminder?
+}
+
+@Dao
+interface WebLinkDao {
+    @Insert suspend fun insert(entity: WebLink)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<WebLink>)
+
+    @Update suspend fun update(entity: WebLink)
+
+    @Transaction @Update suspend fun updateMany(entities: List<WebLink>)
+
+    @Delete suspend fun delete(entity: WebLink)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<WebLink>)
+
+    @Query("SELECT * FROM WebLink") suspend fun getAllPayloads(): List<WebLink>
+
+    @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): WebLink?
 }

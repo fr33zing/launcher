@@ -18,9 +18,31 @@ tasks {
 
         // Update these variables to add support for new NodeKind variants and payload classes.
         val databaseVersion = "1"
-        val payloadClasses = listOf("Application")
+        val payloadClasses =
+            listOf(
+                "Application",
+                "Checkbox",
+                "Directory",
+                "File",
+                "Location",
+                "Note",
+                "Reference",
+                "Reminder",
+                "WebLink",
+            )
         val entityClasses = listOf("Node") + payloadClasses
-        val nodeKindToPayloadClassMap = mapOf("Application" to "Application")
+        val nodeKindToPayloadClassMap =
+            mapOf(
+                "Application" to "Application",
+                "Checkbox" to "Checkbox",
+                "Directory" to "Directory",
+                "File" to "File",
+                "Location" to "Location",
+                "Note" to "Note",
+                "Reference" to "Reference",
+                "Reminder" to "Reminder",
+                "WebLink" to "WebLink",
+            )
 
         // Generate the file.
         val textParts =
@@ -105,7 +127,13 @@ fun database(
 ) =
     """
     @Suppress("UNCHECKED_CAST")
-    @Database(entities = [${payloadClasses.joinToString(", ") { "$it::class" }}], version = $databaseVersion)
+    @Database(
+        entities =
+            [
+                ${payloadClasses.joinToString(",\n${indent(4)}") { "$it::class" }},
+            ],
+        version = $databaseVersion
+    )
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}
 
@@ -114,14 +142,12 @@ ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions
         suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
             when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
-                else -> throw Exception("Invalid NodeKind")
             }
 
         fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
             val payloadClass =
                 when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}::class" }.joinToString("\n")}
-                    else -> throw Exception("Invalid NodeKind")
                 }
             val constructor =
                 payloadClass.constructors.firstOrNull {
