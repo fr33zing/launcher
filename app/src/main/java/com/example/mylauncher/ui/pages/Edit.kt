@@ -46,11 +46,6 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             node = db.nodeDao().getNodeById(nodeId)
             payload = if (node != null) db.getPayloadByNodeId(node!!.kind, node!!.nodeId) else null
-
-            if (node != null && payload != null && payload!!::class != node!!.kind.payloadClass!!)
-                throw Exception(
-                    "Mismatched payload class for node kind.\nNode: $node\nPayload: ${payload!!::class}"
-                )
         }
     }
 
