@@ -1,5 +1,6 @@
 package com.example.mylauncher.ui.pages
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,6 +48,7 @@ import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.helper.verticalScrollShadows
 import com.example.mylauncher.ui.components.NodeIconAndText
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
+import com.example.mylauncher.ui.components.dialog.YesNoDialogBackAction
 import com.example.mylauncher.ui.components.refreshNodeList
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
@@ -90,6 +92,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue reordering",
         noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
+        backAction = YesNoDialogBackAction.Yes,
         onYes = { onCancelChanges(navController) },
     )
 
@@ -104,6 +107,8 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noIcon = Icons.Filled.ArrowBack,
         onYes = { onSaveChanges(navController, db, nodes.value!!) },
     )
+
+    BackHandler { cancelDialogVisible.value = true }
 
     Scaffold(
         topBar = {

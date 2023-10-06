@@ -1,5 +1,6 @@
 package com.example.mylauncher.ui.pages
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -28,6 +29,7 @@ import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.persistent.payloads.Payload
 import com.example.mylauncher.ui.components.EditForm
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
+import com.example.mylauncher.ui.components.dialog.YesNoDialogBackAction
 import com.example.mylauncher.ui.components.refreshNodeList
 import com.example.mylauncher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
@@ -61,6 +63,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             noText = "Continue editing",
             noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
+            backAction = YesNoDialogBackAction.Yes,
             onYes = { onCancelChanges(navController) },
         )
 
@@ -75,6 +78,8 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             noIcon = Icons.Filled.ArrowBack,
             onYes = { onSaveChanges(navController, db, node!!, payload) },
         )
+
+        BackHandler { cancelDialogVisible.value = true }
 
         Scaffold(
             topBar = {

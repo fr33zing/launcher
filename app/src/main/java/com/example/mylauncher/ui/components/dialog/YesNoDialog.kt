@@ -1,5 +1,6 @@
 package com.example.mylauncher.ui.components.dialog
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,12 @@ import androidx.compose.ui.unit.TextUnit
 import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.components.NodeIconAndText
 
+enum class YesNoDialogBackAction {
+    Dismiss,
+    Yes,
+    No
+}
+
 @Composable
 fun YesNoDialog(
     visible: MutableState<Boolean>,
@@ -30,6 +37,7 @@ fun YesNoDialog(
     noText: String,
     noColor: Color,
     noIcon: ImageVector,
+    backAction: YesNoDialogBackAction = YesNoDialogBackAction.Dismiss,
     onDismissRequest: () -> Unit = {},
     onYes: () -> Unit = {},
     onNo: () -> Unit = {},
@@ -39,6 +47,11 @@ fun YesNoDialog(
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
     BaseDialog(visible, icon, onDismissRequest = onDismissRequest) {
+        BackHandler(enabled = backAction != YesNoDialogBackAction.Dismiss) {
+            visible.value = false
+            if (backAction == YesNoDialogBackAction.Yes) onYes() else onNo()
+        }
+
         Column(
             verticalArrangement = Arrangement.spacedBy(lineHeight * 0.8f),
             modifier = Modifier.width(IntrinsicSize.Max)
