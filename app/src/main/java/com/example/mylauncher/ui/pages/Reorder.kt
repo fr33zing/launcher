@@ -47,6 +47,7 @@ import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.helper.verticalScrollShadows
 import com.example.mylauncher.ui.components.NodeIconAndText
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
+import com.example.mylauncher.ui.components.refreshNodeList
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
 import kotlinx.coroutines.CoroutineScope
@@ -89,7 +90,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue reordering",
         noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
-        onYes = {},
+        onYes = { onCancelChanges(navController) },
     )
 
     YesNoDialog(
@@ -101,7 +102,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue reordering",
         noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSave(db, nodes.value!!) },
+        onYes = { onSaveChanges(navController, db, nodes.value!!) },
     )
 
     Scaffold(
@@ -140,12 +141,21 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     }
 }
 
-private fun onSave(db: AppDatabase, nodes: List<Node>) {
+private fun onCancelChanges(navController: NavController) {
+    navController.popBackStack()
+}
+
+private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: List<Node>) {
     // Discard first element due to the aforementioned bug.
     val fixedNodes = nodes.subList(1, nodes.size)
 
     fixedNodes.forEachIndexed { index, node -> node.order = index }
-    CoroutineScope(Dispatchers.IO).launch { db.nodeDao().updateMany(fixedNodes) }
+    CoroutineScope(Dispatchers.IO).launch {
+        db.nodeDao().updateMany(fixedNodes)
+        refreshNodeList()
+    }
+
+    navController.popBackStack()
 }
 
 @Composable
