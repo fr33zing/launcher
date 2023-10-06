@@ -129,7 +129,7 @@ ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}
                         with(it.parameters[1]) { name == "nodeId" && type == typeOf<Int>() } &&
                         it.parameters.subList(2, it.parameters.size).all(KParameter::isOptional)
                 } ?: throw Exception("No minimal constructor for payload ${"$"}{payloadClass.simpleName}")
-            return constructor.call(0, nodeId)
+            return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
         }
     }
     """
