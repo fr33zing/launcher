@@ -20,7 +20,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                     Node(
                         nodeId = 0,
                         parentId = nodeDao().getDefaultNode().nodeId,
-                        dataId = null,
                         kind = NodeKind.Application,
                         order = index,
                         label = activityInfo.label.toString()

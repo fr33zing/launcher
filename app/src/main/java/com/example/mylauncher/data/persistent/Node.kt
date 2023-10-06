@@ -17,7 +17,6 @@ const val DEFAULT_NODE_LABEL = "Uncategorized"
 data class Node(
     @PrimaryKey(autoGenerate = true) val nodeId: Int,
     val parentId: Int?,
-    val dataId: Int?,
     val kind: NodeKind,
     var order: Int,
     @UserEditable(label = "Label") var label: String,
@@ -59,7 +58,6 @@ interface NodeDao {
             Node(
                 nodeId = 0,
                 parentId = null,
-                dataId = null,
                 kind = NodeKind.Directory,
                 order = 0,
                 label = DEFAULT_NODE_LABEL
