@@ -34,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -90,7 +89,6 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesColor = Catppuccin.Current.red,
         yesIcon = Icons.Filled.Close,
         noText = "Continue reordering",
-        noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
         onYes = { onCancelChanges(navController) },
@@ -103,7 +101,6 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesColor = Catppuccin.Current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue reordering",
-        noColor = Color(0xFF888888),
         noIcon = Icons.Filled.ArrowBack,
         onYes = { onSaveChanges(navController, db, nodes.value!!) },
     )

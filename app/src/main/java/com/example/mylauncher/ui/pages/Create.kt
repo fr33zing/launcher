@@ -18,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -61,7 +60,6 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
             yesColor = Catppuccin.Current.red,
             yesIcon = Icons.Filled.Close,
             noText = "Continue editing",
-            noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
             backAction = YesNoDialogBackAction.Yes,
             onYes = { onCancelChanges(navController) },
@@ -74,7 +72,6 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
             yesColor = Catppuccin.Current.green,
             yesIcon = Icons.Filled.Check,
             noText = "Continue editing",
-            noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
             onYes = { onSaveChanges(navController, db, node!!, payload) },
         )

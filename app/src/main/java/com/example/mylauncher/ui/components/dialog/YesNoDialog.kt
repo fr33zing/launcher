@@ -35,7 +35,7 @@ fun YesNoDialog(
     yesColor: Color,
     yesIcon: ImageVector,
     noText: String,
-    noColor: Color,
+    noColor: Color = Color(0xFF888888),
     noIcon: ImageVector,
     backAction: YesNoDialogBackAction = YesNoDialogBackAction.Dismiss,
     onDismissRequest: () -> Unit = {},
