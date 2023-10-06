@@ -1,4 +1,4 @@
-package com.example.mylauncher.data.persistent
+package com.example.mylauncher.data.persistent.payloads
 
 import android.content.pm.LauncherActivityInfo
 import androidx.room.Entity

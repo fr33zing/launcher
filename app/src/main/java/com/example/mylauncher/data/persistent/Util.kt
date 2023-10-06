@@ -2,6 +2,7 @@ package com.example.mylauncher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
 import com.example.mylauncher.data.NodeKind
+import com.example.mylauncher.data.persistent.payloads.Application
 
 /** Create Nodes and Applications for newly installed apps. Returns the number of new apps added. */
 suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivityInfo>): Int {

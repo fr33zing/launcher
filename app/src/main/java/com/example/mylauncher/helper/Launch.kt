@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.UserHandle
 import android.os.UserManager
-import com.example.mylauncher.data.persistent.Application
+import com.example.mylauncher.data.persistent.payloads.Application
 
 lateinit var launcherApps: LauncherApps
 lateinit var userManager: UserManager

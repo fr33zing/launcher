@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.persistent.Node
-import com.example.mylauncher.data.persistent.Payload
+import com.example.mylauncher.data.persistent.payloads.Payload
 import com.example.mylauncher.ui.components.editforms.ApplicationEditForm
 import com.example.mylauncher.ui.components.editforms.DefaultEditForm
 

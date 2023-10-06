@@ -11,31 +11,35 @@ tasks {
         val thisFile = "buildSrc/build.gradle.kts"
         val module = "app"
         val domain = "com.example.mylauncher"
-        val subPackageName = "data.persistent"
-        val fileName = "Database.kt"
+        val nodeKindPackage = "$domain.data"
+        val payloadsPackage = "$domain.data.persistent.payloads"
+        val targetPackage = "$domain.data.persistent"
+        val targetFileName = "Database.kt"
 
         // Update these variables to add support for new NodeKind variants and payload classes.
         val databaseVersion = "1"
-        val payloadClasses = listOf("Node", "Application")
+        val payloadClasses = listOf("Application")
+        val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap = mapOf("Application" to "Application")
 
         // Generate the file.
-        val packageName = "$domain.$subPackageName"
-        val dir = "../$module/src/main/java/${packageName.replace(".", "/")}"
         val textParts =
             listOf(
                 headerComment(thisFile),
-                "package $packageName",
-                imports(domain),
-                database(databaseVersion, payloadClasses, nodeKindToPayloadClassMap),
+                packageDeclaration(targetPackage),
+                imports(nodeKindPackage, payloadsPackage, payloadClasses),
+                database(databaseVersion, entityClasses, nodeKindToPayloadClassMap),
                 allPayloadDaos(payloadClasses),
             )
         val text = textParts.joinToString("\n\n") + "\n"
-        val f = file("$dir/$fileName")
+        val dir = "../$module/src/main/java/${targetPackage.replace(".", "/")}"
+        val f = file("$dir/$targetFileName")
         f.createNewFile()
         f.writeText(text)
     }
 }
+
+fun packageDeclaration(targetPackage: String) = "package $targetPackage"
 
 fun headerComment(thisFile: String) =
     """
@@ -44,12 +48,13 @@ fun headerComment(thisFile: String) =
     //
     // The generator file must be updated in the following circumstances:
     // - Project details (module name, domain, etc) change.
+    // - NodeKind or payload paths or class names change.
     // - New NodeKind variants are added.
     // - New payload classes are added.
     """
         .trimIndent()
 
-fun imports(domain: String) =
+fun imports(nodeKindPackage: String, payloadsPackage: String, payloadClasses: List<String>) =
     """
     import androidx.room.Dao
     import androidx.room.Database
@@ -59,7 +64,9 @@ fun imports(domain: String) =
     import androidx.room.RoomDatabase
     import androidx.room.Transaction
     import androidx.room.Update
-    import $domain.data.NodeKind
+    import $nodeKindPackage.NodeKind
+    import $payloadsPackage.Payload
+    ${payloadClasses.joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     """
         .trimIndent()
 
@@ -88,7 +95,7 @@ fun payloadDao(payloadClass: String) =
         .trimIndent()
 
 fun allPayloadDaos(payloadClasses: List<String>) =
-    payloadClasses.filter { it != "Node" }.joinToString("\n\n") { payloadDao(it) }
+    payloadClasses.joinToString("\n\n") { payloadDao(it) }
 
 fun database(
     databaseVersion: String,

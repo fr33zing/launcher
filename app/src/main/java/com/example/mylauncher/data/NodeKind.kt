@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
-import com.example.mylauncher.data.persistent.Application
+import com.example.mylauncher.data.persistent.payloads.Application
 import com.example.mylauncher.data.persistent.Preferences
 import com.example.mylauncher.ui.theme.Catppuccin
 import com.example.mylauncher.ui.theme.Foreground
@@ -58,7 +58,7 @@ enum class NodeKind {
 
     fun payloadClass(): KClass<*>? =
         when (this) {
-            Application -> com.example.mylauncher.data.persistent.Application::class
+            Application -> com.example.mylauncher.data.persistent.payloads.Application::class
             else -> null
         }
 

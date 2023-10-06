@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import androidx.room.withTransaction
 import com.example.mylauncher.data.persistent.AppDatabase
 import com.example.mylauncher.data.persistent.Node
-import com.example.mylauncher.data.persistent.Payload
+import com.example.mylauncher.data.persistent.payloads.Payload
 import com.example.mylauncher.ui.components.EditForm
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
 import com.example.mylauncher.ui.components.refreshNodeList

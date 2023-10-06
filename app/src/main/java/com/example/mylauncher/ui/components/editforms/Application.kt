@@ -35,9 +35,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.example.mylauncher.data.persistent.Application
+import com.example.mylauncher.data.persistent.payloads.Application
 import com.example.mylauncher.data.persistent.Node
-import com.example.mylauncher.data.persistent.Payload
+import com.example.mylauncher.data.persistent.payloads.Payload
 import com.example.mylauncher.helper.getActivityInfos
 import com.example.mylauncher.ui.components.EditFormColumn
 import com.example.mylauncher.ui.components.NodePropertyTextField

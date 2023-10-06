@@ -3,6 +3,7 @@
 //
 // The generator file must be updated in the following circumstances:
 // - Project details (module name, domain, etc) change.
+// - NodeKind or payload paths or class names change.
 // - New NodeKind variants are added.
 // - New payload classes are added.
 
@@ -17,6 +18,8 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.mylauncher.data.NodeKind
+import com.example.mylauncher.data.persistent.payloads.Payload
+import com.example.mylauncher.data.persistent.payloads.Application
 
 @Suppress("UNCHECKED_CAST")
 @Database(entities = [Node::class, Application::class], version = 1)
