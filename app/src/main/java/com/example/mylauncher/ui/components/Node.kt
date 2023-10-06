@@ -1,5 +1,6 @@
 package com.example.mylauncher.ui.components
 
+import android.annotation.SuppressLint
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -236,7 +237,7 @@ fun NodeIconAndText(
     icon: ImageVector?,
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
-    textModifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
 ) {
     val iconSize = 0.9f
     if (icon != null) {
