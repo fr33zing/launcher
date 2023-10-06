@@ -66,6 +66,8 @@ fun imports(nodeKindPackage: String, payloadsPackage: String, payloadClasses: Li
     import androidx.room.Update
     import $nodeKindPackage.NodeKind
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
+    import kotlin.reflect.KParameter
+    import kotlin.reflect.typeOf
     """
         .trimIndent()
 
@@ -112,8 +114,23 @@ ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions
         suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
             when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
-                else -> throw Exception("Invalid entity type")
+                else -> throw Exception("Invalid NodeKind")
             }
+
+        fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload? {
+            val payloadClass =
+                when (nodeKind) {
+${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}::class" }.joinToString("\n")}
+                    else -> return null
+                }
+            val constructor =
+                payloadClass.constructors.firstOrNull {
+                    with(it.parameters[0]) { name == "payloadId" && type == typeOf<Int>() } &&
+                        with(it.parameters[1]) { name == "nodeId" && type == typeOf<Int>() } &&
+                        it.parameters.subList(2, it.parameters.size).all(KParameter::isOptional)
+                } ?: throw Exception("No minimal constructor for payload ${"$"}{payloadClass.simpleName}")
+            return constructor.call(0, nodeId)
+        }
     }
     """
         .trimIndent()
