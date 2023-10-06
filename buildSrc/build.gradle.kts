@@ -137,13 +137,6 @@ fun database(
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}
 
-${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}
-
-        suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
-            when (nodeKind) {
-${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
-            }
-
         fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
             val payloadClass =
                 when (nodeKind) {
@@ -157,6 +150,13 @@ ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}
                 } ?: throw Exception("No minimal constructor for payload ${"$"}{payloadClass.simpleName}")
             return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
         }
+
+        suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
+            when (nodeKind) {
+${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
+            }
+
+${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}
     }
     """
         .trimIndent()

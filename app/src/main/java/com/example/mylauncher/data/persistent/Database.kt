@@ -69,6 +69,41 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun webLinkDao(): WebLinkDao
 
+    fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
+        val payloadClass =
+            when (nodeKind) {
+                NodeKind.Application -> Application::class
+                NodeKind.Checkbox -> Checkbox::class
+                NodeKind.Directory -> Directory::class
+                NodeKind.File -> File::class
+                NodeKind.Location -> Location::class
+                NodeKind.Note -> Note::class
+                NodeKind.Reference -> Reference::class
+                NodeKind.Reminder -> Reminder::class
+                NodeKind.WebLink -> WebLink::class
+            }
+        val constructor =
+            payloadClass.constructors.firstOrNull {
+                with(it.parameters[0]) { name == "payloadId" && type == typeOf<Int>() } &&
+                    with(it.parameters[1]) { name == "nodeId" && type == typeOf<Int>() } &&
+                    it.parameters.subList(2, it.parameters.size).all(KParameter::isOptional)
+            } ?: throw Exception("No minimal constructor for payload ${payloadClass.simpleName}")
+        return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
+    }
+
+    suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
+        when (nodeKind) {
+            NodeKind.Application -> applicationDao().getPayloadByNodeId(nodeId)
+            NodeKind.Checkbox -> checkboxDao().getPayloadByNodeId(nodeId)
+            NodeKind.Directory -> directoryDao().getPayloadByNodeId(nodeId)
+            NodeKind.File -> fileDao().getPayloadByNodeId(nodeId)
+            NodeKind.Location -> locationDao().getPayloadByNodeId(nodeId)
+            NodeKind.Note -> noteDao().getPayloadByNodeId(nodeId)
+            NodeKind.Reference -> referenceDao().getPayloadByNodeId(nodeId)
+            NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
+            NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
+        }
+
     suspend fun insert(entity: Any) {
         when (entity) {
             is Node -> nodeDao().insert(entity)
@@ -163,41 +198,6 @@ abstract class AppDatabase : RoomDatabase() {
             is WebLink -> webLinkDao().deleteMany(entities as List<WebLink>)
             else -> throw Exception("Invalid entity type")
         }
-    }
-
-    suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
-        when (nodeKind) {
-            NodeKind.Application -> applicationDao().getPayloadByNodeId(nodeId)
-            NodeKind.Checkbox -> checkboxDao().getPayloadByNodeId(nodeId)
-            NodeKind.Directory -> directoryDao().getPayloadByNodeId(nodeId)
-            NodeKind.File -> fileDao().getPayloadByNodeId(nodeId)
-            NodeKind.Location -> locationDao().getPayloadByNodeId(nodeId)
-            NodeKind.Note -> noteDao().getPayloadByNodeId(nodeId)
-            NodeKind.Reference -> referenceDao().getPayloadByNodeId(nodeId)
-            NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
-            NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
-        }
-
-    fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
-        val payloadClass =
-            when (nodeKind) {
-                NodeKind.Application -> Application::class
-                NodeKind.Checkbox -> Checkbox::class
-                NodeKind.Directory -> Directory::class
-                NodeKind.File -> File::class
-                NodeKind.Location -> Location::class
-                NodeKind.Note -> Note::class
-                NodeKind.Reference -> Reference::class
-                NodeKind.Reminder -> Reminder::class
-                NodeKind.WebLink -> WebLink::class
-            }
-        val constructor =
-            payloadClass.constructors.firstOrNull {
-                with(it.parameters[0]) { name == "payloadId" && type == typeOf<Int>() } &&
-                    with(it.parameters[1]) { name == "nodeId" && type == typeOf<Int>() } &&
-                    it.parameters.subList(2, it.parameters.size).all(KParameter::isOptional)
-            } ?: throw Exception("No minimal constructor for payload ${payloadClass.simpleName}")
-        return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
     }
 }
 
