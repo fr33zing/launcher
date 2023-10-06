@@ -39,7 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun insertMany(entities: List<Any>) {
-        when (entities[0]) {
+        when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().insertMany(entities as List<Node>)
             is Application -> applicationDao().insertMany(entities as List<Application>)
             else -> throw Exception("Invalid entity type")
@@ -55,7 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun updateMany(entities: List<Any>) {
-        when (entities[0]) {
+        when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().updateMany(entities as List<Node>)
             is Application -> applicationDao().updateMany(entities as List<Application>)
             else -> throw Exception("Invalid entity type")
@@ -71,7 +71,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun deleteMany(entities: List<Any>) {
-        when (entities[0]) {
+        when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().deleteMany(entities as List<Node>)
             is Application -> applicationDao().deleteMany(entities as List<Application>)
             else -> throw Exception("Invalid entity type")

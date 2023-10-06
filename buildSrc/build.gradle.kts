@@ -138,7 +138,7 @@ ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}
 fun writeFunction(types: List<String>, name: String, many: Boolean) =
     """
     suspend fun $name(${if (many) "entities: List<Any>" else "entity: Any"}) {
-        when (${if (many) "entities[0]" else "entity"}) {
+        when (${if (many) "entities.firstOrNull() ?: return" else "entity"}) {
             ${types.joinToString("\n${indent(3)}") { "is $it -> ${daoCall(it)}.$name(${if (many) "entities as List<$it>" else "entity"})" }}
             else -> throw Exception("Invalid entity type")
         }
