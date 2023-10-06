@@ -28,6 +28,7 @@ import com.example.mylauncher.data.persistent.Node
 import com.example.mylauncher.data.persistent.Payload
 import com.example.mylauncher.ui.components.EditForm
 import com.example.mylauncher.ui.components.dialog.YesNoDialog
+import com.example.mylauncher.ui.components.refreshNodeList
 import com.example.mylauncher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -77,7 +78,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             noText = "Continue editing",
             noColor = Color(0xFF888888),
             noIcon = Icons.Filled.ArrowBack,
-            onYes = { onSaveChanges(navController, db, node!!) },
+            onYes = { onSaveChanges(navController, db, node!!, payload) },
         )
 
         Scaffold(
@@ -114,14 +115,19 @@ private fun onCancelChanges(navController: NavController) {
     navController.popBackStack()
 }
 
-private fun onSaveChanges(navController: NavController, db: AppDatabase, node: Node) {
+private fun onSaveChanges(
+    navController: NavController,
+    db: AppDatabase,
+    node: Node,
+    payload: Payload?
+) {
     CoroutineScope(Dispatchers.Main).launch {
         db.withTransaction {
-            db.nodeDao().update(node)
-
-            // TODO update kind-specific data
+            db.update(node)
+            payload?.let { db.update(it) }
         }
 
+        refreshNodeList()
         navController.popBackStack()
     }
 }
