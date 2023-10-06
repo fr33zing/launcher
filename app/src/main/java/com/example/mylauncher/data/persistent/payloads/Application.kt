@@ -8,11 +8,11 @@ import com.example.mylauncher.ui.util.UserEditable
 class Application(
     payloadId: Int,
     nodeId: Int,
-    @UserEditable("Application name", locked = true) var appName: String,
-    @UserEditable("Package name", locked = true) var packageName: String,
+    @UserEditable("Application name", locked = true) var appName: String = "",
+    @UserEditable("Package name", locked = true) var packageName: String = "",
     @UserEditable("Activity class name", locked = true, userCanUnlock = true)
-    var activityClassName: String,
-    @UserEditable("User handle", locked = true) var userHandle: String,
+    var activityClassName: String = "",
+    @UserEditable("User handle", locked = true) var userHandle: String = "",
 ) : Payload(payloadId, nodeId) {
     constructor(
         payloadId: Int,
