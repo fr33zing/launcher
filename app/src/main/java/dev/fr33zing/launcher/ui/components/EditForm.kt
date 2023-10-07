@@ -21,6 +21,7 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.editforms.ApplicationEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DefaultEditForm
+import dev.fr33zing.launcher.ui.components.editforms.DirectoryEditForm
 
 private val extraPadding = 16.dp
 private val spacing = 16.dp
@@ -30,6 +31,7 @@ fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload?) {
     if (payload != null)
         when (node.kind) {
             NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
+            NodeKind.Directory -> DirectoryEditForm(innerPadding, payload, node)
             else -> DefaultEditForm(innerPadding, node)
         }
     else DefaultEditForm(innerPadding, node)
