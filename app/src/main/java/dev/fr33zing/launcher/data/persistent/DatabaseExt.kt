@@ -124,7 +124,7 @@ suspend fun AppDatabase.getDefaultNode(): Node {
                 )
             )
             val lastNodeId = nodeDao().getLastNodeId()
-            insert(insert(createDefaultPayloadForNode(NodeKind.Directory, lastNodeId)))
+            insert(createDefaultPayloadForNode(NodeKind.Directory, lastNodeId))
 
             nodeDao().getLastNode()
         }

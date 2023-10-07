@@ -11,7 +11,8 @@ import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.ui.util.UserEditable
 
-const val DEFAULT_NODE_LABEL = "Uncategorized"
+
+// TODO fix order when parentId==null (maybe use 0 instead of null?)
 
 /**
  * Ensure that all node order values are unique and sequential. Mutates this List and returns itself
@@ -59,19 +60,5 @@ interface NodeDao {
     @Query("SELECT * FROM Node WHERE parentId == :nodeId")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
 
-    suspend fun getDefaultNode(): Node {
-        val defaultNode = getNodeByLabel(DEFAULT_NODE_LABEL)
-        if (defaultNode != null) return defaultNode
 
-        insert(
-            Node(
-                nodeId = 0,
-                parentId = null,
-                kind = NodeKind.Directory,
-                order = 0,
-                label = DEFAULT_NODE_LABEL
-            )
-        )
-        return getLastNode()
-    }
 }
