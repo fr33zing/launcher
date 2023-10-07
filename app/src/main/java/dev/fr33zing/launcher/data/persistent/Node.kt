@@ -27,7 +27,10 @@ data class Node(
     val kind: NodeKind,
     var order: Int,
     @UserEditable(label = "Label") var label: String,
-)
+) {
+    val isRoot
+        get() = nodeId == ROOT_NODE_ID
+}
 
 @Dao
 interface NodeDao {

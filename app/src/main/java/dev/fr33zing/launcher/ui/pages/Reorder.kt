@@ -3,15 +3,14 @@ package dev.fr33zing.launcher.ui.pages
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -40,16 +39,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import dev.fr33zing.launcher.data.nodeIndent
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
+import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.refreshNodeList
+import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.util.mix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -164,9 +167,12 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
     val fontSize = Preferences.fontSizeDefault
     val spacing = Preferences.spacingDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
+    val indent = remember { nodeIndent(1, Preferences.indentDefault, lineHeight) }
 
-    val state =
+    val listState = rememberLazyListState()
+    val reorderableState =
         rememberReorderableLazyListState(
+            listState = listState,
             onMove = { from, to ->
                 nodes.value =
                     nodes.value!!.toMutableList().apply { add(to.index, removeAt(from.index)) }
@@ -174,32 +180,43 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
             canDragOver = { from, to -> to.index != 0 && from.index != 0 }
         )
 
-    LazyColumn(state = state.listState, modifier = Modifier.reorderable(state).fillMaxWidth()) {
+    LazyColumn(
+        state = reorderableState.listState,
+        modifier = Modifier.reorderable(reorderableState).fillMaxWidth()
+    ) {
         items(nodes.value!!, { it.nodeId }) { node ->
-            ReorderableItem(state, key = node.nodeId, modifier = Modifier.fillMaxWidth()) {
-                isDragging ->
+            ReorderableItem(
+                reorderableState,
+                key = node.nodeId,
+                modifier = Modifier.fillMaxWidth()
+            ) { isDragging ->
                 val draggable = remember { node.nodeId != parentNode.nodeId }
 
-                if (draggable) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(spacing / 2)
-                                .alpha(if (isDragging) 0.65f else 1f),
-                    ) {
-                        NodeIconAndText(
-                            fontSize = fontSize,
-                            lineHeight = lineHeight,
-                            label = node.label,
-                            color = node.kind.color,
-                            icon = node.kind.icon,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis,
-                            textModifier = Modifier.weight(1f)
-                        )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(spacing / 2)
+                            .alpha(if (isDragging) 0.65f else 1f)
+                            .conditional(draggable) { absolutePadding(left = indent) },
+                ) {
+                    NodeIconAndText(
+                        fontSize = fontSize,
+                        lineHeight = lineHeight,
+                        label = node.label,
+                        color =
+                            if (!draggable) Foreground.mix(Background, 0.5f) else node.kind.color,
+                        icon = node.kind.icon,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                        textModifier = Modifier.weight(1f)
+                    )
 
-                        Box(Modifier.absolutePadding(left = lineHeight).detectReorder(state)) {
+                    if (draggable) {
+                        Box(
+                            Modifier.absolutePadding(left = lineHeight)
+                                .detectReorder(reorderableState)
+                        ) {
                             Icon(
                                 Icons.Filled.DragIndicator,
                                 contentDescription = "drag indicator",
@@ -208,11 +225,6 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
                             )
                         }
                     }
-                } else {
-                    // Display nothing for the parent node (first element) due to the aforementioned
-                    // bug. A spacer must be used because zero-height ReorderableItems cause
-                    // problems.
-                    Spacer(Modifier.height(1.dp))
                 }
             }
         }
