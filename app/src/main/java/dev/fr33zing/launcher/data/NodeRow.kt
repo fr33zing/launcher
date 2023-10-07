@@ -17,7 +17,7 @@ class NodeRow(
     var depth: Int,
 ) {
     var collapsed: Boolean
-        get() = _collapsed.value
+        get() = _collapsed.value || parent?.collapsed ?: false
         set(value) {
             if (payload is Directory) {
                 payload.collapsed = value

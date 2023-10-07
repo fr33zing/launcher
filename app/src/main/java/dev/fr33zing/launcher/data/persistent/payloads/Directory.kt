@@ -6,8 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-// TODO fix collapse behavior in ui
-
 @Entity
 class Directory(
     payloadId: Int,
