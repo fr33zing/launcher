@@ -8,6 +8,16 @@ import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 
+const val ROOT_NODE_ID = -1
+
+enum class RelativeNodeOffset(val orderOffset: Int) {
+    Above(0),
+    Within(0),
+    Below(1),
+}
+
+data class RelativeNodePosition(val relativeToNodeId: Int, val offset: RelativeNodeOffset)
+
 suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
     val result = ArrayList<NodeRow>()
 
@@ -28,7 +38,7 @@ suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
             .forEach { add(it, row, depth + 1) }
     }
 
-    nodeDao().getTopLevelNodes().sortedBy { it.order }.forEach { add(it, null, 0) }
+    nodeDao().getChildNodes(getRootNode().nodeId).sortedBy { it.order }.forEach { add(it, null, 0) }
 
     return result
 }
@@ -68,14 +78,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     return newApps
 }
 
-enum class RelativeNodeOffset(val orderOffset: Int) {
-    Above(0),
-    Within(0),
-    Below(1),
-}
-
-data class RelativeNodePosition(val relativeToNodeId: Int, val offset: RelativeNodeOffset)
-
 /**
  * Create a new node (and its payload, if applicable) relative to another node. Returns the new
  * node's id.
@@ -114,10 +116,11 @@ suspend fun AppDatabase.getDefaultNode(): Node {
     val defaultNodeLabel = "Uncategorized"
     return nodeDao().getNodeByLabel(defaultNodeLabel)
         ?: withTransaction {
+            val rootNode = getRootNode()
             insert(
                 Node(
                     nodeId = 0,
-                    parentId = null,
+                    parentId = rootNode.nodeId,
                     kind = NodeKind.Directory,
                     order = 0,
                     label = defaultNodeLabel
@@ -125,6 +128,24 @@ suspend fun AppDatabase.getDefaultNode(): Node {
             )
             val lastNodeId = nodeDao().getLastNodeId()
             insert(createDefaultPayloadForNode(NodeKind.Directory, lastNodeId))
+
+            nodeDao().getLastNode()
+        }
+}
+
+suspend fun AppDatabase.getRootNode(): Node {
+    return nodeDao().getNodeById(ROOT_NODE_ID)
+        ?: withTransaction {
+            insert(
+                Node(
+                    nodeId = ROOT_NODE_ID,
+                    parentId = null,
+                    kind = NodeKind.Directory,
+                    order = 0,
+                    label = "Root"
+                )
+            )
+            insert(createDefaultPayloadForNode(NodeKind.Directory, ROOT_NODE_ID))
 
             nodeDao().getLastNode()
         }
