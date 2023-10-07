@@ -11,8 +11,6 @@ import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.ui.util.UserEditable
 
-// TODO fix order when parentId==null (maybe use 0 instead of null?)
-
 /**
  * Ensure that all node order values are unique and sequential. Mutates this List and returns itself
  * for convenience.
