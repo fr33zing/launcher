@@ -1,6 +1,7 @@
 package com.example.mylauncher.ui.components
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -94,6 +95,9 @@ fun NodeList(db: AppDatabase, navController: NavController) {
         snapshotFlow { listState.isScrollInProgress }
             .collect { if (it) nodeOptionsVisibleIndex = null }
     }
+
+    // Hide node options with back button
+    BackHandler(nodeOptionsVisibleIndex != null) { nodeOptionsVisibleIndex = null }
 
     Box {
         LazyColumn(state = listState) {
