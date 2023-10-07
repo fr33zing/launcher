@@ -11,7 +11,6 @@ import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.ui.util.UserEditable
 
-
 // TODO fix order when parentId==null (maybe use 0 instead of null?)
 
 /**
@@ -55,10 +54,6 @@ interface NodeDao {
 
     @Query("SELECT nodeId FROM Node ORDER BY nodeID DESC LIMIT 1") fun getLastNodeId(): Int
 
-    @Query("SELECT * FROM Node WHERE parentId IS null") suspend fun getTopLevelNodes(): List<Node>
-
     @Query("SELECT * FROM Node WHERE parentId == :nodeId")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
-
-
 }
