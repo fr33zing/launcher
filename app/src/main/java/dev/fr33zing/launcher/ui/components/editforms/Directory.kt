@@ -25,8 +25,6 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.EditFormColumn
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
 
-// TODO implement this
-
 @Composable
 fun DirectoryEditForm(
     innerPadding: PaddingValues,
@@ -42,6 +40,7 @@ fun DirectoryEditForm(
     }
 }
 
+// TODO put an outline around this to match OutlinedTextField
 @Composable
 private fun InitialState(directory: Directory) {
     val radioOptions = Directory.InitialState.values()
