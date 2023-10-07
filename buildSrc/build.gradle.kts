@@ -176,7 +176,7 @@ fun writeFunction(types: List<String>, name: String, many: Boolean) =
         pre${capitalize(name)}(${if (many) "entities" else "entity"})
         when (${if (many) "entities.firstOrNull() ?: return" else "entity"}) {
             ${types.joinToString("\n${indent(3)}") { "is $it -> ${daoCall(it)}.$name${if (many) "Many" else ""}(${if (many) "entities as List<$it>" else "entity"})" }}
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${"$"}{${if (many) "entities[0]" else "entity"}::class.qualifiedName}")
         }
     }
     """

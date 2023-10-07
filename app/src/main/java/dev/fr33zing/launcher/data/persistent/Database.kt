@@ -117,7 +117,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().insert(entity)
             is Reminder -> reminderDao().insert(entity)
             is WebLink -> webLinkDao().insert(entity)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
 
@@ -134,7 +134,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().insertMany(entities as List<Reference>)
             is Reminder -> reminderDao().insertMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().insertMany(entities as List<WebLink>)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
 
@@ -151,7 +151,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().update(entity)
             is Reminder -> reminderDao().update(entity)
             is WebLink -> webLinkDao().update(entity)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
 
@@ -168,7 +168,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().updateMany(entities as List<Reference>)
             is Reminder -> reminderDao().updateMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().updateMany(entities as List<WebLink>)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
 
@@ -185,7 +185,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().delete(entity)
             is Reminder -> reminderDao().delete(entity)
             is WebLink -> webLinkDao().delete(entity)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
 
@@ -202,7 +202,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().deleteMany(entities as List<Reference>)
             is Reminder -> reminderDao().deleteMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().deleteMany(entities as List<WebLink>)
-            else -> throw Exception("Invalid entity type")
+            else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
 
