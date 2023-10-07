@@ -45,8 +45,10 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
-            node = db.nodeDao().getNodeById(nodeId)
-            payload = if (node != null) db.getPayloadByNodeId(node!!.kind, node!!.nodeId) else null
+            node = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node does not exist")
+            payload =
+                db.getPayloadByNodeId(node!!.kind, node!!.nodeId)
+                    ?: throw Exception("Payload does not exist")
         }
     }
 
@@ -103,7 +105,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
                 )
             }
         ) { innerPadding ->
-            EditForm(innerPadding, node!!, payload)
+            EditForm(innerPadding, node!!, payload!!)
         }
     }
 }

@@ -27,14 +27,12 @@ private val extraPadding = 16.dp
 private val spacing = 16.dp
 
 @Composable
-fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload?) {
-    if (payload != null)
-        when (node.kind) {
-            NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
-            NodeKind.Directory -> DirectoryEditForm(innerPadding, payload, node)
-            else -> DefaultEditForm(innerPadding, node)
-        }
-    else DefaultEditForm(innerPadding, node)
+fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload) {
+    when (node.kind) {
+        NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
+        NodeKind.Directory -> DirectoryEditForm(innerPadding, payload, node)
+        else -> DefaultEditForm(innerPadding, node)
+    }
 }
 
 @Composable
