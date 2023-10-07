@@ -59,21 +59,15 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
 
+    // My additions
+    implementation(kotlin("reflect"))
     implementation(libs.rxkotlin)
-
-    implementation(libs.androidx.datastore.preferences)
-
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.material.icons.extended)
-
     implementation(libs.androidx.navigation.compose)
-
     implementation(libs.fuzzywuzzy)
-
     implementation(libs.reorderable)
-
-    implementation(kotlin("reflect"))
 }
