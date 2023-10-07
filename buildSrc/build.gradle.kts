@@ -10,7 +10,7 @@ tasks {
         // Update these variables when project details change.
         val thisFile = "buildSrc/build.gradle.kts"
         val module = "app"
-        val domain = "com.example.mylauncher"
+        val domain = "dev.fr33zing.launcher"
         val nodeKindPackage = "$domain.data"
         val payloadsPackage = "$domain.data.persistent.payloads"
         val targetPackage = "$domain.data.persistent"
