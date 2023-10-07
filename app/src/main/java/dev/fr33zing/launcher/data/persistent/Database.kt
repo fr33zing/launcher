@@ -105,6 +105,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
     suspend fun insert(entity: Any) {
+        preInsert(entity)
         when (entity) {
             is Node -> nodeDao().insert(entity)
             is Application -> applicationDao().insert(entity)
@@ -121,6 +122,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun insertMany(entities: List<Any>) {
+        preInsert(entities)
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().insertMany(entities as List<Node>)
             is Application -> applicationDao().insertMany(entities as List<Application>)
@@ -137,6 +139,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun update(entity: Any) {
+        preUpdate(entity)
         when (entity) {
             is Node -> nodeDao().update(entity)
             is Application -> applicationDao().update(entity)
@@ -153,6 +156,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun updateMany(entities: List<Any>) {
+        preUpdate(entities)
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().updateMany(entities as List<Node>)
             is Application -> applicationDao().updateMany(entities as List<Application>)
@@ -169,6 +173,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun delete(entity: Any) {
+        preDelete(entity)
         when (entity) {
             is Node -> nodeDao().delete(entity)
             is Application -> applicationDao().delete(entity)
@@ -185,6 +190,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     suspend fun deleteMany(entities: List<Any>) {
+        preDelete(entities)
         when (entities.firstOrNull() ?: return) {
             is Node -> nodeDao().deleteMany(entities as List<Node>)
             is Application -> applicationDao().deleteMany(entities as List<Application>)
@@ -199,6 +205,15 @@ abstract class AppDatabase : RoomDatabase() {
             else -> throw Exception("Invalid entity type")
         }
     }
+
+    private fun preInsert(vararg entities: Any) =
+        entities.forEach { if (it is Payload) it.preInsert() }
+
+    private fun preUpdate(vararg entities: Any) =
+        entities.forEach { if (it is Payload) it.preUpdate() }
+
+    private fun preDelete(vararg entities: Any) =
+        entities.forEach { if (it is Payload) it.preDelete() }
 }
 
 @Dao

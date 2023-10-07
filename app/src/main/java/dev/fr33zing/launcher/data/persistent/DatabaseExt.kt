@@ -1,16 +1,25 @@
 package dev.fr33zing.launcher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
+import androidx.compose.runtime.mutableStateOf
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.persistent.payloads.Application
+import dev.fr33zing.launcher.data.persistent.payloads.Directory
 
 suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
     val result = ArrayList<NodeRow>()
 
     suspend fun add(node: Node, parent: NodeRow?, depth: Int) {
-        val row = NodeRow(node, parent, depth)
+        val collapsed =
+            if (node.kind == NodeKind.Directory)
+                (getPayloadByNodeId(node.kind, node.nodeId))?.let {
+                    (it as Directory).initiallyCollapsed
+                } ?: false
+            else false
+
+        val row = NodeRow(node, parent, depth, mutableStateOf(collapsed))
         result.add(row)
 
         nodeDao()
@@ -39,7 +48,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                 .insert(
                     Node(
                         nodeId = 0,
-                        parentId = nodeDao().getDefaultNode().nodeId,
+                        parentId = getDefaultNode().nodeId,
                         kind = NodeKind.Application,
                         order = index,
                         label = activityInfo.label.toString()
@@ -99,4 +108,24 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
 
         lastNodeId
     }
+}
+
+suspend fun AppDatabase.getDefaultNode(): Node {
+    val defaultNodeLabel = "Uncategorized"
+    return nodeDao().getNodeByLabel(defaultNodeLabel)
+        ?: withTransaction {
+            insert(
+                Node(
+                    nodeId = 0,
+                    parentId = null,
+                    kind = NodeKind.Directory,
+                    order = 0,
+                    label = defaultNodeLabel
+                )
+            )
+            val lastNodeId = nodeDao().getLastNodeId()
+            insert(insert(createDefaultPayloadForNode(NodeKind.Directory, lastNodeId)))
+
+            nodeDao().getLastNode()
+        }
 }

@@ -157,15 +157,25 @@ ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(i
             }
 
 ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}
+
+        private fun preInsert(vararg entities: Any) =
+            entities.forEach { if (it is Payload) it.preInsert() }
+
+        private fun preUpdate(vararg entities: Any) =
+            entities.forEach { if (it is Payload) it.preUpdate() }
+
+        private fun preDelete(vararg entities: Any) =
+            entities.forEach { if (it is Payload) it.preDelete() }
     }
     """
         .trimIndent()
 
 fun writeFunction(types: List<String>, name: String, many: Boolean) =
     """
-    suspend fun $name(${if (many) "entities: List<Any>" else "entity: Any"}) {
+    suspend fun $name${if (many) "Many" else ""}(${if (many) "entities: List<Any>" else "entity: Any"}) {
+        pre${capitalize(name)}(${if (many) "entities" else "entity"})
         when (${if (many) "entities.firstOrNull() ?: return" else "entity"}) {
-            ${types.joinToString("\n${indent(3)}") { "is $it -> ${daoCall(it)}.$name(${if (many) "entities as List<$it>" else "entity"})" }}
+            ${types.joinToString("\n${indent(3)}") { "is $it -> ${daoCall(it)}.$name${if (many) "Many" else ""}(${if (many) "entities as List<$it>" else "entity"})" }}
             else -> throw Exception("Invalid entity type")
         }
     }
@@ -173,10 +183,12 @@ fun writeFunction(types: List<String>, name: String, many: Boolean) =
         .replaceIndent(indent(2))
 
 fun bothWriteFunctions(name: String, types: List<String>) =
-    writeFunction(types, name, false) + "\n\n" + writeFunction(types, "${name}Many", true)
+    writeFunction(types, name, false) + "\n\n" + writeFunction(types, name, true)
 
 fun indent(n: Int) = "    ".repeat(n)
 
 fun camelCase(s: String) = s[0].lowercase() + s.substring(1)
+
+fun capitalize(s: String) = s[0].uppercase() + s.substring(1)
 
 fun daoCall(className: String) = "${camelCase(className)}Dao()"
