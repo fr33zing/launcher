@@ -24,10 +24,10 @@ class Directory(
 
         fun text(): String =
             when (this) {
-                Preference -> "Default from preferences"
+                Preference -> "Default from preferences (Expanded)"
+                Remember -> "Remember when toggled"
                 Collapsed -> "Always collapsed"
                 Expanded -> "Always expanded"
-                Remember -> "Remember when toggled"
             }
     }
 

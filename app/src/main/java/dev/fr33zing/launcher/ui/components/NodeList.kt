@@ -140,7 +140,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
 @OptIn(DelicateCoroutinesApi::class)
 private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
     if (nodeRow.node.kind == NodeKind.Directory) {
-        nodeRow.collapsed.value = !nodeRow.collapsed.value
+        nodeRow.collapsed = !nodeRow.collapsed
     } else if (nodeRow.node.kind == NodeKind.Application) {
         GlobalScope.launch {
             val app =

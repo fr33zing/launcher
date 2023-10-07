@@ -38,18 +38,22 @@ fun DirectoryEditForm(
     EditFormColumn(innerPadding) {
         NodePropertyTextField(node::label)
         Spacer(Modifier.height(16.dp))
-        InitialState()
+        InitialState(directory)
     }
 }
 
 @Composable
-private fun InitialState() {
+private fun InitialState(directory: Directory) {
     val radioOptions = Directory.InitialState.values()
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
+    val selectedOption = remember { mutableStateOf(directory.initialState) }
     Column(Modifier.selectableGroup()) {
         Text("Initial visibility behavior")
+
         radioOptions.forEach { option ->
-            InitialStateOption(option, selectedOption, onOptionSelected)
+            InitialStateOption(option, selectedOption.value) {
+                selectedOption.value = it
+                directory.initialState = it
+            }
         }
     }
 }
@@ -71,10 +75,7 @@ private fun InitialStateOption(
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(
-            selected = (option == selectedOption),
-            onClick = null // null recommended for accessibility with screenreaders
-        )
+        RadioButton(selected = (option == selectedOption), onClick = null)
         Text(
             text = option.text(),
             style = MaterialTheme.typography.bodyLarge,

@@ -106,10 +106,10 @@ fun NodeRow(
     val pressing = remember { mutableStateOf(false) }
 
     with(row) {
-        val visible by remember { derivedStateOf { !((parent?.collapsed?.value) ?: false) } }
+        val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
-        val tapColor = node.kind.color(collapsed.value).copy(alpha = 0.15f)
+        val tapColor = node.kind.color(collapsed).copy(alpha = 0.15f)
         val tapColorAnimated by
             animateColorAsState(
                 if (pressing.value) tapColor else Color.Transparent,
@@ -141,7 +141,7 @@ fun NodeRow(
                     navController,
                     node,
                     visible,
-                    collapsed.value,
+                    collapsed,
                     fontSize,
                     lineHeight,
                     spacing,
@@ -154,7 +154,7 @@ fun NodeRow(
                 )
             }
 
-            val isExpandedDir = node.kind == NodeKind.Directory && !row.collapsed.value
+            val isExpandedDir = node.kind == NodeKind.Directory && !collapsed
             AddNodeButton(
                 fontSize,
                 lineHeight,
@@ -167,7 +167,7 @@ fun NodeRow(
                 onDialogOpened = {
                     onAddNodeDialogOpened(
                         RelativeNodePosition(
-                            row.node.nodeId,
+                            node.nodeId,
                             if (isExpandedDir) RelativeNodeOffset.Within
                             else RelativeNodeOffset.Below
                         )

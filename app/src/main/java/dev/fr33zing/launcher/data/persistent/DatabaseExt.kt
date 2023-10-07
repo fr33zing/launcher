@@ -1,12 +1,10 @@
 package dev.fr33zing.launcher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
-import androidx.compose.runtime.mutableStateOf
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.persistent.payloads.Application
-import dev.fr33zing.launcher.data.persistent.payloads.Directory
 
 const val ROOT_NODE_ID = -1
 
@@ -22,14 +20,8 @@ suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
     val result = ArrayList<NodeRow>()
 
     suspend fun add(node: Node, parent: NodeRow?, depth: Int) {
-        val collapsed =
-            if (node.kind == NodeKind.Directory)
-                (getPayloadByNodeId(node.kind, node.nodeId))?.let {
-                    (it as Directory).initiallyCollapsed
-                } ?: false
-            else false
-
-        val row = NodeRow(node, parent, depth, mutableStateOf(collapsed))
+        val payload = getPayloadByNodeId(node.kind, node.nodeId)
+        val row = NodeRow(this, node, payload!!, parent, depth)
         result.add(row)
 
         nodeDao()
