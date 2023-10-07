@@ -60,7 +60,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 }
 
 enum class RelativeNodeOffset(val orderOffset: Int) {
-    Above(-1),
+    Above(0),
     Within(0),
     Below(1),
 }
