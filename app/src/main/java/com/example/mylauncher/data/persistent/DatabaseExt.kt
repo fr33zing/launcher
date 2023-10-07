@@ -3,7 +3,26 @@ package com.example.mylauncher.data.persistent
 import android.content.pm.LauncherActivityInfo
 import androidx.room.withTransaction
 import com.example.mylauncher.data.NodeKind
+import com.example.mylauncher.data.NodeRow
 import com.example.mylauncher.data.persistent.payloads.Application
+
+suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
+    val result = ArrayList<NodeRow>()
+
+    suspend fun add(node: Node, parent: NodeRow?, depth: Int) {
+        val row = NodeRow(node, parent, depth)
+        result.add(row)
+
+        nodeDao()
+            .getChildNodes(node.nodeId)
+            .sortedBy { it.order }
+            .forEach { add(it, row, depth + 1) }
+    }
+
+    nodeDao().getTopLevelNodes().sortedBy { it.order }.forEach { add(it, null, 0) }
+
+    return result
+}
 
 /** Create Nodes and Applications for newly installed apps. Returns the number of new apps added. */
 suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivityInfo>): Int {

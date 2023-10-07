@@ -39,11 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.mylauncher.data.NodeKind
 import com.example.mylauncher.data.NodeRow
-import com.example.mylauncher.data.flattenNodes
 import com.example.mylauncher.data.persistent.AppDatabase
 import com.example.mylauncher.data.persistent.RelativeNodeOffset
 import com.example.mylauncher.data.persistent.RelativeNodePosition
 import com.example.mylauncher.data.persistent.createNode
+import com.example.mylauncher.data.persistent.getFlatNodeList
 import com.example.mylauncher.helper.launchApp
 import com.example.mylauncher.ui.theme.Background
 import com.example.mylauncher.ui.theme.Foreground
@@ -76,12 +76,12 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
 
     // Populate list and listen for changes
-    LaunchedEffect(Unit) { nodes.addAll(flattenNodes(db)) }
+    LaunchedEffect(Unit) { nodes.addAll(db.getFlatNodeList()) }
     DisposableEffect(Unit) {
         val subscription =
             nodesUpdated.subscribe {
                 CoroutineScope(Dispatchers.IO).launch {
-                    val flatNodes = flattenNodes(db)
+                    val flatNodes = db.getFlatNodeList()
                     nodes.clear()
                     nodes.addAll(flatNodes)
                 }
