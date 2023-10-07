@@ -49,7 +49,7 @@ fun colorScheme(darkTheme: Boolean): ColorScheme {
 }
 
 @Composable
-fun MyLauncherTheme(
+fun LauncherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {

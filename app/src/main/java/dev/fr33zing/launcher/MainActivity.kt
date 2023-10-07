@@ -32,7 +32,7 @@ import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Reorder
-import dev.fr33zing.launcher.ui.theme.MyLauncherTheme
+import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
             Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
 
         setContent {
-            MyLauncherTheme {
+            LauncherTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxSize()
