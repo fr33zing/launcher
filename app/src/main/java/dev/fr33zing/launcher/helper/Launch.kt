@@ -17,7 +17,7 @@ fun getUserHandle(userHandleString: String): UserHandle {
         ?: android.os.Process.myUserHandle()
 }
 
-fun launchApp(context: Context, app: Application) {
+fun launchApp(app: Application) {
     val userHandle = getUserHandle(app.userHandle)
     val activityList = launcherApps.getActivityList(app.packageName, userHandle)
     val componentName = ComponentName(app.packageName, activityList[activityList.size - 1].name)

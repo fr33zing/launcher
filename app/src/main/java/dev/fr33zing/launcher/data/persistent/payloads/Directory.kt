@@ -14,7 +14,7 @@ class Directory(
     var initialState: InitialState = InitialState.Preference
 ) : Payload(payloadId, nodeId) {
 
-    enum class InitialState() {
+    enum class InitialState {
         Preference,
         Remember,
         Collapsed,

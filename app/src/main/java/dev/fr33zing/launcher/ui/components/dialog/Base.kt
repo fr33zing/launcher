@@ -98,7 +98,7 @@ private fun BaseDialogCard(
     padding: Boolean,
     spacing: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable() (ColumnScope.(Dp) -> Unit) = {}
+    content: @Composable (ColumnScope.(Dp) -> Unit) = {}
 ) =
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

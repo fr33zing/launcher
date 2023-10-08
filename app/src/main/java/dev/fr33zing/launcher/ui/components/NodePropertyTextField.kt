@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Undo
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -45,7 +44,7 @@ fun refreshNodePropertyTextFields() {
     refresh.onNext(Unit)
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun NodePropertyTextField(
     property: KMutableProperty0<String>,
@@ -134,9 +133,7 @@ private fun ToggleLockedButton(locked: MutableState<Boolean>, userCanUnlock: Boo
         if (locked.value) Icons.Filled.Lock else Icons.Filled.LockOpen,
         contentDescription = if (locked.value) "closed lock" else "open lock",
         modifier =
-            Modifier.conditional(userCanUnlock) {
-                longPressable() { locked.value = !locked.value }
-            },
+            Modifier.conditional(userCanUnlock) { longPressable { locked.value = !locked.value } },
         tint = if (userCanUnlock) Foreground else DisabledTextFieldColor
     )
 }

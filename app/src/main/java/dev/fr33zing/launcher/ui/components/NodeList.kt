@@ -143,7 +143,7 @@ private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow)
             val app =
                 db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
                     ?: throw Exception("Tried to launch null application")
-            launchApp(context, app)
+            launchApp(app)
         }
     }
 }

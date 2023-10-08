@@ -13,7 +13,7 @@ class Catppuccin {
     }
 
     abstract class Palette {
-        companion object {}
+        companion object;
 
         abstract val rosewater: Color
         abstract val flamingo: Color
