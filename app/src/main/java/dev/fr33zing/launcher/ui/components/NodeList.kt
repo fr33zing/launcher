@@ -49,9 +49,7 @@ import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 private val nodesUpdated = PublishSubject.create<Unit>()
@@ -137,12 +135,11 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
     if (nodeRow.node.kind == NodeKind.Directory) {
         nodeRow.collapsed = !nodeRow.collapsed
     } else if (nodeRow.node.kind == NodeKind.Application) {
-        GlobalScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             val app =
                 db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
                     ?: throw Exception("Tried to launch null application")
