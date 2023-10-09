@@ -39,7 +39,7 @@ suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
 /** Create Nodes and Applications for newly installed apps. Returns the number of new apps added. */
 suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivityInfo>): Int {
     var newApps = 0
-    val applicationsDirectory = getOrCreateSingletonDirectory(Directory.SpecialMode.Applications)
+    val applicationsDirectory = getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
 
     activityInfos
         .filter { activityInfo ->

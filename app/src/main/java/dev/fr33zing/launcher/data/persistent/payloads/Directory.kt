@@ -1,8 +1,9 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
@@ -23,14 +24,17 @@ class Directory(
         val modeName: String,
         val defaultDirectoryName: String,
         val icon: ImageVector,
+        val collapsedIcon: ImageVector? = null,
         val userCanCreate: Boolean = false,
         val userCanDelete: Boolean = false,
         val userCanRename: Boolean = false,
+        val userCanAddWithin: Boolean = false,
     ) {
-        Applications(
-            modeName = "Applications",
-            defaultDirectoryName = "Applications",
-            icon = Icons.Filled.Apps,
+        NewApplications(
+            modeName = "New Applications",
+            defaultDirectoryName = "New Applications",
+            icon = Icons.Filled.NewReleases,
+            collapsedIcon = Icons.Outlined.NewReleases,
             userCanRename = true,
         ),
         Trash(

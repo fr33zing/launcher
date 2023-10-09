@@ -109,7 +109,7 @@ fun NodeRow(
         val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
-        val tapColor = node.kind.color(collapsed).copy(alpha = 0.15f)
+        val tapColor = node.kind.color(payload).copy(alpha = 0.15f)
         val tapColorAnimated by
             animateColorAsState(
                 if (pressing.value) tapColor else Color.Transparent,
@@ -129,7 +129,7 @@ fun NodeRow(
                 text = "Add item above",
                 onDialogOpened = {
                     onAddNodeDialogOpened(
-                        RelativeNodePosition(row.node.nodeId, RelativeNodeOffset.Above)
+                        RelativeNodePosition(node.nodeId, RelativeNodeOffset.Above)
                     )
                 },
                 onDialogClosed = onAddNodeDialogClosed,
@@ -139,7 +139,7 @@ fun NodeRow(
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
                 Node(
                     navController,
-                    node,
+                    row,
                     visible,
                     collapsed,
                     fontSize,
@@ -183,7 +183,7 @@ fun NodeRow(
 @Composable
 fun Node(
     navController: NavController,
-    node: Node,
+    row: NodeRow,
     visible: Boolean,
     collapsed: Boolean,
     fontSize: TextUnit,
@@ -197,50 +197,56 @@ fun Node(
     onLongPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val haptics = LocalHapticFeedback.current
-    val icon = node.kind.icon(collapsed)
-    val color = node.kind.color(collapsed)
+    with(row) {
+        val haptics = LocalHapticFeedback.current
+        val icon = node.kind.icon(payload)
+        val color = node.kind.color(payload)
 
-    Box(Modifier.height(IntrinsicSize.Min)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(vertical = spacing / 2)
-                    .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
-                    .conditional(visible) {
-                        pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(requireUnconsumed = true)
-                                val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-                                val heldButtonJob =
-                                    scope.launch {
-                                        delay(25)
-                                        pressing.value = true
-                                        delay(getLongPressTimeout().toLong() - 25)
-                                        // Long press
-                                        pressing.value = false
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onLongPressed()
+        Box(Modifier.height(IntrinsicSize.Min)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(vertical = spacing / 2)
+                        .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
+                        .conditional(visible) {
+                            pointerInput(Unit) {
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = true)
+                                    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+                                    val heldButtonJob =
+                                        scope.launch {
+                                            delay(25)
+                                            pressing.value = true
+                                            delay(getLongPressTimeout().toLong() - 25)
+                                            // Long press
+                                            pressing.value = false
+                                            haptics.performHapticFeedback(
+                                                HapticFeedbackType.LongPress
+                                            )
+                                            onLongPressed()
+                                        }
+                                    waitForUpOrCancellation()?.run {
+                                        // Tap
+                                        if (pressing.value) {
+                                            haptics.performHapticFeedback(
+                                                HapticFeedbackType.LongPress
+                                            )
+                                            onTapped()
+                                        }
                                     }
-                                waitForUpOrCancellation()?.run {
-                                    // Tap
-                                    if (pressing.value) {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onTapped()
-                                    }
+                                    heldButtonJob.cancel()
+                                    pressing.value = false
                                 }
-                                heldButtonJob.cancel()
-                                pressing.value = false
                             }
                         }
-                    }
-                    .then(modifier)
-        ) {
-            NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
-        }
+                        .then(modifier)
+            ) {
+                NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
+            }
 
-        NodeOptionButtons(navController, showOptions, fontSize, lineHeight, node)
+            NodeOptionButtons(navController, showOptions, fontSize, lineHeight, node)
+        }
     }
 }
 
@@ -372,7 +378,14 @@ private fun NodeOptionButtons(
                 .background(Background.copy(alpha = 0.75f))
                 .clickable(onClick = { /* Prevent tapping node underneath */})
         ) {
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Delete") {}
+            NodeOptionButton(
+                fontSize,
+                lineHeight,
+                Icons.Outlined.Delete,
+                "Delete",
+                onLongPress = {},
+                onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
+            )
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {
                 navController.navigate("reorder/${node.parentId}")
             }
@@ -393,16 +406,19 @@ private fun NodeOptionButton(
     lineHeight: Dp,
     icon: ImageVector,
     text: String,
-    onClick: () -> Unit,
+    onLongPress: () -> Unit = {},
+    onTap: () -> Unit,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.padding(horizontal = lineHeight * 0.5f).clickable(onClick = onClick)
+        modifier =
+            Modifier.padding(horizontal = lineHeight * 0.5f).pointerInput(Unit) {
+                detectTapGestures(onTap = { onTap() })
+            }
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
         ) {
             Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f))
             Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold)

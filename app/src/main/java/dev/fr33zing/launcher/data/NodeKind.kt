@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 
@@ -49,10 +50,17 @@ enum class NodeKind {
     /** A time/date alert, optionally recurring */
     Reminder;
 
-    fun color(collapsed: Boolean = false): Color =
+    fun color(payload: Payload? = null): Color =
         when (this) {
             Reference -> Catppuccin.Current.mauve
-            Directory -> if (collapsed) collapsedDirectoryColor else directoryColor
+            Directory -> {
+                if (
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.Directory &&
+                        payload.collapsed == true
+                )
+                    collapsedDirectoryColor
+                else directoryColor
+            }
             Application -> Foreground
             WebLink -> Catppuccin.Current.yellow
             File -> Catppuccin.Current.peach
@@ -62,10 +70,21 @@ enum class NodeKind {
             Reminder -> Catppuccin.Current.red
         }
 
-    fun icon(collapsed: Boolean = false): ImageVector =
+    fun icon(payload: Payload? = null): ImageVector =
         when (this) {
             Reference -> Icons.Filled.East
-            Directory -> if (collapsed) Icons.Outlined.Folder else Icons.Filled.Folder
+            Directory -> {
+                if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
+                    if (payload.specialMode != null) {
+                        if (payload.collapsed == true) {
+                            payload.specialMode!!.collapsedIcon ?: payload.specialMode!!.icon
+                        } else payload.specialMode!!.icon
+                    } else {
+                        if (payload.collapsed == true) Icons.Outlined.Folder
+                        else Icons.Filled.Folder
+                    }
+                } else Icons.Filled.Folder
+            }
             Application -> Icons.Filled.Launch
             WebLink -> Icons.Filled.Link
             File -> Icons.Filled.Description
