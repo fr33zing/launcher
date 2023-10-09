@@ -79,6 +79,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
         val subscription =
             nodesUpdated.subscribe {
                 CoroutineScope(Dispatchers.IO).launch {
+                    nodeOptionsVisibleIndex = null
                     val flatNodes = db.getFlatNodeList()
                     nodes.clear()
                     nodes.addAll(flatNodes)
@@ -105,6 +106,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                 NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = true)
 
                 NodeRow(
+                    db,
                     navController,
                     row,
                     nodeOptionsVisibleIndex,

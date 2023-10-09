@@ -32,11 +32,17 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
+import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.ui.theme.Background
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun NodeOptionButtons(
+    db: AppDatabase,
     navController: NavController,
     visible: Boolean,
     fontSize: TextUnit,
@@ -64,7 +70,9 @@ fun NodeOptionButtons(
                     lineHeight,
                     Icons.Outlined.Delete,
                     "Delete",
-                    onLongPress = {},
+                    onLongPress = {
+                        CoroutineScope(Dispatchers.IO).launch { db.moveToTrash(row.node) }
+                    },
                     onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
                 )
 
@@ -123,7 +131,7 @@ private fun NodeOptionButton(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier.padding(horizontal = lineHeight * 0.5f).pointerInput(Unit) {
-                detectTapGestures(onTap = { onTap() })
+                detectTapGestures(onTap = { onTap() }, onLongPress = { onLongPress() })
             }
     ) {
         Column(

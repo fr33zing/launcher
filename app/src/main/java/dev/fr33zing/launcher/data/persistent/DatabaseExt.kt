@@ -6,6 +6,7 @@ import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.ui.components.refreshNodeList
 
 const val ROOT_NODE_ID = -1
 
@@ -145,3 +146,10 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
 /** Convenience function to get or create the root node. */
 suspend fun AppDatabase.getRootNode(): Node =
     getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
+
+suspend fun AppDatabase.moveToTrash(node: Node) {
+    val trash = getOrCreateSingletonDirectory(Directory.SpecialMode.Trash)
+    node.parentId = trash.nodeId
+    update(node)
+    refreshNodeList()
+}

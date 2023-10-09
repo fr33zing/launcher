@@ -23,7 +23,7 @@ fun List<Node>.fixOrder(): List<Node> {
 @Entity
 data class Node(
     @PrimaryKey(autoGenerate = true) val nodeId: Int,
-    val parentId: Int?,
+    var parentId: Int?,
     val kind: NodeKind,
     var order: Int,
     @UserEditable(label = "Label") var label: String,

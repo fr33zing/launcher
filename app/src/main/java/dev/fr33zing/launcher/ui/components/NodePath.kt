@@ -126,6 +126,6 @@ private suspend fun getHierarchy(
 ): ArrayList<Node> {
     list.add(0, node)
     if (node.parentId == null) return list
-    val parent = db.nodeDao().getNodeById(node.parentId) ?: throw Exception("Parent is null")
+    val parent = db.nodeDao().getNodeById(node.parentId!!) ?: throw Exception("Parent is null")
     return getHierarchy(db, parent, list)
 }

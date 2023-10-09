@@ -58,6 +58,7 @@ import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.nodeIndent
+import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
@@ -73,6 +74,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun NodeRow(
+    db: AppDatabase,
     navController: NavController,
     row: NodeRow,
     nodeOptionsVisibleIndex: Int?,
@@ -114,6 +116,7 @@ fun NodeRow(
         fun node() {
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
                 Node(
+                    db,
                     navController,
                     row,
                     visible,
@@ -189,6 +192,7 @@ fun NodeRow(
 
 @Composable
 fun Node(
+    db: AppDatabase,
     navController: NavController,
     row: NodeRow,
     visible: Boolean,
@@ -251,7 +255,7 @@ fun Node(
                 NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
             }
 
-            NodeOptionButtons(navController, showOptions, fontSize, lineHeight, row)
+            NodeOptionButtons(db, navController, showOptions, fontSize, lineHeight, row)
         }
     }
 }
