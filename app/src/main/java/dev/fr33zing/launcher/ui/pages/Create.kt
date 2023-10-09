@@ -103,7 +103,7 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
                 )
             }
         ) { innerPadding ->
-            EditForm(innerPadding, node!!, payload!!)
+            EditForm(db, innerPadding, node!!, payload!!)
         }
     }
 }

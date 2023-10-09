@@ -19,14 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.EditFormColumn
+import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
 
 @Composable
 fun DirectoryEditForm(
+    db: AppDatabase,
     innerPadding: PaddingValues,
     payload: Payload?,
     node: Node,
@@ -34,6 +37,7 @@ fun DirectoryEditForm(
     val directory = payload as Directory
 
     EditFormColumn(innerPadding) {
+        NodePath(db, node)
         NodePropertyTextField(node::label)
         Spacer(Modifier.height(16.dp))
         InitialState(directory)

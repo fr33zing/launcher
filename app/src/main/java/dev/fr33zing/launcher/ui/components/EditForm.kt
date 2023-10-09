@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.editforms.ApplicationEditForm
@@ -27,10 +28,10 @@ private val extraPadding = 16.dp
 private val spacing = 16.dp
 
 @Composable
-fun EditForm(innerPadding: PaddingValues, node: Node, payload: Payload) {
+fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: Payload) {
     when (node.kind) {
         NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
-        NodeKind.Directory -> DirectoryEditForm(innerPadding, payload, node)
+        NodeKind.Directory -> DirectoryEditForm(db, innerPadding, payload, node)
         else -> DefaultEditForm(innerPadding, node)
     }
 }
