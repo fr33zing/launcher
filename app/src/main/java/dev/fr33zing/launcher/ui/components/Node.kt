@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,10 +31,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
@@ -73,6 +70,7 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
 import dev.fr33zing.launcher.ui.theme.Background
@@ -155,27 +153,29 @@ fun NodeRow(
             }
 
             val isExpandedDir = node.kind == NodeKind.Directory && !collapsed
-            AddNodeButton(
-                fontSize,
-                lineHeight,
-                spacing,
-                indent,
-                depth = if (isExpandedDir) depth + 1 else depth,
-                visible = showOptions,
-                below = true,
-                text = if (isExpandedDir) "Add item within" else "Add item below",
-                onDialogOpened = {
-                    onAddNodeDialogOpened(
-                        RelativeNodePosition(
-                            node.nodeId,
-                            if (isExpandedDir) RelativeNodeOffset.Within
-                            else RelativeNodeOffset.Below
+            if (!isExpandedDir || (payload as Directory).specialMode?.userCanAddWithin != false) {
+                AddNodeButton(
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth = if (isExpandedDir) depth + 1 else depth,
+                    visible = showOptions,
+                    below = true,
+                    text = if (isExpandedDir) "Add item within" else "Add item below",
+                    onDialogOpened = {
+                        onAddNodeDialogOpened(
+                            RelativeNodePosition(
+                                node.nodeId,
+                                if (isExpandedDir) RelativeNodeOffset.Within
+                                else RelativeNodeOffset.Below
+                            )
                         )
-                    )
-                },
-                onDialogClosed = onAddNodeDialogClosed,
-                onKindChosen = onNewNodeKindChosen
-            )
+                    },
+                    onDialogClosed = onAddNodeDialogClosed,
+                    onKindChosen = onNewNodeKindChosen
+                )
+            }
         }
     }
 }
@@ -256,33 +256,18 @@ fun NodeIconAndText(
     lineHeight: Dp,
     label: String,
     color: Color,
-    icon: ImageVector?,
+    icon: ImageVector,
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
     @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
 ) {
-    val iconSize = 0.9f
-    if (icon != null) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(lineHeight * iconSize),
-        )
-    } else {
-        val iconPlaceholderSize = 0.5f
-        val extraSpace = Modifier.width(lineHeight * (iconSize - iconPlaceholderSize) / 2)
-
-        Spacer(extraSpace)
-        Icon(
-            Icons.Outlined.Circle,
-            contentDescription = null,
-            tint = color.copy(alpha = 0.3f),
-            modifier = Modifier.size(lineHeight * 0.5f)
-        )
-        Spacer(extraSpace)
-    }
-
+    val iconSize = 1f
+    Icon(
+        icon,
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(lineHeight * iconSize),
+    )
     Text(
         text = label,
         modifier =

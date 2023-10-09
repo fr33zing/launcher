@@ -102,7 +102,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
             item { Spacer(Modifier.height(paddingTop)) }
 
             itemsIndexed(nodes) { index, row ->
-                NewNodePositionIndicator(newNodePosition, index, above = true)
+                NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = true)
 
                 NodeRow(
                     navController,
@@ -115,8 +115,8 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                     },
                     onLongPressed = { nodeOptionsVisibleIndex = index },
                     onAddNodeDialogOpened = {
-                        nodeOptionsVisibleIndex = null
                         newNodePosition = it
+                        nodeOptionsVisibleIndex = null
                     },
                     onAddNodeDialogClosed = { newNodePosition = null },
                     onNewNodeKindChosen = {
@@ -125,7 +125,7 @@ fun NodeList(db: AppDatabase, navController: NavController) {
                     }
                 )
 
-                NewNodePositionIndicator(newNodePosition, index, above = false)
+                NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = false)
             }
 
             item { Spacer(Modifier.height(paddingBottom)) }
@@ -163,11 +163,12 @@ private fun onAddNode(
 @Composable
 private fun NewNodePositionIndicator(
     newNodePosition: RelativeNodePosition?,
-    index: Int,
+    nodeId: Int,
     above: Boolean,
 ) {
     val visible =
-        newNodePosition?.relativeToNodeId == index &&
+        newNodePosition != null &&
+            newNodePosition.relativeToNodeId == nodeId &&
             (newNodePosition.offset == RelativeNodeOffset.Above) == above
     val density = LocalDensity.current
     val strokeWidth = with(density) { (2.dp).toPx() }
@@ -185,7 +186,7 @@ private fun NewNodePositionIndicator(
                     color = Foreground,
                     strokeWidth = strokeWidth,
                     start = Offset(0f, 0f),
-                    end = Offset(this.size.width * width.value, 0f),
+                    end = Offset(size.width * width.value, 0f),
                     pathEffect =
                         PathEffect.dashPathEffect(
                             intervals = floatArrayOf(dashInterval, dashInterval),
