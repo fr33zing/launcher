@@ -13,6 +13,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
+import dev.fr33zing.launcher.ui.components.Notice
+import dev.fr33zing.launcher.ui.components.sendNotice
 
 // https://stackoverflow.com/a/72554087
 fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
@@ -23,17 +25,24 @@ fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier):
     }
 }
 
-fun Modifier.longPressable(onLongPressed: () -> Unit) = composed {
-    val haptics = LocalHapticFeedback.current
-    pointerInput(onLongPressed) {
-        detectTapGestures(
-            onLongPress = {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                onLongPressed()
-            }
-        )
+fun Modifier.longPressable(tapNotice: (() -> Notice)? = null, onLongPressed: () -> Unit) =
+    composed {
+        val haptics = LocalHapticFeedback.current
+        pointerInput(onLongPressed) {
+            detectTapGestures(
+                onTap = {
+                    tapNotice?.let {
+                        sendNotice(tapNotice())
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                },
+                onLongPress = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongPressed()
+                }
+            )
+        }
     }
-}
 
 // TODO use this for NodeList?
 fun Modifier.verticalScrollShadows(height: Dp) = drawWithContent {

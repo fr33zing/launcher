@@ -134,7 +134,18 @@ private fun ToggleLockedButton(locked: MutableState<Boolean>, userCanUnlock: Boo
         if (locked.value) Icons.Filled.Lock else Icons.Filled.LockOpen,
         contentDescription = if (locked.value) "closed lock" else "open lock",
         modifier =
-            Modifier.conditional(userCanUnlock) { longPressable { locked.value = !locked.value } },
+            Modifier.conditional(userCanUnlock) {
+                longPressable(
+                    tapNotice = {
+                        Notice(
+                            "toggle-lock",
+                            "Long press to ${if (locked.value) "unlock" else  "lock"} this field."
+                        )
+                    }
+                ) {
+                    locked.value = !locked.value
+                }
+            },
         tint = if (userCanUnlock) Foreground else DisabledTextFieldColor
     )
 }
@@ -144,6 +155,10 @@ private fun RevertButton(onLongPressed: () -> Unit) {
     Icon(
         Icons.Filled.Undo,
         contentDescription = "revert changes",
-        modifier = Modifier.longPressable(onLongPressed)
+        modifier =
+            Modifier.longPressable(
+                tapNotice = { Notice("revert", "Long press to revert this field.") },
+                onLongPressed = onLongPressed
+            )
     )
 }

@@ -1,6 +1,11 @@
 package dev.fr33zing.launcher.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -26,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,12 +51,17 @@ import java.util.Timer
 import java.util.UUID
 import kotlin.concurrent.timerTask
 
-private const val NOTICE_DURATION_MS = 3000
+private const val NOTICE_DURATION_MS = 2750
 private const val ANIMATION_DURATION_MS = 300
 
 private val noticesSubject = PublishSubject.create<Notice>()
 
-data class Notice(val id: String, val text: String, val kind: NoticeKind) {
+data class Notice(
+    val id: String,
+    val text: String,
+    val kind: NoticeKind = NoticeKind.Information,
+    val duration: Int = NOTICE_DURATION_MS
+) {
     val initialized: MutableState<Boolean> = mutableStateOf(false)
     val visible: MutableState<Boolean> = mutableStateOf(false)
     val uuid: UUID = UUID.randomUUID()
@@ -70,7 +82,10 @@ fun sendNotice(
     id: String,
     text: String,
     kind: NoticeKind = NoticeKind.Information,
-) = noticesSubject.onNext(Notice(id, text, kind))
+    duration: Int = NOTICE_DURATION_MS
+) = noticesSubject.onNext(Notice(id, text, kind, duration))
+
+fun sendNotice(notice: Notice) = noticesSubject.onNext(notice)
 
 @Composable
 fun Notices() {
@@ -79,9 +94,26 @@ fun Notices() {
     val notices = remember { mutableStateOf(listOf<Notice>()) }
 
     DisposableEffect(Unit) {
-        val subscription = noticesSubject.subscribe { notices.value = notices.value + it }
+        val subscription =
+            noticesSubject.subscribe { notice ->
+                if (notices.value.none { it.id == notice.id })
+                    notices.value = notices.value + notice
+            }
         onDispose { subscription.dispose() }
     }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "notice text color")
+    val textColor by
+        infiniteTransition.animateColor(
+            initialValue = Foreground,
+            targetValue = Foreground.mix(Background, 0.2f),
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(225, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+            label = "notice text color"
+        )
 
     with(notices.value.firstOrNull() ?: return) {
         LaunchedEffect(initialized.value) {
@@ -93,12 +125,12 @@ fun Notices() {
             Timer()
                 .schedule(
                     timerTask { visible.value = false },
-                    NOTICE_DURATION_MS - ANIMATION_DURATION_MS.toLong()
+                    duration - ANIMATION_DURATION_MS.toLong()
                 )
             Timer()
                 .schedule(
                     timerTask { notices.value = notices.value.filter { it.uuid != uuid } },
-                    NOTICE_DURATION_MS.toLong()
+                    duration.toLong()
                 )
         }
 
@@ -120,9 +152,14 @@ fun Notices() {
                                     }
                             )
                 ) {
-                    Icon(kind.icon, null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        kind.icon,
+                        null,
+                        modifier = Modifier.size(18.dp).offset(y = 1.dp),
+                        tint = textColor
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(text)
+                    Text(text, color = textColor)
                 }
             }
         }
