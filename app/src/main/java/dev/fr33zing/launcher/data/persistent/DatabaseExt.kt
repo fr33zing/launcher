@@ -113,17 +113,19 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
             1 -> directories[0].nodeId
             0 -> {
                 withTransaction {
-                    val rootNode = getRootNode()
+                    val isRoot = specialMode == Directory.SpecialMode.Root
+                    val nodeId = if (isRoot) ROOT_NODE_ID else 0
+                    val parentId = if (isRoot) null else getRootNode().nodeId
                     insert(
                         Node(
-                            nodeId = 0,
-                            parentId = rootNode.nodeId,
+                            nodeId = nodeId,
+                            parentId = parentId,
                             kind = NodeKind.Directory,
                             order = 0,
                             label = specialMode.defaultDirectoryName,
                         )
                     )
-                    val lastNodeId = nodeDao().getLastNodeId()
+                    val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
                     insert(
                         Directory(
                             payloadId = 0,
@@ -140,20 +142,6 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
     return nodeDao().getNodeById(nodeId)!!
 }
 
-suspend fun AppDatabase.getRootNode(): Node {
-    return nodeDao().getNodeById(ROOT_NODE_ID)
-        ?: withTransaction {
-            insert(
-                Node(
-                    nodeId = ROOT_NODE_ID,
-                    parentId = null,
-                    kind = NodeKind.Directory,
-                    order = 0,
-                    label = "Root"
-                )
-            )
-            insert(createDefaultPayloadForNode(NodeKind.Directory, ROOT_NODE_ID))
-
-            nodeDao().getLastNode()
-        }
-}
+/** Convenience function to get or create the root node. */
+suspend fun AppDatabase.getRootNode(): Node =
+    getOrCreateSingletonDirectory(Directory.SpecialMode.Root)

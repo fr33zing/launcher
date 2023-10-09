@@ -15,11 +15,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.util.mix
 
 private val directoryColor = Catppuccin.Current.sapphire
+private val rootDirectoryColor = Foreground.mix(Background, 0.5f)
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
 
 enum class NodeKind {
@@ -54,12 +58,10 @@ enum class NodeKind {
         when (this) {
             Reference -> Catppuccin.Current.mauve
             Directory -> {
-                if (
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.Directory &&
-                        payload.collapsed == true
-                )
-                    collapsedDirectoryColor
-                else directoryColor
+                if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
+                    if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
+                    else if (payload.collapsed == true) collapsedDirectoryColor else directoryColor
+                } else directoryColor
             }
             Application -> Foreground
             WebLink -> Catppuccin.Current.yellow

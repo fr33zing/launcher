@@ -2,8 +2,10 @@ package dev.fr33zing.launcher.data.persistent.payloads
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeviceHub
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.rounded.DeviceHub
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
@@ -32,6 +34,11 @@ class Directory(
         val userCanDeleteWithin: Boolean = false,
         val userCanEditWithin: Boolean = false,
     ) {
+        Root(
+            modeName = "Root",
+            defaultDirectoryName = "Root",
+            icon = Icons.Rounded.DeviceHub,
+        ),
         NewApplications(
             modeName = "New Applications",
             defaultDirectoryName = "New Applications",
