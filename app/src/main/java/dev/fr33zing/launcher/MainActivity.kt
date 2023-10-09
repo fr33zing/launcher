@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,6 +28,7 @@ import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.helper.getActivityInfos
 import dev.fr33zing.launcher.helper.launcherApps
 import dev.fr33zing.launcher.helper.userManager
+import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
@@ -56,7 +58,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    Main(db)
+                    Box {
+                        Main(db)
+                        Notices()
+                    }
 
                     // Check for new apps
                     LaunchedEffect(Unit) {
