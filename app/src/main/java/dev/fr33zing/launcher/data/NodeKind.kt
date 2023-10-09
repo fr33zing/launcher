@@ -54,13 +54,14 @@ enum class NodeKind {
     /** A time/date alert, optionally recurring */
     Reminder;
 
-    fun color(payload: Payload? = null): Color =
+    fun color(payload: Payload? = null, ignoreState: Boolean = false): Color =
         when (this) {
             Reference -> Catppuccin.Current.mauve
             Directory -> {
                 if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
                     if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
-                    else if (payload.collapsed == true) collapsedDirectoryColor else directoryColor
+                    else if (payload.collapsed == true && !ignoreState) collapsedDirectoryColor
+                    else directoryColor
                 } else directoryColor
             }
             Application -> Foreground
@@ -72,17 +73,17 @@ enum class NodeKind {
             Reminder -> Catppuccin.Current.red
         }
 
-    fun icon(payload: Payload? = null): ImageVector =
+    fun icon(payload: Payload? = null, ignoreState: Boolean = false): ImageVector =
         when (this) {
             Reference -> Icons.Filled.East
             Directory -> {
                 if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
                     if (payload.specialMode != null) {
-                        if (payload.collapsed == true) {
+                        if (payload.collapsed == true && !ignoreState) {
                             payload.specialMode!!.collapsedIcon ?: payload.specialMode!!.icon
                         } else payload.specialMode!!.icon
                     } else {
-                        if (payload.collapsed == true) Icons.Outlined.Folder
+                        if (payload.collapsed == true && !ignoreState) Icons.Outlined.Folder
                         else Icons.Filled.Folder
                     }
                 } else Icons.Filled.Folder

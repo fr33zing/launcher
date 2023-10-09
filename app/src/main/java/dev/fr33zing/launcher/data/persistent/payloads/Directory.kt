@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.data.persistent.payloads
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeviceHub
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.rounded.DeviceHub

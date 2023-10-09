@@ -26,6 +26,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.EditFormColumn
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.OutlinedReadOnlyValue
 
 @Composable
 fun DirectoryEditForm(
@@ -37,8 +38,11 @@ fun DirectoryEditForm(
     val directory = payload as Directory
 
     EditFormColumn(innerPadding) {
-        NodePath(db, node)
-        NodePropertyTextField(node::label)
+        val labelState = remember { mutableStateOf(node.label) }
+        OutlinedReadOnlyValue(label = "Path", modifier = Modifier.fillMaxWidth()) {
+            NodePath(db, node, lastNodeLabelState = labelState)
+        }
+        NodePropertyTextField(node::label, state = labelState)
         Spacer(Modifier.height(16.dp))
         InitialState(directory)
     }

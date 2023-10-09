@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,33 +30,39 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 
 @Composable
-fun NodePath(db: AppDatabase, node: Node) {
+fun NodePath(db: AppDatabase, node: Node, lastNodeLabelState: MutableState<String>? = null) {
     val hierarchy = remember { mutableListOf<Node>() }
     val payloads = remember { mutableListOf<Payload>() }
     var annotatedString by remember { mutableStateOf<AnnotatedString?>(null) }
     val inlineContents = remember { mutableMapOf<String, InlineTextContent>() }
 
-    LaunchedEffect(node) {
-        getHierarchy(db, node, ArrayList()).also {
-            hierarchy.clear()
-            hierarchy += it
-
-            hierarchy.forEachIndexed { index, node ->
-                payloads.add(
-                    index,
-                    db.getPayloadByNodeId(node.kind, node.nodeId)
-                        ?: throw Exception("Payload is null")
-                )
-            }
-
-            annotatedString = buildAnnotatedString {
+    LaunchedEffect(node, lastNodeLabelState?.value) {
+        if (hierarchy.isEmpty()) {
+            getHierarchy(db, node, ArrayList()).also {
+                hierarchy += it
                 hierarchy.forEachIndexed { index, node ->
-                    val payload = payloads.getOrNull(index)
-
-                    nodeIcon(node, payload, inlineContents)
-                    withStyle(SpanStyle(color = node.kind.color(payload))) { append(node.label) }
-                    if (index < hierarchy.size - 1) delimiter(node, inlineContents)
+                    payloads.add(
+                        index,
+                        db.getPayloadByNodeId(node.kind, node.nodeId)
+                            ?: throw Exception("Payload is null")
+                    )
                 }
+            }
+        }
+
+        annotatedString = buildAnnotatedString {
+            hierarchy.forEachIndexed { index, node ->
+                val payload = payloads.getOrNull(index)
+                val label =
+                    if (lastNodeLabelState != null && index == hierarchy.size - 1)
+                        lastNodeLabelState.value
+                    else node.label
+
+                nodeIcon(node, payload, inlineContents)
+                withStyle(SpanStyle(color = node.kind.color(payload, ignoreState = true))) {
+                    append(label)
+                }
+                if (index < hierarchy.size - 1) delimiter(node, inlineContents)
             }
         }
     }
@@ -79,9 +86,9 @@ private fun AnnotatedString.Builder.nodeIcon(
         ) {
             Row(modifier = Modifier.fillMaxSize()) {
                 Icon(
-                    node.kind.icon(payload),
+                    node.kind.icon(payload, ignoreState = true),
                     contentDescription = "node icon",
-                    tint = node.kind.color(payload),
+                    tint = node.kind.color(payload, ignoreState = true),
                     modifier = Modifier.fillMaxHeight()
                 )
                 Spacer(modifier = Modifier.weight(1f))
