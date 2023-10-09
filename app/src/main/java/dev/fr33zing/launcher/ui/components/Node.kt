@@ -14,18 +14,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absolutePadding
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -33,10 +30,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,7 +50,6 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -66,14 +58,12 @@ import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.nodeIndent
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,31 +105,18 @@ fun NodeRow(
                 label = "node tap alpha"
             )
 
-        Column {
-            AddNodeButton(
-                fontSize,
-                lineHeight,
-                spacing,
-                indent,
-                depth,
-                visible = showOptions,
-                below = false,
-                text = "Add item above",
-                onDialogOpened = {
-                    onAddNodeDialogOpened(
-                        RelativeNodePosition(node.nodeId, RelativeNodeOffset.Above)
-                    )
-                },
-                onDialogClosed = onAddNodeDialogClosed,
-                onKindChosen = onNewNodeKindChosen
-            )
+        val userCanCreateWithinParent =
+            if (parent?.payload is Directory) {
+                (parent.payload as Directory).specialMode?.userCanCreateWithin ?: true
+            } else true
 
+        @Composable
+        fun node() {
             AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
                 Node(
                     navController,
                     row,
                     visible,
-                    collapsed,
                     fontSize,
                     lineHeight,
                     spacing,
@@ -151,30 +128,60 @@ fun NodeRow(
                     onLongPressed,
                 )
             }
+        }
 
-            val isExpandedDir = node.kind == NodeKind.Directory && !collapsed
-            if (!isExpandedDir || (payload as Directory).specialMode?.userCanAddWithin != false) {
+        if (!userCanCreateWithinParent) {
+            // Never show AddNodeButtons if the parent directory prevents creating nodes within it.
+            node()
+        } else {
+            Column {
                 AddNodeButton(
                     fontSize,
                     lineHeight,
                     spacing,
                     indent,
-                    depth = if (isExpandedDir) depth + 1 else depth,
+                    depth,
                     visible = showOptions,
-                    below = true,
-                    text = if (isExpandedDir) "Add item within" else "Add item below",
+                    below = false,
+                    text = "Add item above",
                     onDialogOpened = {
                         onAddNodeDialogOpened(
-                            RelativeNodePosition(
-                                node.nodeId,
-                                if (isExpandedDir) RelativeNodeOffset.Within
-                                else RelativeNodeOffset.Below
-                            )
+                            RelativeNodePosition(node.nodeId, RelativeNodeOffset.Above)
                         )
                     },
                     onDialogClosed = onAddNodeDialogClosed,
                     onKindChosen = onNewNodeKindChosen
                 )
+
+                node()
+
+                val isExpandedDir = node.kind == NodeKind.Directory && !collapsed
+                if (
+                    !isExpandedDir ||
+                        (payload as Directory).specialMode?.userCanCreateWithin != false
+                ) {
+                    AddNodeButton(
+                        fontSize,
+                        lineHeight,
+                        spacing,
+                        indent,
+                        depth = if (isExpandedDir) depth + 1 else depth,
+                        visible = showOptions,
+                        below = true,
+                        text = if (isExpandedDir) "Add item within" else "Add item below",
+                        onDialogOpened = {
+                            onAddNodeDialogOpened(
+                                RelativeNodePosition(
+                                    node.nodeId,
+                                    if (isExpandedDir) RelativeNodeOffset.Within
+                                    else RelativeNodeOffset.Below
+                                )
+                            )
+                        },
+                        onDialogClosed = onAddNodeDialogClosed,
+                        onKindChosen = onNewNodeKindChosen
+                    )
+                }
             }
         }
     }
@@ -185,7 +192,6 @@ fun Node(
     navController: NavController,
     row: NodeRow,
     visible: Boolean,
-    collapsed: Boolean,
     fontSize: TextUnit,
     lineHeight: Dp,
     spacing: Dp,
@@ -245,7 +251,7 @@ fun Node(
                 NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
             }
 
-            NodeOptionButtons(navController, showOptions, fontSize, lineHeight, node)
+            NodeOptionButtons(navController, showOptions, fontSize, lineHeight, row)
         }
     }
 }
@@ -295,7 +301,6 @@ private fun AddNodeButton(
     onDialogClosed: () -> Unit,
     onKindChosen: (NodeKind) -> Unit,
 ) {
-
     val color = Foreground.copy(alpha = 0.5f)
     val extraSpacing = lineHeight * 0.8f
     val expandFrom = if (below) Alignment.Bottom else Alignment.Top
@@ -343,93 +348,6 @@ private fun AddNodeButton(
             onKindChosen(it)
         }
     )
-}
-
-@Composable
-private fun NodeOptionButtons(
-    navController: NavController,
-    visible: Boolean,
-    fontSize: TextUnit,
-    lineHeight: Dp,
-    node: Node,
-) {
-    AnimatedVisibility(
-        visible,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        NodeOptionButtonsLayout(
-            Modifier.fillMaxHeight()
-                .background(Background.copy(alpha = 0.75f))
-                .clickable(onClick = { /* Prevent tapping node underneath */})
-        ) {
-            NodeOptionButton(
-                fontSize,
-                lineHeight,
-                Icons.Outlined.Delete,
-                "Delete",
-                onLongPress = {},
-                onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
-            )
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {
-                navController.navigate("reorder/${node.parentId}")
-            }
-            NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
-                navController.navigate("edit/${node.nodeId}")
-            }
-
-            if (node.kind == NodeKind.Application) {
-                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {}
-            }
-        }
-    }
-}
-
-@Composable
-private fun NodeOptionButton(
-    fontSize: TextUnit,
-    lineHeight: Dp,
-    icon: ImageVector,
-    text: String,
-    onLongPress: () -> Unit = {},
-    onTap: () -> Unit,
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier =
-            Modifier.padding(horizontal = lineHeight * 0.5f).pointerInput(Unit) {
-                detectTapGestures(onTap = { onTap() })
-            }
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceAround,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f))
-            Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun NodeOptionButtonsLayout(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Layout(modifier = modifier, content = content) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints) }
-        layout(constraints.maxWidth, constraints.minHeight) {
-            placeables.forEachIndexed { index, placeable ->
-                placeable.placeRelative(
-                    x =
-                        ((constraints.maxWidth / placeables.size * (index + 0.5f)) -
-                                placeable.width / 2)
-                            .toInt(),
-                    y = 0
-                )
-            }
-        }
-    }
 }
 
 @Composable

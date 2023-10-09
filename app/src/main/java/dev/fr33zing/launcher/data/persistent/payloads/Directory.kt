@@ -27,15 +27,18 @@ class Directory(
         val collapsedIcon: ImageVector? = null,
         val userCanCreate: Boolean = false,
         val userCanDelete: Boolean = false,
-        val userCanRename: Boolean = false,
-        val userCanAddWithin: Boolean = false,
+        val userCanEdit: Boolean = false,
+        val userCanCreateWithin: Boolean = false,
+        val userCanDeleteWithin: Boolean = false,
+        val userCanEditWithin: Boolean = false,
     ) {
         NewApplications(
             modeName = "New Applications",
             defaultDirectoryName = "New Applications",
             icon = Icons.Filled.NewReleases,
             collapsedIcon = Icons.Outlined.NewReleases,
-            userCanRename = true,
+            userCanEdit = true,
+            userCanEditWithin = true
         ),
         Trash(
             modeName = "Trash",

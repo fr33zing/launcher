@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NodeRow(
-    val db: AppDatabase,
+    private val db: AppDatabase,
     val node: Node,
     val payload: Payload,
     val parent: NodeRow?,
