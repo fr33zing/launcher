@@ -11,10 +11,10 @@ class Directory(
     payloadId: Int,
     nodeId: Int,
     var collapsed: Boolean? = null,
-    var initialState: InitialState = InitialState.Preference
+    var initialVisibility: InitialVisibility = InitialVisibility.Preference
 ) : Payload(payloadId, nodeId) {
 
-    enum class InitialState {
+    enum class InitialVisibility {
         Preference,
         Remember,
         Collapsed,
@@ -31,17 +31,18 @@ class Directory(
 
     val initiallyCollapsed: Boolean
         get() =
-            when (initialState) {
-                InitialState.Preference -> false // TODO replace with preference
-                InitialState.Collapsed -> true
-                InitialState.Expanded -> false
-                InitialState.Remember -> collapsed ?: false
+            when (initialVisibility) {
+                InitialVisibility.Preference -> false // TODO replace with preference
+                InitialVisibility.Collapsed -> true
+                InitialVisibility.Expanded -> false
+                InitialVisibility.Remember -> collapsed ?: false
             }
 
     override fun preInsert() = preUpdate()
 
     override fun preUpdate() {
-        collapsed = if (initialState == InitialState.Remember) collapsed else initiallyCollapsed
+        collapsed =
+            if (initialVisibility == InitialVisibility.Remember) collapsed else initiallyCollapsed
     }
 
     override fun activate(db: AppDatabase) {

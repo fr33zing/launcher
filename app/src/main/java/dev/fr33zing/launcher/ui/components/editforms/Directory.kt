@@ -43,15 +43,15 @@ fun DirectoryEditForm(
 // TODO put an outline around this to match OutlinedTextField
 @Composable
 private fun InitialState(directory: Directory) {
-    val radioOptions = Directory.InitialState.values()
-    val selectedOption = remember { mutableStateOf(directory.initialState) }
+    val radioOptions = Directory.InitialVisibility.values()
+    val selectedOption = remember { mutableStateOf(directory.initialVisibility) }
     Column(Modifier.selectableGroup()) {
         Text("Initial visibility behavior")
 
         radioOptions.forEach { option ->
             InitialStateOption(option, selectedOption.value) {
                 selectedOption.value = it
-                directory.initialState = it
+                directory.initialVisibility = it
             }
         }
     }
@@ -59,9 +59,9 @@ private fun InitialState(directory: Directory) {
 
 @Composable
 private fun InitialStateOption(
-    option: Directory.InitialState,
-    selectedOption: Directory.InitialState,
-    onOptionSelected: (Directory.InitialState) -> Unit,
+    option: Directory.InitialVisibility,
+    selectedOption: Directory.InitialVisibility,
+    onOptionSelected: (Directory.InitialVisibility) -> Unit,
 ) {
     Row(
         Modifier.fillMaxWidth()

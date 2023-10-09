@@ -23,7 +23,7 @@ class NodeRow(
                 payload.collapsed = value
                 _collapsed.value = value
 
-                if (payload.initialState == Directory.InitialState.Remember)
+                if (payload.initialVisibility == Directory.InitialVisibility.Remember)
                     CoroutineScope(Dispatchers.IO).launch { db.update(payload) }
             }
         }
