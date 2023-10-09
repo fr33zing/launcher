@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
 import dev.fr33zing.launcher.data.persistent.payloads.Application
+import dev.fr33zing.launcher.data.persistent.payloads.Directory
 
 const val ROOT_NODE_ID = -1
 
@@ -38,6 +39,7 @@ suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
 /** Create Nodes and Applications for newly installed apps. Returns the number of new apps added. */
 suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivityInfo>): Int {
     var newApps = 0
+    val applicationsDirectory = getOrCreateSingletonDirectory(Directory.SpecialMode.Applications)
 
     activityInfos
         .filter { activityInfo ->
@@ -50,7 +52,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                 .insert(
                     Node(
                         nodeId = 0,
-                        parentId = getDefaultNode().nodeId,
+                        parentId = applicationsDirectory.nodeId,
                         kind = NodeKind.Application,
                         order = index,
                         label = activityInfo.label.toString()
@@ -104,25 +106,38 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
     }
 }
 
-suspend fun AppDatabase.getDefaultNode(): Node {
-    val defaultNodeLabel = "Uncategorized"
-    return nodeDao().getNodeByLabel(defaultNodeLabel)
-        ?: withTransaction {
-            val rootNode = getRootNode()
-            insert(
-                Node(
-                    nodeId = 0,
-                    parentId = rootNode.nodeId,
-                    kind = NodeKind.Directory,
-                    order = 0,
-                    label = defaultNodeLabel
-                )
-            )
-            val lastNodeId = nodeDao().getLastNodeId()
-            insert(createDefaultPayloadForNode(NodeKind.Directory, lastNodeId))
+suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node {
+    val directories = directoryDao().getAllPayloads().filter { it.specialMode == specialMode }
+    val nodeId =
+        when (directories.size) {
+            1 -> directories[0].nodeId
+            0 -> {
+                withTransaction {
+                    val rootNode = getRootNode()
+                    insert(
+                        Node(
+                            nodeId = 0,
+                            parentId = rootNode.nodeId,
+                            kind = NodeKind.Directory,
+                            order = 0,
+                            label = specialMode.defaultDirectoryName,
+                        )
+                    )
+                    val lastNodeId = nodeDao().getLastNodeId()
+                    insert(
+                        Directory(
+                            payloadId = 0,
+                            nodeId = lastNodeId,
+                            specialMode = specialMode,
+                        )
+                    )
 
-            nodeDao().getLastNode()
+                    lastNodeId
+                }
+            }
+            else -> throw Exception("Multiple directories exist with special mode: $specialMode")
         }
+    return nodeDao().getNodeById(nodeId)!!
 }
 
 suspend fun AppDatabase.getRootNode(): Node {

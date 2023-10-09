@@ -1,5 +1,9 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -10,9 +14,31 @@ import kotlinx.coroutines.launch
 class Directory(
     payloadId: Int,
     nodeId: Int,
+    var specialMode: SpecialMode? = null,
     var collapsed: Boolean? = null,
     var initialVisibility: InitialVisibility = InitialVisibility.Preference
 ) : Payload(payloadId, nodeId) {
+
+    enum class SpecialMode(
+        val modeName: String,
+        val defaultDirectoryName: String,
+        val icon: ImageVector,
+        val userCanCreate: Boolean = false,
+        val userCanDelete: Boolean = false,
+        val userCanRename: Boolean = false,
+    ) {
+        Applications(
+            modeName = "Applications",
+            defaultDirectoryName = "Applications",
+            icon = Icons.Filled.Apps,
+            userCanRename = true,
+        ),
+        Trash(
+            modeName = "Trash",
+            defaultDirectoryName = "Trash",
+            icon = Icons.Filled.Delete,
+        ),
+    }
 
     enum class InitialVisibility {
         Preference,
