@@ -120,8 +120,8 @@ fun Notices() {
                                     }
                             )
                 ) {
-                    Icon(kind.icon, null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(kind.icon, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(text)
                 }
             }
