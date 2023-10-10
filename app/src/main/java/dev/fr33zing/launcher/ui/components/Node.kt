@@ -50,6 +50,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -214,8 +215,9 @@ fun Node(
 ) {
     with(row) {
         val haptics = LocalHapticFeedback.current
-        val icon = node.kind.icon(payload)
-        val color = node.kind.color(payload)
+        val icon = remember { node.kind.icon(payload) }
+        val color = remember { node.kind.color(payload) }
+        val lineThrough = remember { node.kind.lineThrough(payload) }
 
         Box(Modifier.height(IntrinsicSize.Min)) {
             Row(
@@ -257,7 +259,7 @@ fun Node(
                         }
                         .then(modifier)
             ) {
-                NodeIconAndText(fontSize, lineHeight, node.label, color, icon)
+                NodeIconAndText(fontSize, lineHeight, node.label, color, icon, lineThrough)
             }
 
             NodeOptionButtons(db, navController, showOptions, fontSize, lineHeight, row)
@@ -272,6 +274,7 @@ fun NodeIconAndText(
     label: String,
     color: Color,
     icon: ImageVector,
+    lineThrough: Boolean = false,
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
     @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
@@ -293,6 +296,7 @@ fun NodeIconAndText(
         fontSize = fontSize,
         softWrap = softWrap,
         overflow = overflow,
+        textDecoration = if (lineThrough) TextDecoration.LineThrough else null
     )
 }
 

@@ -1,12 +1,13 @@
 package dev.fr33zing.launcher.helper
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.os.UserHandle
 import android.os.UserManager
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 
+lateinit var mainPackageManager: PackageManager
 lateinit var launcherApps: LauncherApps
 lateinit var userManager: UserManager
 

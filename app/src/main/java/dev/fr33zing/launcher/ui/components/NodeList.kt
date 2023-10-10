@@ -44,7 +44,6 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.getFlatNodeList
-import dev.fr33zing.launcher.helper.launchApp
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import io.reactivex.rxjava3.subjects.PublishSubject
@@ -156,16 +155,9 @@ fun NodeList(
 }
 
 private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
-    if (nodeRow.node.kind == NodeKind.Directory) {
-        nodeRow.collapsed = !nodeRow.collapsed
-    } else if (nodeRow.node.kind == NodeKind.Application) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val app =
-                db.applicationDao().getPayloadByNodeId(nodeRow.node.nodeId)
-                    ?: throw Exception("Tried to launch null application")
-            launchApp(app)
-        }
-    }
+    if (nodeRow.node.kind == NodeKind.Directory) nodeRow.collapsed = !nodeRow.collapsed
+
+    nodeRow.payload.activate(db, context)
 }
 
 private fun onAddNode(

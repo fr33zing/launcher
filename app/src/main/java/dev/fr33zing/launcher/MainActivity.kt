@@ -27,6 +27,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.helper.getActivityInfos
 import dev.fr33zing.launcher.helper.launcherApps
+import dev.fr33zing.launcher.helper.mainPackageManager
 import dev.fr33zing.launcher.helper.userManager
 import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.components.refreshNodeList
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        mainPackageManager = packageManager
         launcherApps = getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
         userManager = getSystemService(Context.USER_SERVICE) as UserManager
 

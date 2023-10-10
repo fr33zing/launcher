@@ -64,13 +64,32 @@ enum class NodeKind {
                     else directoryColor
                 } else directoryColor
             }
-            Application -> Foreground
+            Application -> {
+                if (
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.Application &&
+                        payload.status !=
+                            dev.fr33zing.launcher.data.persistent.payloads.Application.Status.Valid
+                ) {
+                    Foreground.mix(Background, 0.5f)
+                } else Foreground
+            }
             WebLink -> Catppuccin.Current.yellow
             File -> Catppuccin.Current.peach
             Location -> Catppuccin.Current.lavender
             Note -> Catppuccin.Current.pink
             Checkbox -> Catppuccin.Current.green
             Reminder -> Catppuccin.Current.red
+        }
+
+    fun lineThrough(payload: Payload? = null, ignoreState: Boolean = false): Boolean =
+        when (this) {
+            Application -> {
+                !ignoreState &&
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.Application &&
+                    payload.status !=
+                        dev.fr33zing.launcher.data.persistent.payloads.Application.Status.Valid
+            }
+            else -> false
         }
 
     fun icon(payload: Payload? = null, ignoreState: Boolean = false): ImageVector =

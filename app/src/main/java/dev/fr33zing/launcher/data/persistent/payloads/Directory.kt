@@ -12,10 +12,6 @@ import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionMap
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.hasPermission
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Entity
 class Directory(
@@ -105,11 +101,5 @@ class Directory(
     override fun preUpdate() {
         collapsed =
             if (initialVisibility == InitialVisibility.Remember) collapsed else initiallyCollapsed
-    }
-
-    override fun activate(db: AppDatabase) {
-        collapsed = !(collapsed ?: initiallyCollapsed)
-        val payload = this
-        CoroutineScope(Dispatchers.IO).launch { db.update(payload) }
     }
 }
