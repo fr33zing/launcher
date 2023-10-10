@@ -226,6 +226,10 @@ suspend fun AppDatabase.traverseUpwardWithPayload(
     }
 }
 
+/**
+ * Traverses upward to determine if the node has the permission. Note that this method is
+ * inefficient and should be used sparingly.
+ */
 suspend fun AppDatabase.checkPermission(
     kind: PermissionKind,
     scope: PermissionScope,
