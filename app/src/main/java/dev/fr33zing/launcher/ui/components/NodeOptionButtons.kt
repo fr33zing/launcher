@@ -24,8 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -50,6 +52,8 @@ fun NodeOptionButtons(
     lineHeight: Dp,
     row: NodeRow,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val showDeleteButton = remember {
         row.hasPermission(PermissionKind.Delete, PermissionScope.Self)
     }
@@ -74,6 +78,11 @@ fun NodeOptionButtons(
                     Icons.Outlined.Delete,
                     "Delete",
                     onLongPress = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        sendNotice(
+                            "deleted",
+                            "Moved ${row.node.kind.label.lowercase()} '${row.node.label}' to the trash."
+                        )
                         CoroutineScope(Dispatchers.IO).launch { db.moveToTrash(row.node) }
                     },
                     onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
