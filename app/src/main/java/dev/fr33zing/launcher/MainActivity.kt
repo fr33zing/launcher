@@ -33,6 +33,7 @@ import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
+import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Reorder
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import kotlinx.coroutines.CoroutineScope
@@ -101,6 +102,10 @@ class MainActivity : ComponentActivity() {
             composable("reorder/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")!!
                 Reorder(db, navController, nodeId.toInt())
+            }
+            composable("move/{nodeId}") { backStackEntry ->
+                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                Move(db, navController, nodeId.toInt())
             }
         }
     }

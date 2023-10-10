@@ -23,7 +23,7 @@ enum class RelativeNodeOffset(val orderOffset: Int) {
 
 data class RelativeNodePosition(val relativeToNodeId: Int, val offset: RelativeNodeOffset)
 
-suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
+suspend fun AppDatabase.getFlatNodeList(rootNodeId: Int? = null): List<NodeRow> {
     val result = ArrayList<NodeRow>()
 
     suspend fun add(
@@ -61,7 +61,7 @@ suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
     }
 
     nodeDao()
-        .getChildNodes(getRootNode().nodeId)
+        .getChildNodes(rootNodeId ?: getRootNode().nodeId)
         .sortedBy { it.order }
         .forEach { add(it, null, 0, AllPermissions) }
 

@@ -59,7 +59,14 @@ fun refreshNodeList() {
 }
 
 @Composable
-fun NodeList(db: AppDatabase, navController: NavController) {
+fun NodeList(
+    db: AppDatabase,
+    navController: NavController,
+    rootNodeId: Int? = null,
+    minimal: Boolean = false,
+    filter: ((NodeRow) -> Boolean)? = null,
+    onNodeRowTapped: ((NodeRow) -> Unit)? = null,
+) {
     val paddingTop =
         with(LocalDensity.current) { WindowInsets.statusBars.getTop(LocalDensity.current).toDp() }
     val paddingBottom =
@@ -74,66 +81,77 @@ fun NodeList(db: AppDatabase, navController: NavController) {
     var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
 
     // Populate list and listen for changes
-    LaunchedEffect(Unit) { nodes.addAll(db.getFlatNodeList()) }
-    DisposableEffect(Unit) {
-        val subscription =
-            nodesUpdated.subscribe {
-                CoroutineScope(Dispatchers.IO).launch {
-                    nodeOptionsVisibleIndex = null
-                    val flatNodes = db.getFlatNodeList()
-                    nodes.clear()
-                    nodes.addAll(flatNodes)
+    LaunchedEffect(Unit) { nodes.addAll(db.getFlatNodeList(rootNodeId)) }
+    if (!minimal)
+        DisposableEffect(Unit) {
+            val subscription =
+                nodesUpdated.subscribe {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        nodeOptionsVisibleIndex = null
+                        val flatNodes = db.getFlatNodeList(rootNodeId)
+                        nodes.clear()
+                        nodes.addAll(flatNodes)
+                    }
                 }
-            }
 
-        onDispose { subscription.dispose() }
-    }
+            onDispose { subscription.dispose() }
+        }
 
     // Hide node options when scrolling
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }
-            .collect { if (it) nodeOptionsVisibleIndex = null }
-    }
+    if (!minimal)
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.isScrollInProgress }
+                .collect { if (it) nodeOptionsVisibleIndex = null }
+        }
 
     // Hide node options with back button
-    BackHandler(nodeOptionsVisibleIndex != null) { nodeOptionsVisibleIndex = null }
+    if (!minimal) BackHandler(nodeOptionsVisibleIndex != null) { nodeOptionsVisibleIndex = null }
 
     Box {
         LazyColumn(state = listState) {
-            item { Spacer(Modifier.height(paddingTop)) }
+            if (!minimal) item { Spacer(Modifier.height(paddingTop)) }
 
             itemsIndexed(nodes) { index, row ->
-                NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = true)
+                if (filter == null || filter(row)) {
+                    if (!minimal)
+                        NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = true)
 
-                NodeRow(
-                    db,
-                    navController,
-                    row,
-                    nodeOptionsVisibleIndex,
-                    index,
-                    onTapped = {
-                        nodeOptionsVisibleIndex = null
-                        onNodeRowTapped(db, context, row)
-                    },
-                    onLongPressed = { nodeOptionsVisibleIndex = index },
-                    onAddNodeDialogOpened = {
-                        newNodePosition = it
-                        nodeOptionsVisibleIndex = null
-                    },
-                    onAddNodeDialogClosed = { newNodePosition = null },
-                    onNewNodeKindChosen = {
-                        nodeOptionsVisibleIndex = null
-                        onAddNode(db, navController, newNodePosition!!, it)
-                    }
-                )
+                    NodeRow(
+                        db,
+                        navController,
+                        minimal,
+                        row,
+                        nodeOptionsVisibleIndex,
+                        index,
+                        onTapped = {
+                            if (minimal) {
+                                onNodeRowTapped?.invoke(row)
+                            } else {
+                                nodeOptionsVisibleIndex = null
+                                onNodeRowTapped(db, context, row)
+                            }
+                        },
+                        onLongPressed = { nodeOptionsVisibleIndex = index },
+                        onAddNodeDialogOpened = {
+                            newNodePosition = it
+                            nodeOptionsVisibleIndex = null
+                        },
+                        onAddNodeDialogClosed = { newNodePosition = null },
+                        onNewNodeKindChosen = {
+                            nodeOptionsVisibleIndex = null
+                            onAddNode(db, navController, newNodePosition!!, it)
+                        }
+                    )
 
-                NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = false)
+                    if (!minimal)
+                        NewNodePositionIndicator(newNodePosition, row.node.nodeId, above = false)
+                }
             }
 
-            item { Spacer(Modifier.height(paddingBottom)) }
+            if (!minimal) item { Spacer(Modifier.height(paddingBottom)) }
         }
 
-        TopAndBottomShades(paddingTop, paddingBottom)
+        if (!minimal) TopAndBottomShades(paddingTop, paddingBottom)
     }
 }
 

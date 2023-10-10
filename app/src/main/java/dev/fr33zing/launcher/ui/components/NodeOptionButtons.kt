@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DriveFileMove
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.SwapVert
@@ -57,6 +58,7 @@ fun NodeOptionButtons(
     val showDeleteButton = remember {
         row.hasPermission(PermissionKind.Delete, PermissionScope.Self)
     }
+    val showMoveButton = remember { true }
     val showReorderButton = remember { true }
     val showEditButton = remember { row.hasPermission(PermissionKind.Edit, PermissionScope.Self) }
     val showInfoButton = remember { row.node.kind == NodeKind.Application }
@@ -87,6 +89,11 @@ fun NodeOptionButtons(
                     },
                     onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
                 )
+
+            if (showMoveButton)
+                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.DriveFileMove, "Move") {
+                    navController.navigate("move/${row.node.nodeId}")
+                }
 
             if (showReorderButton)
                 NodeOptionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {

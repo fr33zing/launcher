@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.em
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import kotlin.text.Typography.nbsp
 
 @Composable
 fun NodePath(db: AppDatabase, node: Node, lastNodeLabelState: MutableState<String>? = null) {
@@ -58,9 +59,9 @@ fun NodePath(db: AppDatabase, node: Node, lastNodeLabelState: MutableState<Strin
                         lastNodeLabelState.value
                     else node.label
 
-                nodeIcon(node, payload, inlineContents)
+                //                nodeIcon(node, payload, inlineContents)
                 withStyle(SpanStyle(color = node.kind.color(payload, ignoreState = true))) {
-                    append(label)
+                    append(label.replace(' ', nbsp))
                 }
                 if (index < hierarchy.size - 1) delimiter(node, inlineContents)
             }
