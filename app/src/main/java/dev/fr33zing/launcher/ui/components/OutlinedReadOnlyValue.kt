@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.OutlinedTextField
@@ -36,7 +37,7 @@ fun OutlinedReadOnlyValue(
         modifier =
             modifier.then(
                 Modifier.conditional(condition = contentHeight != null) {
-                    height(contentHeight!! + 42.dp)
+                    animateContentSize().height(contentHeight!! + 42.dp)
                 }
             ),
         prefix = {
