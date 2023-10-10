@@ -53,7 +53,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
@@ -307,7 +306,6 @@ private fun AddNodeButton(
     onKindChosen: (NodeKind) -> Unit,
 ) {
     val color = Foreground.copy(alpha = 0.5f)
-    val extraSpacing = lineHeight * 0.8f
     val expandFrom = if (below) Alignment.Bottom else Alignment.Top
 
     val dialogVisible = remember { mutableStateOf(false) }
@@ -321,11 +319,7 @@ private fun AddNodeButton(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.padding(vertical = spacing / 2)
-                    .absolutePadding(
-                        left = nodeIndent(depth, indent, lineHeight),
-                        top = if (below) extraSpacing else 0.dp,
-                        bottom = if (!below) extraSpacing else 0.dp
-                    )
+                    .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = {
