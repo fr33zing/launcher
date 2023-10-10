@@ -10,6 +10,8 @@ enum class PermissionKind {
     Delete,
     Edit,
     Move,
+    MoveIn,
+    MoveOut,
 }
 
 typealias PermissionMap = Map<PermissionKind, MutableSet<PermissionScope>>

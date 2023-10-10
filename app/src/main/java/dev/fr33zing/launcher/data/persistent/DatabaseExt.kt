@@ -11,7 +11,9 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.refreshNodeList
+import kotlinx.coroutines.runBlocking
 
 const val ROOT_NODE_ID = -1
 
@@ -38,16 +40,20 @@ suspend fun AppDatabase.getFlatNodeList(rootNodeId: Int? = null): List<NodeRow> 
         if (payload is Directory) {
             PermissionKind.values().forEach { kind ->
                 PermissionScope.values().forEach { scope ->
-                    if (!payload.hasPermission(kind, scope)) ownPermissions[kind]!!.remove(scope)
+                    if (!payload.hasPermission(kind, scope)) {
+                        ownPermissions[kind]!!.remove(scope)
+                    }
                 }
             }
         }
 
-        val childPermissions = ownPermissions.clone()
+        val childPermissions = parentPermissions.clone()
         if (payload is Directory) {
             PermissionKind.values().forEach { kind ->
-                if (!payload.hasPermission(kind, PermissionScope.Recursive))
-                    ownPermissions[kind]!!.remove(PermissionScope.Self)
+                if (!payload.hasPermission(kind, PermissionScope.Recursive)) {
+                    childPermissions[kind]!!.remove(PermissionScope.Self)
+                    childPermissions[kind]!!.remove(PermissionScope.Recursive)
+                }
             }
         }
 
@@ -187,4 +193,57 @@ suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int?) {
 suspend fun AppDatabase.moveToTrash(node: Node) {
     val trash = getOrCreateSingletonDirectory(Directory.SpecialMode.Trash)
     moveNode(node, trash.nodeId)
+}
+
+suspend fun AppDatabase.traverseUpward(
+    node: Node,
+    includeFirst: Boolean = false,
+    action: (Node) -> Boolean
+) {
+    if (includeFirst) {
+        val shouldContinue = action(node)
+        if (!shouldContinue) return
+    }
+
+    if (node.parentId == null) return
+
+    val parent = nodeDao().getNodeById(node.parentId!!) ?: return
+
+    traverseUpward(parent, true, action)
+}
+
+suspend fun AppDatabase.traverseUpwardWithPayload(
+    node: Node,
+    includeFirst: Boolean = false,
+    action: (Node, Payload) -> Boolean
+) {
+    traverseUpward(node, includeFirst) {
+        val payload =
+            runBlocking { getPayloadByNodeId(node.kind, node.nodeId) }
+                ?: throw Exception("Payload is null")
+
+        action(node, payload)
+    }
+}
+
+suspend fun AppDatabase.checkPermission(
+    kind: PermissionKind,
+    scope: PermissionScope,
+    node: Node,
+): Boolean {
+    val selfPayload =
+        getPayloadByNodeId(node.kind, node.nodeId) ?: throw Exception("Payload is null")
+    if (selfPayload is Directory && !selfPayload.hasPermission(kind, scope)) return false
+
+    var parentsAllow = true
+    traverseUpwardWithPayload(node) { _, parentPayload ->
+        if (
+            parentPayload is Directory &&
+                !parentPayload.hasPermission(kind, PermissionScope.Recursive)
+        ) {
+            parentsAllow = false
+            false
+        } else true
+    }
+    return parentsAllow
 }

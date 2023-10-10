@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,31 +39,41 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.checkPermission
 import dev.fr33zing.launcher.data.persistent.moveNode
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.OutlinedReadOnlyValue
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.util.mix
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,7 +83,8 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
-    var node by remember { mutableStateOf<Node?>(null) }
+    var movingNode by remember { mutableStateOf<Node?>(null) }
+    var movingNodeCurrentParent by remember { mutableStateOf<Node?>(null) }
     var rootNodeId by remember { mutableStateOf<Int?>(null) }
     var rootNode by remember { mutableStateOf<Node?>(null) }
     var dirsAndParent by remember { mutableStateOf<Pair<List<Node>, Node?>>(Pair(listOf(), null)) }
@@ -102,8 +114,11 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
     }
 
     LaunchedEffect(nodeId) {
-        node = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node is null")
-        rootNodeId = node!!.parentId
+        movingNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node is null")
+        movingNodeCurrentParent =
+            db.nodeDao().getNodeById(movingNode!!.parentId ?: ROOT_NODE_ID)
+                ?: throw Exception("Parent node is null")
+        rootNodeId = movingNodeCurrentParent!!.parentId
         setRootNode(rootNodeId, 0)
     }
 
@@ -127,7 +142,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, node!!, rootNodeId) },
+        onYes = { onSaveChanges(navController, db, movingNode!!, rootNodeId) },
     )
 
     BackHandler(enabled = rootNode?.parentId == null) { cancelDialogVisible.value = true }
@@ -140,9 +155,9 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                     Text(
                         buildAnnotatedString {
                             append("Moving ")
-                            if (node != null) {
-                                withStyle(SpanStyle(color = node!!.kind.color)) {
-                                    append(node!!.kind.label)
+                            if (movingNode != null) {
+                                withStyle(SpanStyle(color = movingNode!!.kind.color)) {
+                                    append(movingNode!!.kind.label)
                                 }
                             }
                         }
@@ -159,13 +174,14 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
             )
         },
     ) { innerPadding ->
-        if (node != null && rootNode != null) {
+        if (movingNode != null && rootNode != null) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(extraPadding)) {
                 DirectoryPicker(
                     db,
                     animationDirection,
                     dirsAndParent,
-                    node!!,
+                    movingNode!!,
+                    movingNodeCurrentParent!!,
                     rootNode!!,
                     ::setRootNode
                 )
@@ -190,16 +206,13 @@ private fun onSaveChanges(
     }
 }
 
-private fun canMoveInto(node: Node) {
-    return node.
-}
-
 @Composable
 private fun DirectoryPicker(
     db: AppDatabase,
     animationDirection: Int,
     dirsAndParent: Pair<List<Node>, Node?>,
-    node: Node,
+    movingNode: Node,
+    movingNodeCurrentParent: Node,
     rootNode: Node,
     setRootNode: (Int?, Int) -> Unit,
 ) {
@@ -217,10 +230,10 @@ private fun DirectoryPicker(
         modifier = Modifier.padding(horizontal = 12.dp)
     ) {
         OutlinedReadOnlyValue(
-            label = "${node.kind.label} to move",
+            label = "${movingNode.kind.label} to move",
             modifier = Modifier.fillMaxWidth()
         ) {
-            NodePath(db, node)
+            NodePath(db, movingNode)
         }
 
         OutlinedReadOnlyValue(label = "Destination", modifier = Modifier.fillMaxWidth()) {
@@ -245,42 +258,113 @@ private fun DirectoryPicker(
                 Column(
                     Modifier.verticalScroll(rememberScrollState()).padding(vertical = spacing / 2)
                 ) {
-                    it.first.forEach { node ->
-                        var payload by remember { mutableStateOf<Payload?>(null) }
-                        LaunchedEffect(node.nodeId) {
-                            payload = db.getPayloadByNodeId(node.kind, node.nodeId)
-                        }
-
-                        val navigateUp = node.nodeId == (it.second?.nodeId ?: ROOT_NODE_ID)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier =
-                                Modifier.padding(vertical = spacing / 2).fillMaxWidth().clickable {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    setRootNode(node.nodeId, if (navigateUp) -1 else 1)
-                                }
-                        ) {
-                            if (navigateUp) {
-                                NodeIconAndText(
-                                    fontSize = fontSize,
-                                    lineHeight = lineHeight,
-                                    label = "..",
-                                    color = Foreground.mix(Background, 0.5f),
-                                    icon = Icons.Outlined.DriveFolderUpload
-                                )
-                            } else {
-                                NodeIconAndText(
-                                    fontSize = fontSize,
-                                    lineHeight = lineHeight,
-                                    label = node.label,
-                                    color = node.kind.color(payload, ignoreState = true),
-                                    icon = node.kind.icon(payload, ignoreState = true),
-                                )
-                            }
+                    it.first.forEach { potentialDestinationNode ->
+                        if (potentialDestinationNode != movingNode) {
+                            DirectoryRow(
+                                db,
+                                movingNode,
+                                movingNodeCurrentParent,
+                                potentialDestinationNode,
+                                it.second?.nodeId,
+                                setRootNode,
+                                haptics,
+                                spacing,
+                                fontSize,
+                                lineHeight
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DirectoryRow(
+    db: AppDatabase,
+    movingNode: Node,
+    movingNodeCurrentParent: Node,
+    potentialDestinationNode: Node,
+    parentNodeId: Int?,
+    setRootNode: (Int?, Int) -> Unit,
+    haptics: HapticFeedback,
+    spacing: Dp,
+    fontSize: TextUnit,
+    lineHeight: Dp,
+) {
+    var payload by remember { mutableStateOf<Payload?>(null) }
+    var moveIntoBlockedMessage by remember { mutableStateOf<String?>(null) }
+    val canMoveInto by remember { derivedStateOf { moveIntoBlockedMessage == null } }
+
+    LaunchedEffect(potentialDestinationNode.nodeId) {
+        payload =
+            db.getPayloadByNodeId(potentialDestinationNode.kind, potentialDestinationNode.nodeId)
+
+        if (potentialDestinationNode == movingNodeCurrentParent) {
+            val kind =
+                movingNode.kind.label.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                }
+            moveIntoBlockedMessage =
+                "$kind '${movingNode.label}' is already in directory '${potentialDestinationNode.label}'."
+        } else if (
+            !(db.checkPermission(
+                PermissionKind.Move,
+                PermissionScope.Recursive,
+                potentialDestinationNode
+            ) ||
+                db.checkPermission(
+                    PermissionKind.MoveIn,
+                    PermissionScope.Recursive,
+                    potentialDestinationNode
+                ))
+        ) {
+            moveIntoBlockedMessage =
+                "Cannot move ${movingNode.kind.label.lowercase()} '${movingNode.label}' into directory '${potentialDestinationNode.label}'"
+        } else {
+            moveIntoBlockedMessage = null
+        }
+    }
+
+    val navigateUp = potentialDestinationNode.nodeId == (parentNodeId ?: ROOT_NODE_ID)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            Modifier.padding(vertical = spacing / 2)
+                .fillMaxWidth()
+                .conditional(canMoveInto) {
+                    clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setRootNode(potentialDestinationNode.nodeId, if (navigateUp) -1 else 1)
+                    }
+                }
+                .conditional(!canMoveInto) {
+                    alpha(0.5f).clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        sendNotice(
+                            "move-blocked:${potentialDestinationNode.nodeId}",
+                            moveIntoBlockedMessage!!
+                        )
+                    }
+                }
+    ) {
+        if (navigateUp) {
+            NodeIconAndText(
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                label = "..",
+                color = Foreground.mix(Background, 0.5f),
+                icon = Icons.Outlined.DriveFolderUpload
+            )
+        } else {
+            NodeIconAndText(
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                label = potentialDestinationNode.label,
+                color = potentialDestinationNode.kind.color(payload, ignoreState = true),
+                icon = potentialDestinationNode.kind.icon(payload, ignoreState = true),
+            )
         }
     }
 }

@@ -58,7 +58,11 @@ fun NodeOptionButtons(
     val showDeleteButton = remember {
         row.hasPermission(PermissionKind.Delete, PermissionScope.Self)
     }
-    val showMoveButton = remember { true }
+    val showMoveButton = remember {
+        row.hasPermission(PermissionKind.Move, PermissionScope.Self) ||
+            row.hasPermission(PermissionKind.MoveIn, PermissionScope.Self) ||
+            row.hasPermission(PermissionKind.MoveOut, PermissionScope.Self)
+    }
     val showReorderButton = remember { true }
     val showEditButton = remember { row.hasPermission(PermissionKind.Edit, PermissionScope.Self) }
     val showInfoButton = remember { row.node.kind == NodeKind.Application }

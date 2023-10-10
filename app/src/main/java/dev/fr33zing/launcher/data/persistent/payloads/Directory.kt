@@ -52,8 +52,7 @@ class Directory(
                 mapOf(
                     PermissionKind.Edit to
                         mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
-                    PermissionKind.Move to
-                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
+                    PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
                 ),
         ),
         Trash(
@@ -63,8 +62,8 @@ class Directory(
             permissions =
                 mapOf(
                     PermissionKind.Edit to mutableSetOf(PermissionScope.Self),
-                    PermissionKind.Move to
-                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
+                    PermissionKind.MoveIn to mutableSetOf(PermissionScope.Recursive),
+                    PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
                 ),
         ),
     }
