@@ -39,7 +39,7 @@ class Directory(
     ) {
         Root(
             modeName = "Root",
-            defaultDirectoryName = "Root",
+            defaultDirectoryName = "~",
             icon = Icons.Rounded.DeviceHub,
             permissions = AllPermissions
         ),
