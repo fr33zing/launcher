@@ -87,8 +87,10 @@ class MainActivity : ComponentActivity() {
         NavHost(
             navController,
             startDestination = "home",
-            enterTransition = { slideInHorizontally() + fadeIn() },
-            exitTransition = { slideOutHorizontally() + fadeOut() },
+            enterTransition = { slideInHorizontally { it } + fadeIn() },
+            exitTransition = { slideOutHorizontally { -it } + fadeOut() },
+            popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
+            popExitTransition = { slideOutHorizontally { it } + fadeOut() },
         ) {
             composable("home") { Home(db, navController) }
             composable("edit/{nodeId}") { backStackEntry ->
