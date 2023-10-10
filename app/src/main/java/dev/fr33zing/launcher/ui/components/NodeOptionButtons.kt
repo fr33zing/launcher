@@ -32,9 +32,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.moveToTrash
-import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.ui.theme.Background
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,9 +50,11 @@ fun NodeOptionButtons(
     lineHeight: Dp,
     row: NodeRow,
 ) {
-    val showDeleteButton = remember { shouldShowDeleteButton(row) }
+    val showDeleteButton = remember {
+        row.hasPermission(PermissionKind.Delete, PermissionScope.Self)
+    }
     val showReorderButton = remember { true }
-    val showEditButton = remember { shouldShowEditButton(row) }
+    val showEditButton = remember { row.hasPermission(PermissionKind.Edit, PermissionScope.Self) }
     val showInfoButton = remember { row.node.kind == NodeKind.Application }
 
     AnimatedVisibility(
@@ -90,32 +93,6 @@ fun NodeOptionButtons(
                 NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {}
         }
     }
-}
-
-private fun shouldShowDeleteButton(row: NodeRow): Boolean {
-    val parentPayload = row.parent?.payload
-    if (
-        parentPayload is Directory &&
-            parentPayload.specialMode != null &&
-            !parentPayload.specialMode!!.userCanDeleteWithin
-    ) {
-        return false
-    }
-
-    return true
-}
-
-private fun shouldShowEditButton(row: NodeRow): Boolean {
-    val parentPayload = row.parent?.payload
-    if (
-        parentPayload is Directory &&
-            parentPayload.specialMode != null &&
-            !parentPayload.specialMode!!.userCanEditWithin
-    ) {
-        return false
-    }
-
-    return true
 }
 
 @Composable

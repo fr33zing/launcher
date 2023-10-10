@@ -10,12 +10,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NodeRow(
-    private val db: AppDatabase,
     val node: Node,
     val payload: Payload,
     val parent: NodeRow?,
     var depth: Int,
+    private val db: AppDatabase,
+    private var permissions: PermissionMap
 ) {
+    fun hasPermission(kind: PermissionKind, scope: PermissionScope) =
+        permissions.hasPermission(kind, scope)
+
     var collapsed: Boolean
         get() = _collapsed.value || parent?.collapsed ?: false
         set(value) {

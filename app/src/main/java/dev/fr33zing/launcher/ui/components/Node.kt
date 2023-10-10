@@ -57,12 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.nodeIndent
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
-import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -85,17 +86,29 @@ fun NodeRow(
     onAddNodeDialogClosed: () -> Unit,
     onNewNodeKindChosen: (NodeKind) -> Unit,
 ) {
-    val preferences = Preferences(LocalContext.current)
-    val localDensity = LocalDensity.current
-
-    val fontSize by preferences.getFontSize()
-    val spacing by preferences.getSpacing()
-    val indent by preferences.getIndent()
-    val lineHeight = with(localDensity) { fontSize.toDp() }
-
-    val pressing = remember { mutableStateOf(false) }
-
     with(row) {
+        val preferences = Preferences(LocalContext.current)
+        val localDensity = LocalDensity.current
+
+        val fontSize by preferences.getFontSize()
+        val spacing by preferences.getSpacing()
+        val indent by preferences.getIndent()
+        val lineHeight = with(localDensity) { fontSize.toDp() }
+
+        val pressing = remember { mutableStateOf(false) }
+        val userCanCreateWithin = remember {
+            hasPermission(PermissionKind.Create, PermissionScope.Recursive)
+        }
+        val userCanCreateWithinParent = remember {
+            parent?.hasPermission(PermissionKind.Create, PermissionScope.Recursive) ?: true
+        }
+        val isExpandedDir by
+            remember(row) { derivedStateOf { node.kind == NodeKind.Directory && !collapsed } }
+        val showCreateAboveButton by remember { derivedStateOf { userCanCreateWithinParent } }
+        val showCreateBelowButton by remember {
+            derivedStateOf { if (isExpandedDir) userCanCreateWithin else userCanCreateWithinParent }
+        }
+
         val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
@@ -106,11 +119,6 @@ fun NodeRow(
                 animationSpec = if (pressing.value) snap() else tween(1000),
                 label = "node tap alpha"
             )
-
-        val userCanCreateWithinParent =
-            if (parent?.payload is Directory) {
-                (parent.payload as Directory).specialMode?.userCanCreateWithin ?: true
-            } else true
 
         @Composable
         fun node() {
@@ -133,11 +141,8 @@ fun NodeRow(
             }
         }
 
-        if (!userCanCreateWithinParent) {
-            // Never show AddNodeButtons if the parent directory prevents creating nodes within it.
-            node()
-        } else {
-            Column {
+        Column {
+            if (showCreateAboveButton) {
                 AddNodeButton(
                     fontSize,
                     lineHeight,
@@ -155,36 +160,32 @@ fun NodeRow(
                     onDialogClosed = onAddNodeDialogClosed,
                     onKindChosen = onNewNodeKindChosen
                 )
+            }
 
-                node()
+            node()
 
-                val isExpandedDir = node.kind == NodeKind.Directory && !collapsed
-                if (
-                    !isExpandedDir ||
-                        (payload as Directory).specialMode?.userCanCreateWithin != false
-                ) {
-                    AddNodeButton(
-                        fontSize,
-                        lineHeight,
-                        spacing,
-                        indent,
-                        depth = if (isExpandedDir) depth + 1 else depth,
-                        visible = showOptions,
-                        below = true,
-                        text = if (isExpandedDir) "Add item within" else "Add item below",
-                        onDialogOpened = {
-                            onAddNodeDialogOpened(
-                                RelativeNodePosition(
-                                    node.nodeId,
-                                    if (isExpandedDir) RelativeNodeOffset.Within
-                                    else RelativeNodeOffset.Below
-                                )
+            if (showCreateBelowButton) {
+                AddNodeButton(
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth = if (isExpandedDir) depth + 1 else depth,
+                    visible = showOptions,
+                    below = true,
+                    text = if (isExpandedDir) "Add item within" else "Add item below",
+                    onDialogOpened = {
+                        onAddNodeDialogOpened(
+                            RelativeNodePosition(
+                                node.nodeId,
+                                if (isExpandedDir) RelativeNodeOffset.Within
+                                else RelativeNodeOffset.Below
                             )
-                        },
-                        onDialogClosed = onAddNodeDialogClosed,
-                        onKindChosen = onNewNodeKindChosen
-                    )
-                }
+                        )
+                    },
+                    onDialogClosed = onAddNodeDialogClosed,
+                    onKindChosen = onNewNodeKindChosen
+                )
             }
         }
     }

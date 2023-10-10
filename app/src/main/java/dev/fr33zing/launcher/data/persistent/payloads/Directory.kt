@@ -7,6 +7,11 @@ import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.rounded.DeviceHub
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
+import dev.fr33zing.launcher.data.AllPermissions
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionMap
+import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,37 +26,56 @@ class Directory(
     var initialVisibility: InitialVisibility = InitialVisibility.Preference
 ) : Payload(payloadId, nodeId) {
 
+    //
+    // Permissions
+    //
+
     enum class SpecialMode(
         val modeName: String,
         val defaultDirectoryName: String,
         val icon: ImageVector,
         val collapsedIcon: ImageVector? = null,
-        val userCanCreate: Boolean = false,
-        val userCanDelete: Boolean = false,
-        val userCanEdit: Boolean = false,
-        val userCanCreateWithin: Boolean = false,
-        val userCanDeleteWithin: Boolean = false,
-        val userCanEditWithin: Boolean = false,
+        val permissions: PermissionMap = mapOf()
     ) {
         Root(
             modeName = "Root",
             defaultDirectoryName = "Root",
             icon = Icons.Rounded.DeviceHub,
+            permissions = AllPermissions
         ),
         NewApplications(
             modeName = "New Applications",
             defaultDirectoryName = "New Applications",
             icon = Icons.Filled.NewReleases,
             collapsedIcon = Icons.Outlined.NewReleases,
-            userCanEdit = true,
-            userCanEditWithin = true
+            permissions =
+                mapOf(
+                    PermissionKind.Edit to
+                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
+                    PermissionKind.Move to
+                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
+                ),
         ),
         Trash(
             modeName = "Trash",
             defaultDirectoryName = "Trash",
             icon = Icons.Filled.Delete,
+            permissions =
+                mapOf(
+                    PermissionKind.Edit to mutableSetOf(PermissionScope.Self),
+                    PermissionKind.Move to
+                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
+                ),
         ),
     }
+
+    fun hasPermission(kind: PermissionKind, scope: PermissionScope): Boolean {
+        return (specialMode ?: return true).permissions.hasPermission(kind, scope)
+    }
+
+    //
+    // Visibility
+    //
 
     enum class InitialVisibility {
         Preference,

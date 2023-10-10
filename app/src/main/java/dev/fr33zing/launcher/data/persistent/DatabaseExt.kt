@@ -2,8 +2,13 @@ package dev.fr33zing.launcher.data.persistent
 
 import android.content.pm.LauncherActivityInfo
 import androidx.room.withTransaction
+import dev.fr33zing.launcher.data.AllPermissions
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.NodeRow
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionMap
+import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.ui.components.refreshNodeList
@@ -21,18 +26,44 @@ data class RelativeNodePosition(val relativeToNodeId: Int, val offset: RelativeN
 suspend fun AppDatabase.getFlatNodeList(): List<NodeRow> {
     val result = ArrayList<NodeRow>()
 
-    suspend fun add(node: Node, parent: NodeRow?, depth: Int) {
+    suspend fun add(
+        node: Node,
+        parent: NodeRow?,
+        depth: Int,
+        parentPermissions: PermissionMap,
+    ) {
         val payload = getPayloadByNodeId(node.kind, node.nodeId)
-        val row = NodeRow(this, node, payload!!, parent, depth)
+
+        val ownPermissions = parentPermissions.clone()
+        if (payload is Directory) {
+            PermissionKind.values().forEach { kind ->
+                PermissionScope.values().forEach { scope ->
+                    if (!payload.hasPermission(kind, scope)) ownPermissions[kind]!!.remove(scope)
+                }
+            }
+        }
+
+        val childPermissions = ownPermissions.clone()
+        if (payload is Directory) {
+            PermissionKind.values().forEach { kind ->
+                if (!payload.hasPermission(kind, PermissionScope.Recursive))
+                    ownPermissions[kind]!!.remove(PermissionScope.Self)
+            }
+        }
+
+        val row = NodeRow(node, payload!!, parent, depth, this, ownPermissions)
         result.add(row)
 
         nodeDao()
             .getChildNodes(node.nodeId)
             .sortedBy { it.order }
-            .forEach { add(it, row, depth + 1) }
+            .forEach { add(it, row, depth + 1, childPermissions) }
     }
 
-    nodeDao().getChildNodes(getRootNode().nodeId).sortedBy { it.order }.forEach { add(it, null, 0) }
+    nodeDao()
+        .getChildNodes(getRootNode().nodeId)
+        .sortedBy { it.order }
+        .forEach { add(it, null, 0, AllPermissions) }
 
     return result
 }
