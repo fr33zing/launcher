@@ -178,9 +178,13 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
 suspend fun AppDatabase.getRootNode(): Node =
     getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
 
-suspend fun AppDatabase.moveToTrash(node: Node) {
-    val trash = getOrCreateSingletonDirectory(Directory.SpecialMode.Trash)
-    node.parentId = trash.nodeId
+suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int?) {
+    node.parentId = newParentNodeId
     update(node)
     refreshNodeList()
+}
+
+suspend fun AppDatabase.moveToTrash(node: Node) {
+    val trash = getOrCreateSingletonDirectory(Directory.SpecialMode.Trash)
+    moveNode(node, trash.nodeId)
 }
