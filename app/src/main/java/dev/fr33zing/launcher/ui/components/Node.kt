@@ -112,6 +112,7 @@ fun NodeRow(
         val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
+        // TODO replace this with a custom Indication?
         val tapColor = node.kind.color(payload).copy(alpha = 0.15f)
         val tapColorAnimated by
             animateColorAsState(
