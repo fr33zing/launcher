@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.ui.components.editforms
 
 import android.content.pm.LauncherActivityInfo
+import android.os.Process
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -77,7 +78,10 @@ fun ApplicationEditForm(
         NodePropertyTextField(application::appName)
         NodePropertyTextField(application::packageName)
         NodePropertyTextField(application::activityClassName, userCanRevert = true)
-        NodePropertyTextField(application::userHandle)
+        NodePropertyTextField(
+            application::userHandle,
+            defaultValue = Process.myUserHandle().toString()
+        )
     }
 }
 

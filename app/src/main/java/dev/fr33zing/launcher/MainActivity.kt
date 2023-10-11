@@ -25,10 +25,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.createNewApplications
+import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
+import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
+import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.helper.getActivityInfos
-import dev.fr33zing.launcher.helper.launcherApps
-import dev.fr33zing.launcher.helper.mainPackageManager
-import dev.fr33zing.launcher.helper.userManager
 import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.pages.Create

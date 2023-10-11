@@ -1,14 +1,20 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
+import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
+import android.os.UserManager
 import androidx.room.Entity
 import androidx.room.Ignore
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.helper.mainPackageManager
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.util.UserEditable
+
+lateinit var mainPackageManager: PackageManager
+lateinit var launcherApps: LauncherApps
+lateinit var userManager: UserManager
 
 @Entity
 class Application(
@@ -18,7 +24,7 @@ class Application(
     @UserEditable("Package name", locked = true) var packageName: String = "",
     @UserEditable("Activity class name", locked = true, userCanUnlock = true)
     var activityClassName: String = "",
-    @UserEditable("User handle", locked = true) var userHandle: String = "",
+    @UserEditable("User handle", locked = true, userCanUnlock = true) var userHandle: String = "",
 ) : Payload(payloadId, nodeId) {
     constructor(
         payloadId: Int,
@@ -34,9 +40,10 @@ class Application(
     )
 
     enum class Status(val reason: String) {
-        Valid("the package and activity are valid"),
+        Valid("<valid>"),
         MissingPackage("the package is missing"),
-        MissingActivity("the activity class name is invalid")
+        MissingActivity("the activity class name is invalid"),
+        MissingProfile("the user profile is missing")
     }
 
     @Ignore private var _status: Status? = null
@@ -55,18 +62,27 @@ class Application(
                 return Status.MissingPackage
             }
 
-        packageInfo.activities.firstOrNull { it.name == activityClassName }
-            ?: return Status.MissingActivity
+        if (packageInfo.activities.none { it.name == activityClassName })
+            return Status.MissingActivity
+
+        if (userManager.userProfiles.none { it.toString() == userHandle })
+            return Status.MissingProfile
 
         return Status.Valid
     }
 
-    override fun activate(db: AppDatabase, context: Context) {
-        if (status != Status.Valid) {
+    override fun activate(db: AppDatabase, context: Context) =
+        if (status == Status.Valid) {
+            val userHandle =
+                userManager.userProfiles.first { it.toString() == userHandle }
+                    ?: throw Exception("Missing user profile")
+            val activityList = launcherApps.getActivityList(packageName, userHandle)
+            val componentName = ComponentName(packageName, activityList[activityList.size - 1].name)
+            launcherApps.startMainActivity(componentName, userHandle, null, null)
+        } else {
             sendNotice(
                 "app-invalid:${nodeId}",
                 "Cannot launch application because ${status.reason}."
             )
         }
-    }
 }
