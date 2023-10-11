@@ -41,7 +41,7 @@ import dev.fr33zing.launcher.data.persistent.checkPermission
 import dev.fr33zing.launcher.data.persistent.moveNode
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePicker
-import dev.fr33zing.launcher.ui.components.OutlinedReadOnlyValue
+import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.theme.Catppuccin
@@ -133,14 +133,14 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {
-                    OutlinedReadOnlyValue(
+                    OutlinedValue(
                         label = "${movingNode!!.kind.label} to move",
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         NodePath(db, movingNode!!)
                     }
 
-                    OutlinedReadOnlyValue(
+                    OutlinedValue(
                         label = "Destination",
                         modifier = Modifier.fillMaxWidth()
                     ) {

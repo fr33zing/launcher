@@ -1,11 +1,11 @@
 package dev.fr33zing.launcher.ui.components.editforms
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -26,7 +26,8 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.EditFormColumn
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
-import dev.fr33zing.launcher.ui.components.OutlinedReadOnlyValue
+import dev.fr33zing.launcher.ui.components.OutlinedValue
+import dev.fr33zing.launcher.ui.theme.Foreground
 
 @Composable
 fun DirectoryEditForm(
@@ -39,27 +40,29 @@ fun DirectoryEditForm(
 
     EditFormColumn(innerPadding) {
         val labelState = remember { mutableStateOf(node.label) }
-        OutlinedReadOnlyValue(label = "Path", modifier = Modifier.fillMaxWidth()) {
+        OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) {
             NodePath(db, node, lastNodeLabelState = labelState)
         }
         NodePropertyTextField(node::label, state = labelState)
-        Spacer(Modifier.height(16.dp))
         InitialState(directory)
     }
 }
 
-// TODO put an outline around this to match OutlinedTextField
 @Composable
 private fun InitialState(directory: Directory) {
     val radioOptions = Directory.InitialVisibility.values()
     val selectedOption = remember { mutableStateOf(directory.initialVisibility) }
-    Column(Modifier.selectableGroup()) {
-        Text("Initial visibility behavior")
-
-        radioOptions.forEach { option ->
-            InitialStateOption(option, selectedOption.value) {
-                selectedOption.value = it
-                directory.initialVisibility = it
+    OutlinedValue(
+        "Initial visibility behavior",
+        readOnly = false,
+        modifier = Modifier.selectableGroup()
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            radioOptions.forEach { option ->
+                InitialStateOption(option, selectedOption.value) {
+                    selectedOption.value = it
+                    directory.initialVisibility = it
+                }
             }
         }
     }
@@ -72,21 +75,23 @@ private fun InitialStateOption(
     onOptionSelected: (Directory.InitialVisibility) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth()
-            .height(56.dp)
-            .selectable(
-                selected = (option == selectedOption),
-                onClick = { onOptionSelected(option) },
-                role = Role.RadioButton
-            )
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            Modifier.fillMaxWidth()
+                .selectable(
+                    selected = (option == selectedOption),
+                    onClick = { onOptionSelected(option) },
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    role = Role.RadioButton
+                )
     ) {
         RadioButton(selected = (option == selectedOption), onClick = null)
         Text(
             text = option.text(),
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp),
+            color = Foreground
         )
     }
 }

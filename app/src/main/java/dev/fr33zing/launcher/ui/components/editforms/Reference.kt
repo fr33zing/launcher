@@ -24,7 +24,7 @@ import dev.fr33zing.launcher.ui.components.EditFormSpacing
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePicker
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
-import dev.fr33zing.launcher.ui.components.OutlinedReadOnlyValue
+import dev.fr33zing.launcher.ui.components.OutlinedValue
 
 @Composable
 fun ReferenceEditForm(
@@ -60,7 +60,7 @@ fun ReferenceEditForm(
         modifier = Modifier.padding(innerPadding).padding(EditFormExtraPadding).fillMaxHeight(),
     ) {
         NodePropertyTextField(node::label, state = labelState)
-        OutlinedReadOnlyValue(label = "Target", modifier = Modifier.fillMaxWidth()) {
+        OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) {
             if (selectedNode.value != null) NodePath(db, selectedNode.value!!)
         }
         Box(Modifier.weight(1f)) {

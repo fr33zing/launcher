@@ -19,9 +19,10 @@ import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 
 @Composable
-fun OutlinedReadOnlyValue(
+fun OutlinedValue(
     label: String,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
@@ -33,7 +34,7 @@ fun OutlinedReadOnlyValue(
         colors = outlinedTextFieldColors(),
         label = { Text(label) },
         readOnly = true,
-        enabled = false,
+        enabled = !readOnly,
         modifier =
             modifier.then(
                 Modifier.conditional(condition = contentHeight != null) {
