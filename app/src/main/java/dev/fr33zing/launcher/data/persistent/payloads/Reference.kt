@@ -7,6 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+// TODO detect cycles and display "infinite loop" error
+
 @Entity
 class Reference(payloadId: Int, nodeId: Int, var targetId: Int? = null) :
     Payload(payloadId, nodeId) {
