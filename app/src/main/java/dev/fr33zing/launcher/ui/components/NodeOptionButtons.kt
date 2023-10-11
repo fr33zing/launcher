@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,7 +76,11 @@ fun NodeOptionButtons(
         NodeOptionButtonsLayout(
             Modifier.fillMaxHeight()
                 .background(Background.copy(alpha = 0.75f))
-                .clickable(onClick = { /* Prevent tapping node underneath */})
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = { /* Prevent tapping node underneath */}
+                )
         ) {
             if (showDeleteButton)
                 NodeOptionButton(
