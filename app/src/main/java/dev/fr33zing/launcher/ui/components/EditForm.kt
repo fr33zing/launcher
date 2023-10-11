@@ -23,28 +23,39 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.editforms.ApplicationEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DefaultEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DirectoryEditForm
+import dev.fr33zing.launcher.ui.components.editforms.ReferenceEditForm
 
-private val extraPadding = 16.dp
-private val spacing = 16.dp
+val EditFormExtraPadding = 16.dp
+val EditFormSpacing = 16.dp
 
 @Composable
 fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: Payload) {
     when (node.kind) {
         NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
         NodeKind.Directory -> DirectoryEditForm(db, innerPadding, payload, node)
+        NodeKind.Reference -> ReferenceEditForm(db, innerPadding, payload, node)
         else -> DefaultEditForm(innerPadding, node)
     }
 }
 
 @Composable
-fun EditFormColumn(innerPadding: PaddingValues, content: @Composable (ColumnScope.() -> Unit)) {
+fun EditFormColumn(
+    innerPadding: PaddingValues,
+    scrollable: Boolean = true,
+    content: @Composable (ColumnScope.() -> Unit)
+) {
     val scrollState = rememberScrollState()
 
     Box(Modifier.imePadding().fillMaxHeight()) {
-        Box(Modifier.fillMaxSize().verticalScroll(scrollState).height(IntrinsicSize.Max)) {
+        Box(
+            Modifier.fillMaxSize()
+                .verticalScroll(scrollState, enabled = scrollable)
+                .height(IntrinsicSize.Max)
+        ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(spacing),
-                modifier = Modifier.padding(innerPadding).padding(extraPadding).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(EditFormSpacing),
+                modifier =
+                    Modifier.padding(innerPadding).padding(EditFormExtraPadding).fillMaxHeight(),
                 content = content
             )
         }

@@ -71,7 +71,7 @@ fun NodePicker(
     var nodesAndParent by remember { mutableStateOf<Pair<List<Node>, Node?>>(Pair(listOf(), null)) }
     var animationDirection by remember { mutableIntStateOf(-1) }
 
-    fun setRootNode(nodeId: Int?, animDirection: Int) {
+    fun setRootNode(nodeId: Int?, animDirection: Int, alsoSelectNode: Boolean = true) {
         animationDirection = animDirection
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -79,7 +79,8 @@ fun NodePicker(
             rootNode =
                 db.nodeDao().getNodeById(rootNodeId ?: ROOT_NODE_ID)
                     ?: throw Exception("Root node is null")
-            selectedNodeState.value = rootNode
+
+            if (alsoSelectNode) selectedNodeState.value = rootNode
 
             val parentNode = rootNode!!.parentId?.let { db.nodeDao().getNodeById(it) }
             val nodes =
@@ -94,10 +95,10 @@ fun NodePicker(
         }
     }
 
-    LaunchedEffect(Unit) { setRootNode(initialRootNodeId, 0) }
+    LaunchedEffect(Unit) { setRootNode(initialRootNodeId, 0, false) }
 
     if (rootNode != null) {
-        DirectoryPicker(
+        NodePickerRowList(
             db,
             animationDirection,
             rootNode!!,
@@ -110,7 +111,7 @@ fun NodePicker(
 }
 
 @Composable
-private fun DirectoryPicker(
+private fun NodePickerRowList(
     db: AppDatabase,
     animationDirection: Int,
     rootNode: Node,
@@ -144,7 +145,7 @@ private fun DirectoryPicker(
         Box(Modifier.verticalScrollShadows(spacing / 2)) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = spacing / 2)) {
                 it.first.forEach { node ->
-                    DirectoryRow(
+                    NodePickerRow(
                         db,
                         node,
                         rootNode,
@@ -164,7 +165,7 @@ private fun DirectoryPicker(
 }
 
 @Composable
-private fun DirectoryRow(
+private fun NodePickerRow(
     db: AppDatabase,
     node: Node,
     rootNode: Node,

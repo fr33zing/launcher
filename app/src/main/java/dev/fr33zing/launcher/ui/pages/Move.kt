@@ -69,6 +69,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         movingNodeCurrentParent =
             db.nodeDao().getNodeById(parentId) ?: throw Exception("parent is null")
         initialRootNodeId = movingNodeCurrentParent!!.parentId ?: ROOT_NODE_ID
+        selectedNode.value = db.nodeDao().getNodeById(initialRootNodeId!!)
     }
 
     YesNoDialog(
