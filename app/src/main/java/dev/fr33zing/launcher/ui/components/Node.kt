@@ -77,7 +77,6 @@ import kotlinx.coroutines.launch
 fun NodeRow(
     db: AppDatabase,
     navController: NavController,
-    minimal: Boolean,
     row: NodeRow,
     nodeOptionsVisibleIndex: Int?,
     index: Int,
@@ -121,76 +120,67 @@ fun NodeRow(
                 label = "node tap alpha"
             )
 
-        @Composable
-        fun node() {
-            Node(
-                db,
-                navController,
-                row,
-                visible,
-                fontSize,
-                lineHeight,
-                spacing,
-                indent,
-                depth,
-                showOptions,
-                pressing,
-                onTapped,
-                onLongPressed,
-            )
-        }
+        Column {
+            if (showCreateAboveButton) {
+                AddNodeButton(
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth,
+                    visible = showOptions,
+                    below = false,
+                    text = "Add item above",
+                    onDialogOpened = {
+                        onAddNodeDialogOpened(
+                            RelativeNodePosition(node.nodeId, RelativeNodeOffset.Above)
+                        )
+                    },
+                    onDialogClosed = onAddNodeDialogClosed,
+                    onKindChosen = onNewNodeKindChosen
+                )
+            }
 
-        if (minimal) {
-            node()
-        } else {
-            Column {
-                if (showCreateAboveButton) {
-                    AddNodeButton(
-                        fontSize,
-                        lineHeight,
-                        spacing,
-                        indent,
-                        depth,
-                        visible = showOptions,
-                        below = false,
-                        text = "Add item above",
-                        onDialogOpened = {
-                            onAddNodeDialogOpened(
-                                RelativeNodePosition(node.nodeId, RelativeNodeOffset.Above)
+            AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
+                Node(
+                    db,
+                    navController,
+                    row,
+                    visible,
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth,
+                    showOptions,
+                    pressing,
+                    onTapped,
+                    onLongPressed,
+                )
+            }
+
+            if (showCreateBelowButton) {
+                AddNodeButton(
+                    fontSize,
+                    lineHeight,
+                    spacing,
+                    indent,
+                    depth = if (isExpandedDir) depth + 1 else depth,
+                    visible = showOptions,
+                    below = true,
+                    text = if (isExpandedDir) "Add item within" else "Add item below",
+                    onDialogOpened = {
+                        onAddNodeDialogOpened(
+                            RelativeNodePosition(
+                                node.nodeId,
+                                if (isExpandedDir) RelativeNodeOffset.Within
+                                else RelativeNodeOffset.Below
                             )
-                        },
-                        onDialogClosed = onAddNodeDialogClosed,
-                        onKindChosen = onNewNodeKindChosen
-                    )
-                }
-
-                AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
-                    node()
-                }
-
-                if (showCreateBelowButton) {
-                    AddNodeButton(
-                        fontSize,
-                        lineHeight,
-                        spacing,
-                        indent,
-                        depth = if (isExpandedDir) depth + 1 else depth,
-                        visible = showOptions,
-                        below = true,
-                        text = if (isExpandedDir) "Add item within" else "Add item below",
-                        onDialogOpened = {
-                            onAddNodeDialogOpened(
-                                RelativeNodePosition(
-                                    node.nodeId,
-                                    if (isExpandedDir) RelativeNodeOffset.Within
-                                    else RelativeNodeOffset.Below
-                                )
-                            )
-                        },
-                        onDialogClosed = onAddNodeDialogClosed,
-                        onKindChosen = onNewNodeKindChosen
-                    )
-                }
+                        )
+                    },
+                    onDialogClosed = onAddNodeDialogClosed,
+                    onKindChosen = onNewNodeKindChosen
+                )
             }
         }
     }
@@ -227,7 +217,7 @@ fun Node(
                         .padding(vertical = spacing / 2)
                         .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
                         .conditional(visible) {
-                            pointerInput(Unit) {
+                            pointerInput(row) {
                                 awaitEachGesture {
                                     awaitFirstDown(requireUnconsumed = true)
                                     val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
