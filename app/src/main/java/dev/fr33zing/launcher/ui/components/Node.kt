@@ -215,9 +215,9 @@ fun Node(
 ) {
     with(row) {
         val haptics = LocalHapticFeedback.current
-        val icon = remember { node.kind.icon(payload) }
-        val color = remember { node.kind.color(payload) }
-        val lineThrough = remember { node.kind.lineThrough(payload) }
+        val icon = node.kind.icon(payload)
+        val color = node.kind.color(payload)
+        val lineThrough = node.kind.lineThrough(payload)
 
         Box(Modifier.height(IntrinsicSize.Min)) {
             Row(
