@@ -32,7 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,6 +68,7 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
+    val haptics = LocalHapticFeedback.current
     var parentNode by remember { mutableStateOf<Node?>(null) }
     val nodes = remember { mutableStateOf<List<Node>?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
@@ -123,10 +126,20 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                     )
                 },
                 actions = {
-                    IconButton(onClick = { cancelDialogVisible.value = true }) {
+                    IconButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            cancelDialogVisible.value = true
+                        }
+                    ) {
                         Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
                     }
-                    IconButton(onClick = { saveDialogVisible.value = true }) {
+                    IconButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            saveDialogVisible.value = true
+                        }
+                    ) {
                         Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
                     }
                 },

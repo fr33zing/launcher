@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -37,6 +39,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
+    val haptics = LocalHapticFeedback.current
     var node by remember { mutableStateOf<Node?>(null) }
     var payload by remember { mutableStateOf<Payload?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
@@ -93,10 +96,20 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
                         )
                     },
                     actions = {
-                        IconButton(onClick = { cancelDialogVisible.value = true }) {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                cancelDialogVisible.value = true
+                            }
+                        ) {
                             Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
                         }
-                        IconButton(onClick = { saveDialogVisible.value = true }) {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                saveDialogVisible.value = true
+                            }
+                        ) {
                             Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
                         }
                     },
