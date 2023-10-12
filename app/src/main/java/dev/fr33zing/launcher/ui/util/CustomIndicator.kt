@@ -32,13 +32,18 @@ fun rememberCustomIndication(
     overrideAlpha: Float = 0.333f,
     useHaptics: Boolean = true,
     circular: Boolean = false,
-) = remember(color, overrideAlpha) { CustomIndication(color, overrideAlpha, useHaptics, circular) }
+    longPressable: Boolean = false,
+) =
+    remember(color, overrideAlpha) {
+        CustomIndication(color, overrideAlpha, useHaptics, circular, longPressable)
+    }
 
 class CustomIndication(
     private val color: Color,
     private val overrideAlpha: Float,
     private val useHaptics: Boolean,
-    private val circular: Boolean
+    private val circular: Boolean,
+    private val longPressable: Boolean,
 ) : Indication {
     private val longPressTimeout = getLongPressTimeout().toLong()
     private val timer = Timer()
@@ -79,6 +84,8 @@ class CustomIndication(
             if (pressed) return
             pressed = true
             animatedColor.snapTo(pressedColor)
+
+            if (!longPressable) return
             timerTask?.run { cancel() }
             timerTask = timerTask { onReleaseOrCancel() }
             timer.schedule(timerTask, longPressTimeout)

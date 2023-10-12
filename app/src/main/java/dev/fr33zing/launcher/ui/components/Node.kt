@@ -2,18 +2,14 @@ package dev.fr33zing.launcher.ui.components
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -85,7 +81,6 @@ fun NodeRow(
         val indent by preferences.getIndent()
         val lineHeight = with(localDensity) { fontSize.toDp() }
 
-        val pressing = remember { mutableStateOf(false) }
         val userCanCreateWithin = remember {
             hasPermission(PermissionKind.Create, PermissionScope.Recursive)
         }
@@ -101,15 +96,6 @@ fun NodeRow(
 
         val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
-
-        // TODO replace this with a custom Indication?
-        val tapColor = node.kind.color(payload).copy(alpha = 0.15f)
-        val tapColorAnimated by
-            animateColorAsState(
-                if (pressing.value) tapColor else Color.Transparent,
-                animationSpec = if (pressing.value) snap() else tween(1000),
-                label = "node tap alpha"
-            )
 
         Column {
             if (showCreateAboveButton) {
@@ -132,7 +118,7 @@ fun NodeRow(
                 )
             }
 
-            AnimatedNodeVisibility(visible, modifier = Modifier.background(tapColorAnimated)) {
+            AnimatedNodeVisibility(visible) {
                 Node(
                     db,
                     navController,
@@ -199,7 +185,7 @@ fun Node(
         val lineThrough = node.kind.lineThrough(payload)
 
         val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color)
+        val indication = rememberCustomIndication(color, longPressable = true)
 
         Box(
             Modifier.height(IntrinsicSize.Min)
