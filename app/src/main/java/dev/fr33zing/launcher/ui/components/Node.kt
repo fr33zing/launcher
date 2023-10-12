@@ -1,7 +1,6 @@
 package dev.fr33zing.launcher.ui.components
 
 import android.annotation.SuppressLint
-import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -13,11 +12,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -33,7 +32,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,12 +42,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -64,14 +60,9 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
-import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
 import dev.fr33zing.launcher.ui.theme.Foreground
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 
 @Composable
 fun NodeRow(
@@ -80,8 +71,8 @@ fun NodeRow(
     row: NodeRow,
     nodeOptionsVisibleIndex: Int?,
     index: Int,
-    onTapped: () -> Unit,
-    onLongPressed: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onAddNodeDialogOpened: (RelativeNodePosition) -> Unit,
     onAddNodeDialogClosed: () -> Unit,
     onNewNodeKindChosen: (NodeKind) -> Unit,
@@ -154,9 +145,8 @@ fun NodeRow(
                     indent,
                     depth,
                     showOptions,
-                    pressing,
-                    onTapped,
-                    onLongPressed,
+                    onClick,
+                    onLongClick,
                 )
             }
 
@@ -187,6 +177,7 @@ fun NodeRow(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Node(
     db: AppDatabase,
@@ -199,55 +190,34 @@ fun Node(
     indent: Dp,
     depth: Int,
     showOptions: Boolean,
-    pressing: MutableState<Boolean>,
-    onTapped: () -> Unit,
-    onLongPressed: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     with(row) {
-        val haptics = LocalHapticFeedback.current
         val icon = node.kind.icon(payload)
         val color = node.kind.color(payload)
         val lineThrough = node.kind.lineThrough(payload)
 
-        Box(Modifier.height(IntrinsicSize.Min)) {
+        val interactionSource = remember { MutableInteractionSource() }
+        val indication = rememberCustomIndication(color)
+
+        Box(
+            Modifier.height(IntrinsicSize.Min)
+                .combinedClickable(
+                    enabled = visible,
+                    interactionSource = interactionSource,
+                    indication = indication,
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                )
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(vertical = spacing / 2)
                         .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
-                        .conditional(visible) {
-                            pointerInput(row) {
-                                awaitEachGesture {
-                                    awaitFirstDown(requireUnconsumed = true)
-                                    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-                                    val heldButtonJob =
-                                        scope.launch {
-                                            delay(25)
-                                            pressing.value = true
-                                            delay(getLongPressTimeout().toLong() - 25)
-                                            // Long press
-                                            pressing.value = false
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.LongPress
-                                            )
-                                            onLongPressed()
-                                        }
-                                    waitForUpOrCancellation()?.run {
-                                        // Tap
-                                        if (pressing.value) {
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.LongPress
-                                            )
-                                            onTapped()
-                                        }
-                                    }
-                                    heldButtonJob.cancel()
-                                    pressing.value = false
-                                }
-                            }
-                        }
                         .then(modifier)
             ) {
                 NodeIconAndText(fontSize, lineHeight, node.label, color, icon, lineThrough)

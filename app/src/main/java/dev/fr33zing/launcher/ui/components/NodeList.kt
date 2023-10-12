@@ -116,11 +116,11 @@ fun NodeList(
                         row,
                         nodeOptionsVisibleIndex,
                         index,
-                        onTapped = {
+                        onClick = {
                             nodeOptionsVisibleIndex = null
-                            onNodeRowTapped(db, context, row)
+                            onNodeRowClicked(db, context, row)
                         },
-                        onLongPressed = { nodeOptionsVisibleIndex = index },
+                        onLongClick = { nodeOptionsVisibleIndex = index },
                         onAddNodeDialogOpened = {
                             newNodePosition = it
                             nodeOptionsVisibleIndex = null
@@ -143,7 +143,7 @@ fun NodeList(
     }
 }
 
-private fun onNodeRowTapped(db: AppDatabase, context: Context, nodeRow: NodeRow) {
+private fun onNodeRowClicked(db: AppDatabase, context: Context, nodeRow: NodeRow) {
     if (nodeRow.node.kind == NodeKind.Directory) nodeRow.collapsed = !nodeRow.collapsed
 
     nodeRow.payload.activate(db, context)
