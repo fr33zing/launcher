@@ -1,7 +1,7 @@
 package dev.fr33zing.launcher.ui.components.editforms
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,7 +27,9 @@ import dev.fr33zing.launcher.ui.components.EditFormColumn
 import dev.fr33zing.launcher.ui.components.NodePath
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.OutlinedValue
+import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 
 @Composable
 fun DirectoryEditForm(
@@ -40,8 +42,13 @@ fun DirectoryEditForm(
 
     EditFormColumn(innerPadding) {
         val labelState = remember { mutableStateOf(node.label) }
-        OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) {
-            NodePath(db, node, lastNodeLabelState = labelState)
+        OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) { padding ->
+            NodePath(
+                db,
+                node,
+                lastNodeLabelState = labelState,
+                modifier = Modifier.padding(padding)
+            )
         }
         NodePropertyTextField(node::label, state = labelState)
         InitialState(directory)
@@ -52,14 +59,15 @@ fun DirectoryEditForm(
 private fun InitialState(directory: Directory) {
     val radioOptions = Directory.InitialVisibility.values()
     val selectedOption = remember { mutableStateOf(directory.initialVisibility) }
+
     OutlinedValue(
         "Initial visibility behavior",
         readOnly = false,
         modifier = Modifier.selectableGroup()
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    ) { padding ->
+        Column() {
             radioOptions.forEach { option ->
-                InitialStateOption(option, selectedOption.value) {
+                InitialStateOption(padding, option, selectedOption.value) {
                     selectedOption.value = it
                     directory.initialVisibility = it
                 }
@@ -70,28 +78,34 @@ private fun InitialState(directory: Directory) {
 
 @Composable
 private fun InitialStateOption(
+    padding: PaddingValues,
     option: Directory.InitialVisibility,
     selectedOption: Directory.InitialVisibility,
     onOptionSelected: (Directory.InitialVisibility) -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(color = Catppuccin.Current.pink)
+    Box(
         modifier =
-            Modifier.fillMaxWidth()
-                .selectable(
-                    selected = (option == selectedOption),
-                    onClick = { onOptionSelected(option) },
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    role = Role.RadioButton
-                )
+            Modifier.selectable(
+                selected = (option == selectedOption),
+                onClick = { onOptionSelected(option) },
+                interactionSource = interactionSource,
+                indication = indication,
+                role = Role.RadioButton
+            )
     ) {
-        RadioButton(selected = (option == selectedOption), onClick = null)
-        Text(
-            text = option.text(),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp),
-            color = Foreground
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(padding).padding(vertical = 10.dp)
+        ) {
+            RadioButton(selected = (option == selectedOption), onClick = null)
+            Text(
+                text = option.text(),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 12.dp),
+                color = Foreground
+            )
+        }
     }
 }

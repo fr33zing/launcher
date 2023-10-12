@@ -136,15 +136,14 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                     OutlinedValue(
                         label = "${movingNode!!.kind.label} to move",
                         modifier = Modifier.fillMaxWidth()
-                    ) {
-                        NodePath(db, movingNode!!)
+                    ) { padding ->
+                        NodePath(db, movingNode!!, modifier = Modifier.padding(padding))
                     }
 
-                    OutlinedValue(
-                        label = "Destination",
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (selectedNode.value != null) NodePath(db, selectedNode.value!!)
+                    OutlinedValue(label = "Destination", modifier = Modifier.fillMaxWidth()) {
+                        padding ->
+                        if (selectedNode.value != null)
+                            NodePath(db, selectedNode.value!!, modifier = Modifier.padding(padding))
                     }
 
                     NodePicker(

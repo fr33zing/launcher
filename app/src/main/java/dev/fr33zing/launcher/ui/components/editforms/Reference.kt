@@ -60,8 +60,9 @@ fun ReferenceEditForm(
         modifier = Modifier.padding(innerPadding).padding(EditFormExtraPadding).fillMaxHeight(),
     ) {
         NodePropertyTextField(node::label, state = labelState)
-        OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) {
-            if (selectedNode.value != null) NodePath(db, selectedNode.value!!)
+        OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) { padding ->
+            if (selectedNode.value != null)
+                NodePath(db, selectedNode.value!!, modifier = Modifier.padding(padding))
         }
         Box(Modifier.weight(1f)) {
             if (initialRootNodeId != null)

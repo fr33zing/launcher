@@ -29,7 +29,12 @@ import kotlin.text.Typography.nbsp
 import kotlinx.coroutines.sync.Mutex
 
 @Composable
-fun NodePath(db: AppDatabase, node: Node, lastNodeLabelState: MutableState<String>? = null) {
+fun NodePath(
+    db: AppDatabase,
+    node: Node,
+    modifier: Modifier = Modifier,
+    lastNodeLabelState: MutableState<String>? = null,
+) {
     val hierarchyMutex = remember { Mutex() }
     val hierarchy = remember { mutableListOf<Node>() }
     val payloads = remember { mutableListOf<Payload>() }
@@ -55,7 +60,7 @@ fun NodePath(db: AppDatabase, node: Node, lastNodeLabelState: MutableState<Strin
     }
 
     if (annotatedString != null) {
-        Text(text = annotatedString!!, inlineContent = inlineContents)
+        Text(text = annotatedString!!, inlineContent = inlineContents, modifier = modifier)
     }
 }
 
