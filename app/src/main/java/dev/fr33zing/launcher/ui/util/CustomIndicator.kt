@@ -23,32 +23,36 @@ import dev.fr33zing.launcher.ui.theme.Foreground
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.concurrent.timerTask
+import kotlin.math.hypot
 import kotlinx.coroutines.launch
 
 @Composable
 fun rememberCustomIndication(
     color: Color = Foreground,
     overrideAlpha: Float = 0.333f,
-    useHaptics: Boolean = true
-) =
-    remember(color, overrideAlpha, useHaptics) {
-        CustomIndication(color, overrideAlpha, useHaptics)
-    }
+    useHaptics: Boolean = true,
+    circular: Boolean = false,
+) = remember(color, overrideAlpha) { CustomIndication(color, overrideAlpha, useHaptics, circular) }
 
-class CustomIndication(val color: Color, val overrideAlpha: Float, val useHaptics: Boolean) :
-    Indication {
-
-    private val pressedColor = color.copy(overrideAlpha)
+class CustomIndication(
+    private val color: Color,
+    private val overrideAlpha: Float,
+    private val useHaptics: Boolean,
+    private val circular: Boolean
+) : Indication {
     private val longPressTimeout = getLongPressTimeout().toLong()
     private val timer = Timer()
     private var timerTask: TimerTask? = null
 
     private class CustomIndicationInstance(
+        private val circular: Boolean,
         private val colorState: State<Color>,
     ) : IndicationInstance {
 
         override fun ContentDrawScope.drawIndication() {
-            drawRect(color = colorState.value, size = size)
+            if (circular)
+                drawCircle(color = colorState.value, radius = hypot(size.width, size.height) / 2)
+            else drawRect(color = colorState.value, size = size)
             drawContent()
         }
     }
@@ -56,6 +60,7 @@ class CustomIndication(val color: Color, val overrideAlpha: Float, val useHaptic
     @Composable
     override fun rememberUpdatedInstance(interactionSource: InteractionSource): IndicationInstance {
         val haptics = LocalHapticFeedback.current
+        val pressedColor = remember(color, overrideAlpha) { color.copy(overrideAlpha) }
         val animatedColor = remember { Animatable(Color.Transparent) }
         val colorState = remember(animatedColor) { animatedColor.asState() }
         val coroutineScope = rememberCoroutineScope()
@@ -89,6 +94,6 @@ class CustomIndication(val color: Color, val overrideAlpha: Float, val useHaptic
             }
         }
 
-        return remember(interactionSource) { CustomIndicationInstance(colorState) }
+        return remember(interactionSource) { CustomIndicationInstance(circular, colorState) }
     }
 }

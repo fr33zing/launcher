@@ -3,15 +3,16 @@ package dev.fr33zing.launcher.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -27,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +41,7 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -88,7 +89,7 @@ fun NodeOptionButtons(
                     lineHeight,
                     Icons.Outlined.Delete,
                     "Delete",
-                    onLongPress = {
+                    onLongClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         sendNotice(
                             "deleted",
@@ -96,7 +97,7 @@ fun NodeOptionButtons(
                         )
                         CoroutineScope(Dispatchers.IO).launch { db.moveToTrash(row.node) }
                     },
-                    onTap = { sendNotice("delete", "Long press to move this item to the trash.") }
+                    onClick = { sendNotice("delete", "Long press to move this item to the trash.") }
                 )
 
             if (showMoveButton)
@@ -120,25 +121,33 @@ fun NodeOptionButtons(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NodeOptionButton(
     fontSize: TextUnit,
     lineHeight: Dp,
     icon: ImageVector,
     text: String,
-    onLongPress: () -> Unit = {},
-    onTap: () -> Unit,
+    onLongClick: () -> Unit = {},
+    onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(circular = true)
+
     Box(
         contentAlignment = Alignment.Center,
         modifier =
-            Modifier.padding(horizontal = lineHeight * 0.5f).pointerInput(Unit) {
-                detectTapGestures(onTap = { onTap() }, onLongPress = { onLongPress() })
-            }
+            Modifier.combinedClickable(
+                interactionSource = interactionSource,
+                indication = indication,
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.aspectRatio(1f, true)
         ) {
             Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f))
             Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold)
