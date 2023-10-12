@@ -6,8 +6,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -17,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -27,7 +24,9 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.EditForm
+import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.refreshNodeList
@@ -96,22 +95,8 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
                         )
                     },
                     actions = {
-                        IconButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                cancelDialogVisible.value = true
-                            }
-                        ) {
-                            Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
-                        }
-                        IconButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                saveDialogVisible.value = true
-                            }
-                        ) {
-                            Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
-                        }
+                        CancelButton { cancelDialogVisible.value = true }
+                        FinishButton { saveDialogVisible.value = true }
                     },
                 )
             }

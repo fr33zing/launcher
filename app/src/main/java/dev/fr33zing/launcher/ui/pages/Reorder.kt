@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -32,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
@@ -47,6 +45,8 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
+import dev.fr33zing.launcher.ui.components.CancelButton
+import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
@@ -126,22 +126,8 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                     )
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            cancelDialogVisible.value = true
-                        }
-                    ) {
-                        Icon(Icons.Filled.Close, "cancel", tint = Catppuccin.Current.red)
-                    }
-                    IconButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            saveDialogVisible.value = true
-                        }
-                    ) {
-                        Icon(Icons.Filled.Check, "finish", tint = Catppuccin.Current.green)
-                    }
+                    CancelButton { cancelDialogVisible.value = true }
+                    FinishButton { saveDialogVisible.value = true }
                 },
             )
         }
