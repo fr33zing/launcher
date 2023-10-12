@@ -2,6 +2,7 @@ package dev.fr33zing.launcher.ui.components.dialog
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +60,7 @@ import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
 import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -67,6 +70,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
+
+private val itemSpacing = 16.dp
 
 @Composable
 fun <T> FuzzyPickerDialog(
@@ -185,42 +190,56 @@ fun <T> FuzzyPickerDialog(
         }
 
         @Composable
-        fun Item(item: T, alpha: Double, color: Color) {
-            val itemFontSize = 19.sp
-            val string = itemToString(item)
-            val distinct = items.map(itemToString).count { it == string } == 1
-            val text =
-                if (showAnnotatedString(item, distinct))
-                    itemToAnnotatedString(item, fontSize, color)
-                else
-                    buildAnnotatedString {
-                        withStyle(SpanStyle(color = color, fontSize = itemFontSize)) {
-                            append(itemToString(item))
-                        }
-                    }
+        fun Item(item: T, padding: Dp, alpha: Double, color: Color) {
+            val interactionSource = remember(color) { MutableInteractionSource() }
+            val indication = rememberCustomIndication(color = color)
 
-            Text(
-                text,
-                modifier =
-                    Modifier.alpha(alpha.toFloat()).clickable {
+            Box(
+                Modifier.clickable(
+                    interactionSource,
+                    indication,
+                    onClick = {
                         visible.value = false
                         onItemPicked(item)
                     }
-            )
+                )
+            ) {
+                val itemFontSize = 19.sp
+                val string = itemToString(item)
+                val distinct = items.map(itemToString).count { it == string } == 1
+                val text =
+                    if (showAnnotatedString(item, distinct))
+                        itemToAnnotatedString(item, fontSize, color)
+                    else
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(color = color, fontSize = itemFontSize)) {
+                                append(itemToString(item))
+                            }
+                        }
+
+                Text(
+                    text,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = padding, vertical = itemSpacing / 2)
+                            .alpha(alpha.toFloat())
+                )
+            }
         }
 
         Box(Modifier.verticalScrollShadows(padding / 2)) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier =
                     Modifier.fillMaxWidth()
                         .verticalScroll(scrollState)
-                        .padding(horizontal = padding, vertical = padding / 2)
+                        .padding(vertical = padding / 2)
             ) {
                 if (query.isEmpty()) {
-                    items.forEach { Item(it, 1.0, Foreground) }
+                    items.forEach { Item(it, padding, 1.0, Foreground) }
                 } else {
-                    styledItems(matches).forEach { with(it) { Item(referent, alpha, color) } }
+                    styledItems(matches).forEach {
+                        with(it) { Item(referent, padding, alpha, color) }
+                    }
                 }
             }
         }

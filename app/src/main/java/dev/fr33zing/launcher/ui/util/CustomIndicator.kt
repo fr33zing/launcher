@@ -30,7 +30,10 @@ fun rememberCustomIndication(
     color: Color = Foreground,
     overrideAlpha: Float = 0.333f,
     useHaptics: Boolean = true
-) = remember(color, overrideAlpha) { CustomIndication(color, overrideAlpha, useHaptics) }
+) =
+    remember(color, overrideAlpha, useHaptics) {
+        CustomIndication(color, overrideAlpha, useHaptics)
+    }
 
 class CustomIndication(val color: Color, val overrideAlpha: Float, val useHaptics: Boolean) :
     Indication {
