@@ -1,9 +1,13 @@
 package dev.fr33zing.launcher.ui.components.dialog
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,6 +22,7 @@ import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
+import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 
 @Composable
 fun AddNodeDialog(
@@ -47,24 +52,40 @@ fun AddNodeDialog(
         Icons.Filled.Add,
         onDismissRequest = onDismissRequest,
         modifier = Modifier.width(IntrinsicSize.Min)
-    ) {
-        kinds.forEach { Option(fontSize, lineHeight, it) { onKindChosen(it) } }
+    ) { padding ->
+        val verticalPadding = remember { padding - Preferences.spacingDefault / 2 }
+        Column(modifier = Modifier.padding(vertical = verticalPadding)) {
+            kinds.forEach { Option(padding, fontSize, lineHeight, it) { onKindChosen(it) } }
+        }
     }
 }
 
 @Composable
-private fun Option(fontSize: TextUnit, lineHeight: Dp, nodeKind: NodeKind, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-    ) {
-        NodeIconAndText(
-            fontSize = fontSize,
-            lineHeight = lineHeight,
-            label = nodeKind.label,
-            color = nodeKind.color,
-            icon = nodeKind.icon,
-            softWrap = false,
-        )
+private fun Option(
+    padding: Dp,
+    fontSize: TextUnit,
+    lineHeight: Dp,
+    nodeKind: NodeKind,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(color = nodeKind.color)
+
+    Box(Modifier.clickable(interactionSource, indication, onClick = onClick)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = padding, vertical = Preferences.spacingDefault / 2)
+        ) {
+            NodeIconAndText(
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                label = nodeKind.label,
+                color = nodeKind.color,
+                icon = nodeKind.icon,
+                softWrap = false,
+            )
+        }
     }
 }

@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.ui.components.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -25,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
-import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 
@@ -49,8 +48,6 @@ fun BaseDialog(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit = {},
-    padding: Boolean = true,
-    spacing: Boolean = true,
     content: @Composable ColumnScope.(Dp) -> Unit = {},
 ) {
     // HACK: Fix bug caused by hiding dialog when keyboard is visible.
@@ -77,7 +74,7 @@ fun BaseDialog(
                 modifier = Modifier.padding(vertical = 24.dp).imePadding()
             ) {
                 BaseDialogIcon(icon)
-                BaseDialogCard(padding, spacing, modifier, content)
+                BaseDialogCard(modifier, content)
             }
 
             // The rest of the hack:
@@ -92,24 +89,21 @@ fun BaseDialog(
 fun Modifier.baseDialogStyles(shape: Shape) =
     this.background(baseDialogBackgroundColor, shape)
         .border(baseDialogBorderWidth, baseDialogBorderColor, shape)
+        .clip(shape)
 
 @Composable
 private fun BaseDialogCard(
-    padding: Boolean,
-    spacing: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.(Dp) -> Unit) = {}
-) =
+) {
+    val padding = remember { 36.dp }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(if (spacing) 8.dp else 0.dp),
-        modifier =
-            Modifier.baseDialogStyles(MaterialTheme.shapes.large)
-                .conditional(padding) { padding(36.dp) }
-                .then(modifier),
+        modifier = Modifier.baseDialogStyles(MaterialTheme.shapes.large).then(modifier),
     ) {
-        content(36.dp)
+        content(padding)
     }
+}
 
 @Composable
 private fun BaseDialogIcon(icon: ImageVector) {

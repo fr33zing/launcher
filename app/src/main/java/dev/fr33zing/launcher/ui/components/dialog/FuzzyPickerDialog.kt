@@ -82,8 +82,6 @@ fun <T> FuzzyPickerDialog(
         visible,
         Icons.Filled.Search,
         onDismissRequest = onDismissRequest,
-        padding = false,
-        spacing = false,
         modifier = Modifier.fillMaxSize()
     ) { padding ->
         val focusManager = LocalFocusManager.current
