@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun rememberCustomIndication(
     color: Color = Foreground,
-    overrideAlpha: Float = 0.4f,
+    overrideAlpha: Float = 0.333f,
     useHaptics: Boolean = true
 ) = remember(color, overrideAlpha) { CustomIndication(color, overrideAlpha, useHaptics) }
 

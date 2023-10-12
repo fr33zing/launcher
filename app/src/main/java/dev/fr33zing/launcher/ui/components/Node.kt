@@ -14,8 +14,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -277,27 +276,26 @@ private fun AddNodeButton(
 ) {
     val color = Foreground.copy(alpha = 0.5f)
     val expandFrom = if (below) Alignment.Bottom else Alignment.Top
-
     val dialogVisible = remember { mutableStateOf(false) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(color)
 
     AnimatedVisibility(
         visible = visible,
         enter = expandVertically(expandFrom = expandFrom) + fadeIn(),
         exit = shrinkVertically(shrinkTowards = expandFrom) + fadeOut(),
+        modifier =
+            Modifier.fillMaxWidth().clickable(interactionSource, indication, enabled = visible) {
+                dialogVisible.value = true
+                onDialogOpened()
+            }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.padding(vertical = spacing / 2)
                     .absolutePadding(left = nodeIndent(depth, indent, lineHeight))
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = {
-                                dialogVisible.value = true
-                                onDialogOpened()
-                            }
-                        )
-                    }
         ) {
             NodeIconAndText(
                 fontSize = fontSize,
