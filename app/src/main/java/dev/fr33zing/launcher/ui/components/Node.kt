@@ -200,7 +200,6 @@ fun Node(
                     onLongClick = onLongClick
                 )
         ) {
-            Text(row.node.order.toString())
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =
