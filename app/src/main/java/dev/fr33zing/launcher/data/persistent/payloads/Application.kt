@@ -9,6 +9,7 @@ import android.os.UserManager
 import androidx.room.Entity
 import androidx.room.Ignore
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.util.UserEditable
 
@@ -29,7 +30,7 @@ class Application(
     constructor(
         payloadId: Int,
         nodeId: Int,
-        activityInfo: LauncherActivityInfo
+        activityInfo: LauncherActivityInfo,
     ) : this(
         payloadId = payloadId,
         nodeId = nodeId,
@@ -62,27 +63,64 @@ class Application(
                 return Status.MissingPackage
             }
 
-        if (packageInfo.activities.none { it.name == activityClassName })
-            return Status.MissingActivity
-
         if (userManager.userProfiles.none { it.toString() == userHandle })
             return Status.MissingProfile
+
+        if (packageInfo.activities.none { it.name == activityClassName })
+            return Status.MissingActivity
 
         return Status.Valid
     }
 
-    override fun activate(db: AppDatabase, context: Context) =
+    override fun activate(db: AppDatabase, context: Context) = launch()
+
+    fun launch() {
         if (status == Status.Valid) {
-            val userHandle =
-                userManager.userProfiles.first { it.toString() == userHandle }
-                    ?: throw Exception("Missing user profile")
-            val activityList = launcherApps.getActivityList(packageName, userHandle)
-            val componentName = ComponentName(packageName, activityList[activityList.size - 1].name)
-            launcherApps.startMainActivity(componentName, userHandle, null, null)
+            try {
+                val foundUserHandle =
+                    userManager.userProfiles.first { it.toString() == userHandle }
+                        ?: throw Exception("Missing user profile")
+                val activityList = launcherApps.getActivityList(packageName, foundUserHandle)
+                val componentName =
+                    ComponentName(packageName, activityList[activityList.size - 1].name)
+                launcherApps.startMainActivity(componentName, foundUserHandle, null, null)
+            } catch (e: Exception) {
+                sendNotice(
+                    "app-launch-failed:${nodeId}",
+                    "Failed to launch application. Error: ${e.message}.",
+                    NoticeKind.Error
+                )
+            }
         } else {
             sendNotice(
-                "app-invalid:${nodeId}",
+                "app-launch-invalid:${nodeId}",
                 "Cannot launch application because ${status.reason}."
             )
         }
+    }
+
+    fun openInfo(context: Context) {
+        if (status == Status.Valid || status == Status.MissingActivity) {
+            try {
+                val foundUserHandle =
+                    userManager.userProfiles.first { it.toString() == userHandle }
+                        ?: throw Exception("Missing user profile")
+                val intent =
+                    context.packageManager.getLaunchIntentForPackage(packageName)
+                        ?: throw Exception("Missing package")
+                launcherApps.startAppDetailsActivity(intent.component, foundUserHandle, null, null)
+            } catch (e: Exception) {
+                sendNotice(
+                    "app-info-failed:${nodeId}",
+                    "Failed to open application info. Error: ${e.message}",
+                    NoticeKind.Error
+                )
+            }
+        } else {
+            sendNotice(
+                "app-info-invalid:${nodeId}",
+                "Cannot open application info because ${status.reason}."
+            )
+        }
+    }
 }

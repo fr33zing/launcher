@@ -72,7 +72,7 @@ enum class NoticeKind(val color: Color, val icon: ImageVector) {
         color = Background.mix(Foreground, 0.1f),
         icon = Icons.Filled.Info,
     ),
-    Warning(
+    Error(
         color = Background.mix(Catppuccin.Current.red, 0.1f),
         icon = Icons.Filled.Warning,
     ),

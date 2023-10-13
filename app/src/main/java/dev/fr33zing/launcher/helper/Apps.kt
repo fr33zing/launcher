@@ -18,3 +18,4 @@ suspend fun getActivityInfos(context: Context): List<LauncherActivityInfo> {
             .sortedBy { it.label.toString() } // as ArrayList<LauncherActivityInfo>
     }
 }
+

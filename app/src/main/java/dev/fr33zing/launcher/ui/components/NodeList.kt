@@ -46,16 +46,18 @@ import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.getFlatNodeList
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-private val nodesUpdated = PublishSubject.create<Unit>()
+private val nodesUpdatedSubject = PublishSubject.create<Unit>()
+private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
 
-fun refreshNodeList() {
-    nodesUpdated.onNext(Unit)
-}
+fun refreshNodeList() = nodesUpdatedSubject.onNext(Unit)
+
+fun closeNodeOptions() = closeNodeOptionsSubject.onNext(Unit)
 
 @Composable
 fun NodeList(
@@ -80,17 +82,20 @@ fun NodeList(
     // Populate list and listen for changes
     LaunchedEffect(Unit) { nodes.addAll(db.getFlatNodeList(rootNodeId)) }
     DisposableEffect(Unit) {
-        val subscription =
-            nodesUpdated.subscribe {
-                CoroutineScope(Dispatchers.IO).launch {
-                    nodeOptionsVisibleIndex = null
-                    val flatNodes = db.getFlatNodeList(rootNodeId)
-                    nodes.clear()
-                    nodes.addAll(flatNodes)
-                }
-            }
+        val subscriptions =
+            listOf(
+                nodesUpdatedSubject.subscribe {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        closeNodeOptions()
+                        val flatNodes = db.getFlatNodeList(rootNodeId)
+                        nodes.clear()
+                        nodes.addAll(flatNodes)
+                    }
+                },
+                closeNodeOptionsSubject.subscribe { nodeOptionsVisibleIndex = null }
+            )
 
-        onDispose { subscription.dispose() }
+        onDispose { subscriptions.forEach(Disposable::dispose) }
     }
 
     // Hide node options when scrolling
@@ -100,7 +105,7 @@ fun NodeList(
     }
 
     // Hide node options with back button
-    BackHandler(nodeOptionsVisibleIndex != null) { nodeOptionsVisibleIndex = null }
+    BackHandler(nodeOptionsVisibleIndex != null) { closeNodeOptions() }
 
     Box {
         LazyColumn(state = listState) {
@@ -117,17 +122,17 @@ fun NodeList(
                         nodeOptionsVisibleIndex,
                         index,
                         onClick = {
-                            nodeOptionsVisibleIndex = null
+                            closeNodeOptions()
                             onNodeRowClicked(db, context, row)
                         },
                         onLongClick = { nodeOptionsVisibleIndex = index },
                         onAddNodeDialogOpened = {
                             newNodePosition = it
-                            nodeOptionsVisibleIndex = null
+                            closeNodeOptions()
                         },
                         onAddNodeDialogClosed = { newNodePosition = null },
                         onNewNodeKindChosen = {
-                            nodeOptionsVisibleIndex = null
+                            closeNodeOptions()
                             onAddNode(db, navController, newNodePosition!!, it)
                         }
                     )

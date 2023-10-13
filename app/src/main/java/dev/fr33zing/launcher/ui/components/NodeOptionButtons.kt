@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -40,6 +41,7 @@ import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.moveToTrash
+import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import kotlinx.coroutines.CoroutineScope
@@ -116,8 +118,13 @@ fun NodeOptionButtons(
                     navController.navigate("edit/${row.node.nodeId}")
                 }
 
-            if (showInfoButton)
-                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {}
+            if (showInfoButton) {
+                val context = LocalContext.current
+                NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {
+                    closeNodeOptions()
+                    (row.payload as Application).openInfo(context)
+                }
+            }
         }
     }
 }
