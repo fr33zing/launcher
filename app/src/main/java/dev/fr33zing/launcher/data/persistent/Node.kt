@@ -41,7 +41,7 @@ interface NodeDao {
 
     @Delete suspend fun delete(node: Node)
 
-    @Transaction @Insert suspend fun deleteMany(nodes: List<Node>)
+    @Transaction @Delete suspend fun deleteMany(nodes: List<Node>)
 
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
 

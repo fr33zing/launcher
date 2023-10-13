@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.data.persistent.payloads
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.rounded.DeviceHub
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -55,6 +56,7 @@ class Directory(
             modeName = "Trash",
             defaultDirectoryName = "Trash",
             icon = Icons.Filled.Delete,
+            collapsedIcon = Icons.Outlined.Delete,
             permissions =
                 mapOf(
                     PermissionKind.Edit to mutableSetOf(PermissionScope.Self),

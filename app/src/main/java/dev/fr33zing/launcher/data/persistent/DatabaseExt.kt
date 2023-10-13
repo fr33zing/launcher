@@ -201,6 +201,24 @@ suspend fun AppDatabase.moveToTrash(node: Node) {
     moveNode(node, trash.nodeId)
 }
 
+suspend fun AppDatabase.deleteRecursively(node: Node) {
+    val nodes = mutableListOf<Node>()
+    val payloads = mutableListOf<Payload>()
+
+    suspend fun add(node: Node) {
+        nodes.add(node)
+        getPayloadByNodeId(node.kind, node.nodeId)?.let { payloads.add(it) }
+        nodeDao().getChildNodes(node.nodeId).forEach { add(it) }
+    }
+    add(node)
+
+    withTransaction {
+        deleteMany(nodes)
+        payloads.forEach { delete(it) }
+    }
+    refreshNodeList()
+}
+
 suspend fun AppDatabase.traverseUpward(
     node: Node,
     includeFirst: Boolean = false,
