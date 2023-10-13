@@ -81,20 +81,23 @@ fun NodeRow(
         val indent by preferences.getIndent()
         val lineHeight = with(localDensity) { fontSize.toDp() }
 
-        val userCanCreateWithin = remember {
-            hasPermission(PermissionKind.Create, PermissionScope.Recursive)
-        }
-        val userCanCreateWithinParent = remember {
-            parent?.hasPermission(PermissionKind.Create, PermissionScope.Recursive) ?: true
-        }
+        val userCanCreateWithin =
+            remember(row) { hasPermission(PermissionKind.Create, PermissionScope.Recursive) }
+        val userCanCreateWithinParent =
+            remember(row) {
+                parent?.hasPermission(PermissionKind.Create, PermissionScope.Recursive) ?: true
+            }
         val isExpandedDir by
             remember(row) { derivedStateOf { node.kind == NodeKind.Directory && !collapsed } }
-        val showCreateAboveButton by remember { derivedStateOf { userCanCreateWithinParent } }
-        val showCreateBelowButton by remember {
-            derivedStateOf { if (isExpandedDir) userCanCreateWithin else userCanCreateWithinParent }
-        }
+        val showCreateAboveButton by remember(row) { derivedStateOf { userCanCreateWithinParent } }
+        val showCreateBelowButton by
+            remember(row) {
+                derivedStateOf {
+                    if (isExpandedDir) userCanCreateWithin else userCanCreateWithinParent
+                }
+            }
 
-        val visible by remember { derivedStateOf { !((parent?.collapsed) ?: false) } }
+        val visible by remember(row) { derivedStateOf { !((parent?.collapsed) ?: false) } }
         val showOptions = nodeOptionsVisibleIndex == index
 
         Column {
@@ -184,7 +187,7 @@ fun Node(
         val color = node.kind.color(payload)
         val lineThrough = node.kind.lineThrough(payload)
 
-        val interactionSource = remember { MutableInteractionSource() }
+        val interactionSource = remember(row) { MutableInteractionSource() }
         val indication = rememberCustomIndication(color, longPressable = true)
 
         Box(
@@ -197,6 +200,7 @@ fun Node(
                     onLongClick = onLongClick
                 )
         ) {
+            Text(row.node.order.toString())
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =

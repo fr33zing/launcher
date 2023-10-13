@@ -128,6 +128,7 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
         val siblings = nodeDao().getChildNodes(parentId).fixOrder()
         siblings.filter { it.order >= order }.forEach { it.order++ }
         updateMany(siblings)
+
         insert(
             Node(
                 nodeId = 0,
@@ -185,9 +186,14 @@ suspend fun AppDatabase.getRootNode(): Node =
     getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
 
 suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int?) {
-    node.parentId = newParentNodeId
-    update(node)
-    refreshNodeList()
+    withTransaction {
+        val oldParentId = node.parentId
+        node.parentId = newParentNodeId
+        update(node)
+        val siblings = nodeDao().getChildNodes(oldParentId).fixOrder()
+        updateMany(siblings)
+        refreshNodeList()
+    }
 }
 
 suspend fun AppDatabase.moveToTrash(node: Node) {
