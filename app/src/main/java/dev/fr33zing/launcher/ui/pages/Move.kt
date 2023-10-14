@@ -46,7 +46,6 @@ import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -152,14 +151,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                             it.kind == NodeKind.Directory && it != movingNode
                         },
                         nodeBlockedReason = { node ->
-                            if (node == movingNodeCurrentParent) {
-                                val kind =
-                                    movingNode!!.kind.label.replaceFirstChar {
-                                        if (it.isLowerCase()) it.titlecase(Locale.getDefault())
-                                        else it.toString()
-                                    }
-                                "$kind '${movingNode!!.label}' is already in directory '${node.label}'."
-                            } else if (
+                            if (
                                 !(db.checkPermission(
                                     PermissionKind.Move,
                                     PermissionScope.Recursive,
@@ -173,9 +165,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                             ) {
                                 val kind = movingNode!!.kind.label.lowercase()
                                 "Cannot move $kind '${movingNode!!.label}' into directory '${node.label}'"
-                            } else {
-                                null
-                            }
+                            } else null
                         }
                     )
                 }

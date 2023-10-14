@@ -187,11 +187,13 @@ suspend fun AppDatabase.getRootNode(): Node =
 
 suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int?) {
     withTransaction {
-        val oldParentId = node.parentId
+        val oldParentNodeId = node.parentId
         node.parentId = newParentNodeId
+        node.order = -1
         update(node)
-        val siblings = nodeDao().getChildNodes(oldParentId).fixOrder()
-        updateMany(siblings)
+        val oldSiblings = nodeDao().getChildNodes(oldParentNodeId).fixOrder()
+        val newSiblings = nodeDao().getChildNodes(newParentNodeId).fixOrder()
+        updateMany(oldSiblings + newSiblings)
         refreshNodeList()
     }
 }
