@@ -73,7 +73,14 @@ enum class NodeKind {
                     Foreground.mix(Background, 0.5f)
                 } else Foreground
             }
-            WebLink -> Catppuccin.Current.yellow
+            WebLink -> {
+                if (
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.WebLink &&
+                        !payload.validUrl
+                ) {
+                    Catppuccin.Current.yellow.mix(Background, 0.5f)
+                } else Catppuccin.Current.yellow
+            }
             File -> Catppuccin.Current.peach
             Location -> Catppuccin.Current.lavender
             Note -> Catppuccin.Current.pink
@@ -88,6 +95,11 @@ enum class NodeKind {
                     payload is dev.fr33zing.launcher.data.persistent.payloads.Application &&
                     payload.status !=
                         dev.fr33zing.launcher.data.persistent.payloads.Application.Status.Valid
+            }
+            WebLink -> {
+                !ignoreState &&
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.WebLink &&
+                    !payload.validUrl
             }
             else -> false
         }
