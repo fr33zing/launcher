@@ -34,7 +34,7 @@ fun colorScheme(darkTheme: Boolean): ColorScheme {
             background = Background,
             error = red,
             errorContainer = base,
-            onPrimary = yellow,
+            onPrimary = Background,
             onPrimaryContainer = crust,
             primary = pink,
             primaryContainer = mauve,
