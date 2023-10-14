@@ -82,7 +82,9 @@ private fun Option(
                 fontSize = fontSize,
                 lineHeight = lineHeight,
                 label = nodeKind.label,
-                color = nodeKind.color,
+                color =
+                    if (nodeKind.implemented()) nodeKind.color
+                    else nodeKind.color.copy(alpha = 0.5f),
                 icon = nodeKind.icon,
                 softWrap = false,
             )

@@ -54,6 +54,15 @@ enum class NodeKind {
     /** A time/date alert, optionally recurring */
     Reminder;
 
+    fun implemented(): Boolean =
+        when (this) {
+            Reference -> false // partially implemented
+            Directory -> true
+            Application -> true
+            WebLink -> true
+            else -> false
+        }
+
     fun color(payload: Payload? = null, ignoreState: Boolean = false): Color =
         when (this) {
             Reference -> Catppuccin.Current.mauve
