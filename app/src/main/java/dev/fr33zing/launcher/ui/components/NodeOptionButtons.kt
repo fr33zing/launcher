@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.navigation.NavController
@@ -196,12 +197,25 @@ private fun NodeOptionButton(
             )
     ) {
         Column(
-            verticalArrangement = Arrangement.SpaceAround,
+            verticalArrangement =
+                Arrangement.spacedBy(lineHeight * 0.125f, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.aspectRatio(1f, true)
         ) {
-            Icon(icon, text, modifier = Modifier.size(lineHeight * 1.15f), tint = color)
-            Text(text, fontSize = fontSize * 0.65f, fontWeight = FontWeight.Bold, color = color)
+            Icon(
+                icon,
+                text,
+                tint = color,
+                modifier = Modifier.size(lineHeight * 1.15f),
+            )
+            Text(
+                text,
+                fontSize = fontSize * 0.65f,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                overflow = TextOverflow.Visible,
+                softWrap = false,
+            )
         }
     }
 }

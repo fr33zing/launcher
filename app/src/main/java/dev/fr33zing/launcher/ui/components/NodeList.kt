@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -21,17 +22,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -44,10 +49,13 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.getFlatNodeList
+import dev.fr33zing.launcher.helper.detectZoom
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
+import java.lang.Float.max
+import java.lang.Float.min
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,6 +67,7 @@ fun refreshNodeList() = nodesUpdatedSubject.onNext(Unit)
 
 fun closeNodeOptions() = closeNodeOptionsSubject.onNext(Unit)
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun NodeList(
     db: AppDatabase,
@@ -66,6 +75,8 @@ fun NodeList(
     rootNodeId: Int? = null,
     filter: ((NodeRow) -> Boolean)? = null,
 ) {
+    var scale by remember { mutableFloatStateOf(1f) }
+
     val paddingTop =
         with(LocalDensity.current) { WindowInsets.statusBars.getTop(LocalDensity.current).toDp() }
     val paddingBottom =
@@ -118,6 +129,7 @@ fun NodeList(
                     NodeRow(
                         db,
                         navController,
+                        scale,
                         row,
                         nodeOptionsVisibleIndex,
                         index,
@@ -145,6 +157,16 @@ fun NodeList(
         }
 
         TopAndBottomShades(paddingTop, paddingBottom)
+
+        Box(
+            Modifier.fillMaxSize()
+                .pointerInteropFilter { false }
+                .pointerInput(Unit) {
+                    detectZoom(changeScale = 0.75f) { change ->
+                        scale = max(0.6f, min(scale * change, 1.0f))
+                    }
+                }
+        )
     }
 }
 

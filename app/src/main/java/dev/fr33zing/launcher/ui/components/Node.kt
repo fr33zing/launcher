@@ -63,6 +63,7 @@ import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 fun NodeRow(
     db: AppDatabase,
     navController: NavController,
+    scale: Float,
     row: NodeRow,
     nodeOptionsVisibleIndex: Int?,
     index: Int,
@@ -76,10 +77,15 @@ fun NodeRow(
         val preferences = Preferences(LocalContext.current)
         val localDensity = LocalDensity.current
 
-        val fontSize by preferences.getFontSize()
-        val spacing by preferences.getSpacing()
-        val indent by preferences.getIndent()
-        val lineHeight = with(localDensity) { fontSize.toDp() }
+        val fontSizeState = preferences.getFontSize()
+        val fontSize by derivedStateOf { fontSizeState.value * scale }
+
+        val spacingState = preferences.getSpacing()
+        val spacing by derivedStateOf { spacingState.value * scale }
+
+        val indentState = preferences.getIndent()
+        val indent by derivedStateOf { indentState.value * scale }
+        val lineHeight by derivedStateOf { with(localDensity) { fontSize.toDp() } }
 
         val userCanCreateWithin =
             remember(row) { hasPermission(PermissionKind.Create, PermissionScope.Recursive) }
