@@ -23,6 +23,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.editforms.ApplicationEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DefaultEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DirectoryEditForm
+import dev.fr33zing.launcher.ui.components.editforms.LocationEditForm
 import dev.fr33zing.launcher.ui.components.editforms.ReferenceEditForm
 import dev.fr33zing.launcher.ui.components.editforms.WebLinkEditForm
 
@@ -36,6 +37,7 @@ fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: 
         NodeKind.Directory -> DirectoryEditForm(db, innerPadding, payload, node)
         NodeKind.Reference -> ReferenceEditForm(db, innerPadding, payload, node)
         NodeKind.WebLink -> WebLinkEditForm(innerPadding, payload, node)
+        NodeKind.Location -> LocationEditForm(innerPadding, payload, node)
         else -> DefaultEditForm(innerPadding, node)
     }
 }
