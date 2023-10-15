@@ -4,14 +4,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.rounded.DeviceHub
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.AllPermissions
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionMap
 import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.hasPermission
 
 @Entity
@@ -39,6 +42,19 @@ class Directory(
             defaultDirectoryName = "~",
             icon = Icons.Rounded.DeviceHub,
             permissions = AllPermissions
+        ),
+        Home(
+            modeName = "Home",
+            defaultDirectoryName = "Home",
+            icon = Icons.Rounded.Home,
+            collapsedIcon = Icons.Outlined.Home,
+            permissions =
+                run {
+                    val permissions = AllPermissions.clone().toMutableMap()
+                    permissions[PermissionKind.Create] = mutableSetOf(PermissionScope.Recursive)
+                    permissions[PermissionKind.Delete] = mutableSetOf(PermissionScope.Recursive)
+                    permissions
+                }
         ),
         NewApplications(
             modeName = "New Applications",

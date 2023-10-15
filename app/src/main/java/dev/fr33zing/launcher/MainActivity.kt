@@ -11,7 +11,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +38,7 @@ import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Reorder
+import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,12 +92,48 @@ class MainActivity : ComponentActivity() {
         NavHost(
             navController,
             startDestination = "home",
-            enterTransition = { slideInHorizontally { it } + fadeIn() },
-            exitTransition = { slideOutHorizontally { -it } + fadeOut() },
-            popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
-            popExitTransition = { slideOutHorizontally { it } + fadeOut() },
+            enterTransition = {
+                if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
+                    Log.d("nav anim", "enterTransition: tree")
+                    slideInVertically { it } + fadeIn()
+                } else {
+                    Log.d("nav anim", "enterTransition: normal")
+                    slideInHorizontally { it } + fadeIn()
+                }
+            },
+            exitTransition = {
+                if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
+                    Log.d("nav anim", "exitTransition: tree")
+                    fadeOut()
+                } else {
+                    Log.d("nav anim", "exitTransition: normal")
+                    slideOutHorizontally { -it } + fadeOut()
+                }
+            },
+            popEnterTransition = {
+                if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
+                    Log.d("nav anim", "popEnterTransition: tree")
+                    fadeIn()
+                } else {
+                    Log.d("nav anim", "popEnterTransition: normal")
+                    slideInHorizontally { -it } + fadeIn()
+                }
+            },
+            popExitTransition = {
+                if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
+                    Log.d("nav anim", "popExitTransition: tree")
+                    slideOutVertically { it } + fadeOut()
+                } else {
+                    Log.d("nav anim", "popExitTransition: normal")
+                    slideOutHorizontally { it } + fadeOut()
+                }
+            },
         ) {
             composable("home") { Home(db, navController) }
+            composable("home/tree/{nodeId}") { backStackEntry ->
+                val nodeId = backStackEntry.arguments?.getString("nodeId")
+                Tree(db, navController, nodeId?.toInt())
+            }
             composable("edit/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")!!
                 Edit(db, navController, nodeId.toInt())

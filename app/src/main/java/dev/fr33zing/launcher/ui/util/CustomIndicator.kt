@@ -71,11 +71,12 @@ class CustomIndication(
         val coroutineScope = rememberCoroutineScope()
         var pressed by remember { mutableStateOf(false) }
 
-        fun onReleaseOrCancel() {
+        fun onReleaseOrCancel(cancelled: Boolean = false) {
             if (!pressed) return
             pressed = false
             coroutineScope.launch {
-                if (useHaptics) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                if (useHaptics && !cancelled)
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 animatedColor.animateTo(Color.Transparent, animationSpec = tween(1000))
             }
         }
@@ -84,10 +85,8 @@ class CustomIndication(
             if (pressed) return
             pressed = true
             animatedColor.snapTo(pressedColor)
-
-            if (!longPressable) return
             timerTask?.run { cancel() }
-            timerTask = timerTask { onReleaseOrCancel() }
+            timerTask = timerTask { onReleaseOrCancel(cancelled = !longPressable) }
             timer.schedule(timerTask, longPressTimeout)
         }
 
@@ -96,7 +95,7 @@ class CustomIndication(
                 when (interaction) {
                     is PressInteraction.Press -> onPress()
                     is PressInteraction.Release -> onReleaseOrCancel()
-                    is PressInteraction.Cancel -> onReleaseOrCancel()
+                    is PressInteraction.Cancel -> onReleaseOrCancel(true)
                 }
             }
         }
