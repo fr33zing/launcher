@@ -60,6 +60,7 @@ enum class NodeKind {
             Directory -> true
             Application -> true
             WebLink -> true
+            Location -> true
             else -> false
         }
 
@@ -91,7 +92,14 @@ enum class NodeKind {
                 } else Catppuccin.Current.yellow
             }
             File -> Catppuccin.Current.peach
-            Location -> Catppuccin.Current.lavender
+            Location -> {
+                if (
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.Location &&
+                        !payload.status.valid
+                ) {
+                    Catppuccin.Current.lavender.mix(Background, 0.5f)
+                } else Catppuccin.Current.lavender
+            }
             Note -> Catppuccin.Current.pink
             Checkbox -> Catppuccin.Current.green
             Reminder -> Catppuccin.Current.red
@@ -109,6 +117,11 @@ enum class NodeKind {
                 !ignoreState &&
                     payload is dev.fr33zing.launcher.data.persistent.payloads.WebLink &&
                     !payload.validUrl
+            }
+            Location -> {
+                !ignoreState &&
+                    payload is dev.fr33zing.launcher.data.persistent.payloads.Location &&
+                    !payload.status.valid
             }
             else -> false
         }

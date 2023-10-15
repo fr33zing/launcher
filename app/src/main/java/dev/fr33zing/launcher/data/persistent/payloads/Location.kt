@@ -9,8 +9,10 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.util.UserEditable
+import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.text.DecimalFormat
 
 @Entity
 class Location(
@@ -28,24 +30,25 @@ class Location(
         refresh()
     }
 
-    fun refresh(useUri: String = geoUri, except: String? = null) {
+    fun refresh(useUri: String? = null, except: List<String>? = null) {
+        val uriStr = useUri ?: geoUri
         val uri =
             Uri.parse(
-                if (useUri.startsWith("geo:")) {
-                    if (useUri.startsWith("geo://")) useUri else "geo://${useUri.substring(4)}"
-                } else "geo://$useUri"
+                if (uriStr.startsWith("geo:")) {
+                    if (uriStr.startsWith("geo://")) uriStr else "geo://${uriStr.substring(4)}"
+                } else "geo://$uriStr"
             )
         val latLon = uri.host?.split(',')
-        if (except != "latitude")
-            latitude.value = latLon?.getOrNull(0)?.toFloatOrNull()?.toString() ?: "0.0"
-        if (except != "longitude")
-            longitude.value = latLon?.getOrNull(1)?.toFloatOrNull()?.toString() ?: "0.0"
-        if (except != "zoom")
+        if (except?.contains("latitude") != true)
+            latitude.value = latLon?.getOrNull(0)?.toDoubleOrNull()?.toString() ?: ""
+        if (except?.contains("longitude") != true)
+            longitude.value = latLon?.getOrNull(1)?.toDoubleOrNull()?.toString() ?: ""
+        if (except?.contains("zoom") != true)
             zoom.value =
                 (uri.getQueryParameter("z") ?: uri.getQueryParameter("zoom"))
                     ?.toIntOrNull()
                     ?.toString() ?: ""
-        if (except != "query")
+        if (except?.contains("query") != true)
             query.value =
                 URLDecoder.decode(
                     uri.getQueryParameter("q") ?: uri.getQueryParameter("query") ?: "",
@@ -57,10 +60,13 @@ class Location(
     fun toUri(): Uri =
         Uri.parse(
             buildString {
+                val df = DecimalFormat("#.######")
+                df.roundingMode = RoundingMode.FLOOR
+
                 append("geo://")
-                append(latitude.value.toFloatOrNull() ?: "0.0")
+                append(df.format(latitude.value.toDoubleOrNull() ?: ""))
                 append(",")
-                append(longitude.value.toFloatOrNull() ?: "0.0")
+                append(df.format(longitude.value.toDoubleOrNull() ?: ""))
                 if (zoom.value.isNotEmpty()) {
                     append("?z=")
                     append(zoom.value)
@@ -75,12 +81,27 @@ class Location(
             }
         )
 
-    data class Status(val validScheme: Boolean)
+    data class Status(val validScheme: Boolean, val validCoordinates: Boolean) {
+        val valid: Boolean
+            get() = validScheme && validCoordinates
+    }
 
     val status: Status
         get() {
+            fun coordinateValid(coordinate: Double?): Boolean =
+                coordinate != null && coordinate >= -180 && coordinate <= 180
+            fun stringCoordinateValid(coordinate: String?): Boolean =
+                coordinateValid(coordinate?.toDoubleOrNull())
+
             val uri = Uri.parse(geoUri)
-            return Status(validScheme = uri.scheme == "geo")
+            val latLon = uri.host?.split(',')
+            return Status(
+                validScheme = uri.scheme == "geo",
+                validCoordinates =
+                    latLon?.size == 2 &&
+                        stringCoordinateValid(latLon.getOrNull(0)) &&
+                        stringCoordinateValid(latLon.getOrNull(1))
+            )
         }
 
     override fun activate(db: AppDatabase, context: Context) {

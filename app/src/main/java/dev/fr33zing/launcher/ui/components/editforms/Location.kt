@@ -10,7 +10,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// TODO support more coordinate formats and cleanup detection code
 private val osmandCoordinatesRegex =
     "\\d+(\\.\\d+)?$degree?\\s?[NS]?,\\s?\\d+(\\.\\d+)?$degree?\\s?[EW]?".toRegex()
 
@@ -94,8 +94,6 @@ fun LocationEditForm(
         NodePropertyTextField(node::label)
         NodePropertyTextField(location::geoUri, state = geoUriState)
 
-        LaunchedEffect(geoUriState.value) { location.refresh() }
-
         // TODO get consent to check clipboard first
         clipboardLocation(clipboardManager)?.let { clipboardLocation ->
             Row(
@@ -104,7 +102,8 @@ fun LocationEditForm(
             ) {
                 Button(
                     onClick = {
-                        location.refresh(clipboardLocation)
+                        clearFocus()
+                        location.refresh(clipboardLocation, except = listOf("zoom", "query"))
                         geoUriState.value = location.geoUri
                     }
                 ) {
@@ -119,7 +118,7 @@ fun LocationEditForm(
             onValueChange = {
                 location.latitude.value = it
                 geoUriState.value = location.toUri().toString()
-                location.refresh("latitude")
+                location.refresh(except = listOf("latitude"))
             },
             enabled = inputsEnabled,
             colors = outlinedTextFieldColors(),
@@ -139,8 +138,8 @@ fun LocationEditForm(
             value = location.longitude.value,
             onValueChange = {
                 location.longitude.value = it
+                location.refresh(except = listOf("longitude"))
                 geoUriState.value = location.toUri().toString()
-                location.refresh("longitude")
             },
             enabled = inputsEnabled,
             colors = outlinedTextFieldColors(),
@@ -160,8 +159,8 @@ fun LocationEditForm(
             value = location.zoom.value,
             onValueChange = {
                 location.zoom.value = it
+                location.refresh(except = listOf("zoom"))
                 geoUriState.value = location.toUri().toString()
-                location.refresh("zoom")
             },
             enabled = inputsEnabled,
             colors = outlinedTextFieldColors(),
@@ -181,8 +180,8 @@ fun LocationEditForm(
             value = location.query.value,
             onValueChange = {
                 location.query.value = it
+                location.refresh(except = listOf("query"))
                 geoUriState.value = location.toUri().toString()
-                location.refresh("query")
             },
             enabled = inputsEnabled,
             colors = outlinedTextFieldColors(),
