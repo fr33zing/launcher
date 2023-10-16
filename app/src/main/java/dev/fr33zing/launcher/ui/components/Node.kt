@@ -2,9 +2,9 @@ package dev.fr33zing.launcher.ui.components
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -58,6 +58,7 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import kotlin.math.roundToInt
 
 @Composable
 fun NodeRow(
@@ -318,21 +319,20 @@ private fun AnimatedNodeVisibility(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val transformOriginTop = TransformOrigin.Center.copy(pivotFractionY = 0f)
+    val transformOriginTop = remember { TransformOrigin.Center.copy(pivotFractionY = 0f) }
     val scaleYAmount = 0.4f
 
-    val visibleAsFloat = if (visible) 1f else 0f
+    val visibleAsFloat = remember(visible) { if (visible) 1f else 0f }
     val animatedHeight by
         animateFloatAsState(
             targetValue = visibleAsFloat,
-            animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
+            animationSpec = tween(200, easing = FastOutLinearInEasing),
             label = "node visibility: height"
         )
     val animatedAlpha by
         animateFloatAsState(
             targetValue = visibleAsFloat,
-            animationSpec =
-                spring(stiffness = if (visible) Spring.StiffnessVeryLow else Spring.StiffnessLow),
+            animationSpec = tween(200, easing = FastOutLinearInEasing),
             label = "node visibility: alpha"
         )
 
@@ -352,7 +352,7 @@ private fun AnimatedNodeVisibility(
     ) { measurables, constraints ->
         val child = measurables[0].measure(constraints)
         val contentHeight = child.height
-        val containerHeight = (contentHeight * animatedHeight).toInt()
+        val containerHeight = (contentHeight * animatedHeight).roundToInt()
         val containerWidth = constraints.maxWidth
 
         layout(containerWidth, containerHeight) { child.placeRelative(0, 0) }
