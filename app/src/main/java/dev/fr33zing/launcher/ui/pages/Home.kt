@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,11 +45,10 @@ private val horizontalPadding = 16.dp
 fun Home(db: AppDatabase, navController: NavController) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
-        modifier = Modifier.systemBarsPadding(),
+        modifier = Modifier.systemBarsPadding().padding(vertical = 32.dp),
     ) {
         Clock(horizontalPadding)
-        HomeNodeList(db)
-        Spacer(Modifier.weight(1f))
+        HomeNodeList(db, modifier = Modifier.weight(1f))
         TreeShortcut(navController)
     }
 }
@@ -61,10 +58,7 @@ private fun TreeShortcut(navController: NavController) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(circular = true)
 
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth().absolutePadding(bottom = 32.dp)
-    ) {
+    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
         Icon(
             Icons.Rounded.KeyboardArrowUp,
             contentDescription = null,
@@ -77,7 +71,7 @@ private fun TreeShortcut(navController: NavController) {
 }
 
 @Composable
-private fun HomeNodeList(db: AppDatabase) {
+private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
     val homeNodes = remember { mutableStateListOf<Node>() }
 
     val preferences = Preferences(LocalContext.current)
@@ -89,10 +83,12 @@ private fun HomeNodeList(db: AppDatabase) {
 
     LaunchedEffect(Unit) {
         val homeNode = db.getOrCreateSingletonDirectory(Directory.SpecialMode.Home)
-        homeNodes.addAll(db.nodeDao().getChildNodes(homeNode.nodeId))
+        homeNodes.addAll(db.nodeDao().getChildNodes(homeNode.nodeId).sortedBy { it.order })
     }
 
-    Column { homeNodes.forEach { HomeNode(db, it, fontSize, spacing, lineHeight) } }
+    Column(verticalArrangement = Arrangement.Center, modifier = modifier) {
+        homeNodes.forEach { HomeNode(db, it, fontSize, spacing, lineHeight) }
+    }
 }
 
 @Composable
