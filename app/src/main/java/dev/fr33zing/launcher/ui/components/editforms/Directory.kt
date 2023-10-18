@@ -65,7 +65,7 @@ private fun InitialState(directory: Directory) {
         readOnly = false,
         modifier = Modifier.selectableGroup()
     ) { padding ->
-        Column() {
+        Column {
             radioOptions.forEach { option ->
                 InitialStateOption(padding, option, selectedOption.value) {
                     selectedOption.value = it
