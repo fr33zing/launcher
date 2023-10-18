@@ -64,9 +64,9 @@ class Location(
                 df.roundingMode = RoundingMode.FLOOR
 
                 append("geo://")
-                append(df.format(latitude.value.toDoubleOrNull() ?: ""))
+                append(latitude.value.toDoubleOrNull()?.let { df.format(it) })
                 append(",")
-                append(df.format(longitude.value.toDoubleOrNull() ?: ""))
+                append(longitude.value.toDoubleOrNull()?.let { df.format(it) })
                 if (zoom.value.isNotEmpty()) {
                     append("?z=")
                     append(zoom.value)
