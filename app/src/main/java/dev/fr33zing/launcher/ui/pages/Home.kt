@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -35,6 +33,7 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.helper.detectFlingUp
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
@@ -43,30 +42,21 @@ private val horizontalPadding = 16.dp
 
 @Composable
 fun Home(db: AppDatabase, navController: NavController) {
+    fun onFlingUp() {
+        navController.navigate("home/tree/$ROOT_NODE_ID")
+    }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
-        modifier = Modifier.systemBarsPadding().padding(vertical = 32.dp),
+        modifier =
+            Modifier.systemBarsPadding().padding(vertical = 32.dp).fillMaxSize().pointerInput(
+                Unit
+            ) {
+                detectFlingUp(::onFlingUp)
+            },
     ) {
         Clock(horizontalPadding)
         HomeNodeList(db, modifier = Modifier.weight(1f))
-        TreeShortcut(navController)
-    }
-}
-
-@Composable
-private fun TreeShortcut(navController: NavController) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(circular = true)
-
-    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-        Icon(
-            Icons.Rounded.KeyboardArrowUp,
-            contentDescription = null,
-            modifier =
-                Modifier.size(42.dp).clickable(interactionSource, indication) {
-                    navController.navigate("home/tree/$ROOT_NODE_ID")
-                }
-        )
     }
 }
 
