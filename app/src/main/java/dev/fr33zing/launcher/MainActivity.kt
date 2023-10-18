@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.UserManager
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -74,11 +73,8 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(Unit) {
                         CoroutineScope(Dispatchers.IO).launch {
                             val activityInfos = getActivityInfos(applicationContext)
-                            val newAppsAdded = db.createNewApplications(activityInfos)
-                            if (newAppsAdded > 0) {
-                                Log.d("", "Added $newAppsAdded new apps")
-                                // TODO refresh node list
-                            }
+                            db.createNewApplications(activityInfos)
+                            // TODO add auto-categorize feature
                         }
                     }
                 }

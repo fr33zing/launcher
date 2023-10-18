@@ -448,6 +448,7 @@ private fun RecursiveNodeList(
         }
 
         // React to database changes.
+        // TODO fix order after changes
         DisposableEffect(node) {
             fun log(vararg lines: String) {
                 Log.i(TAG, "[DB] ${lines.joinToString("\n ->      ")}")
