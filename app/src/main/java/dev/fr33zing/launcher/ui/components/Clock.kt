@@ -36,7 +36,8 @@ import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
-const val CLOCK_REFRESH_INTERVAL: Long = 60000 // milliseconds
+const val CLOCK_MINIMUM_GRANULARITY: Long = 60_000 // milliseconds
+const val CLOCK_REFRESH_INTERVAL: Long = 500 // milliseconds
 
 @OptIn(ExperimentalTextApi::class)
 private fun makeFontFamily(weight: Int) =
@@ -76,24 +77,33 @@ fun Clock(horizontalPadding: Dp) {
     var currentTime by remember { mutableStateOf(buildAnnotatedString {}) }
     var currentDate by remember { mutableStateOf(buildAnnotatedString {}) }
 
+    fun updateTime() {
+        val now = Date()
+        currentTime = buildAnnotatedString {
+            withStyle(timeSpanStyle) { append(timeFormat.format(now).trimStart('0')) }
+            spacer()
+            withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
+        }
+        currentDate = buildAnnotatedString {
+            withStyle(dateSpanStyle) { append(dateFormat.format(now)) }
+            spacer()
+            withStyle(weekSpanStyle) {
+                append("Week ")
+                append(weekFormat.format(now))
+            }
+        }
+    }
+
     DisposableEffect(Unit) {
+        var lastUpdateTimeMinGranularity: Long = 0
         val timer = Timer()
         timer.scheduleAtFixedRate(
             timerTask {
-                val now = Date()
-                currentTime = buildAnnotatedString {
-                    withStyle(timeSpanStyle) { append(timeFormat.format(now).trimStart('0')) }
-                    spacer()
-                    withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
-                }
-                currentDate = buildAnnotatedString {
-                    withStyle(dateSpanStyle) { append(dateFormat.format(now)) }
-                    spacer()
-                    withStyle(weekSpanStyle) {
-                        append("Week ")
-                        append(weekFormat.format(now))
-                    }
-                }
+                val currentTimeMinGranularity =
+                    System.currentTimeMillis() / CLOCK_MINIMUM_GRANULARITY
+                if (currentTimeMinGranularity == lastUpdateTimeMinGranularity) return@timerTask
+                lastUpdateTimeMinGranularity = currentTimeMinGranularity
+                updateTime()
             },
             0,
             CLOCK_REFRESH_INTERVAL
