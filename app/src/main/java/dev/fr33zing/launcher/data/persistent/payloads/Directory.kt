@@ -17,6 +17,9 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.hasPermission
 
+// TODO rename "collapsed" to "childrenVisible", invert conditionals, search entire project for
+// "collapsed" so comments are fixed too
+
 @Entity
 class Directory(
     payloadId: Int,

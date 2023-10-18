@@ -93,6 +93,7 @@ private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
 
 @Composable
 private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: Dp, lineHeight: Dp) {
+    val context = LocalContext.current
     var payload by remember { mutableStateOf<Payload?>(null) }
 
     LaunchedEffect(node) { payload = db.getPayloadByNodeId(node.kind, node.nodeId) }
@@ -106,7 +107,13 @@ private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: D
         val interactionSource = remember(node) { MutableInteractionSource() }
         val indication = rememberCustomIndication(color = color)
 
-        Box(Modifier.clickable(interactionSource, indication, onClick = {})) {
+        Box(
+            Modifier.clickable(
+                interactionSource,
+                indication,
+                onClick = { payload!!.activate(db, context) }
+            )
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =

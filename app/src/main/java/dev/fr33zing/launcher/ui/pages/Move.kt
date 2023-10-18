@@ -93,7 +93,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, movingNode!!, selectedNode.value?.nodeId) },
+        onYes = { onSaveChanges(navController, db, movingNode!!, selectedNode.value?.nodeId!!) },
     )
 
     BackHandler(enabled = selectedNode.value?.nodeId == ROOT_NODE_ID) {
@@ -182,7 +182,7 @@ private fun onSaveChanges(
     navController: NavController,
     db: AppDatabase,
     node: Node,
-    newParentNodeId: Int?,
+    newParentNodeId: Int,
 ) {
     CoroutineScope(Dispatchers.Main).launch {
         db.moveNode(node, newParentNodeId)

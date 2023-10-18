@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -23,13 +22,13 @@ import androidx.navigation.NavController
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
+import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.EditForm
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +37,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
-    val haptics = LocalHapticFeedback.current
     var node by remember { mutableStateOf<Node?>(null) }
     var payload by remember { mutableStateOf<Payload?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
@@ -122,7 +120,7 @@ private fun onSaveChanges(
             payload?.let { db.update(it) }
         }
 
-        refreshNodeList()
+        NodeUpdatedSubject.onNext(Pair(node.nodeId, node.parentId!!))
         navController.popBackStack()
     }
 }

@@ -32,7 +32,6 @@ import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.helper.getActivityInfos
 import dev.fr33zing.launcher.ui.components.Notices
-import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
@@ -43,6 +42,8 @@ import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+const val TAG = "dev.fr33zing.launcher"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
                             val newAppsAdded = db.createNewApplications(activityInfos)
                             if (newAppsAdded > 0) {
                                 Log.d("", "Added $newAppsAdded new apps")
-                                refreshNodeList()
+                                // TODO refresh node list
                             }
                         }
                     }
@@ -94,37 +95,29 @@ class MainActivity : ComponentActivity() {
             startDestination = "home",
             enterTransition = {
                 if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    Log.d("nav anim", "enterTransition: tree")
                     slideInVertically { it } + fadeIn()
                 } else {
-                    Log.d("nav anim", "enterTransition: normal")
                     slideInHorizontally { it } + fadeIn()
                 }
             },
             exitTransition = {
                 if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    Log.d("nav anim", "exitTransition: tree")
                     fadeOut()
                 } else {
-                    Log.d("nav anim", "exitTransition: normal")
                     slideOutHorizontally { -it } + fadeOut()
                 }
             },
             popEnterTransition = {
                 if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    Log.d("nav anim", "popEnterTransition: tree")
                     fadeIn()
                 } else {
-                    Log.d("nav anim", "popEnterTransition: normal")
                     slideInHorizontally { -it } + fadeIn()
                 }
             },
             popExitTransition = {
                 if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    Log.d("nav anim", "popExitTransition: tree")
                     slideOutVertically { it } + fadeOut()
                 } else {
-                    Log.d("nav anim", "popExitTransition: normal")
                     slideOutHorizontally { it } + fadeOut()
                 }
             },

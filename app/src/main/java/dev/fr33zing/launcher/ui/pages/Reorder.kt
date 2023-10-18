@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +41,7 @@ import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.nodeIndent
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
+import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
@@ -50,7 +50,6 @@ import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.refreshNodeList
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -68,7 +67,6 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
-    val haptics = LocalHapticFeedback.current
     var parentNode by remember { mutableStateOf<Node?>(null) }
     val nodes = remember { mutableStateOf<List<Node>?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
@@ -154,7 +152,7 @@ private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: 
     fixedNodes.forEachIndexed { index, node -> node.order = index }
     CoroutineScope(Dispatchers.IO).launch {
         db.nodeDao().updateMany(fixedNodes)
-        refreshNodeList()
+        fixedNodes.forEach { node -> NodeUpdatedSubject.onNext(Pair(node.nodeId, node.parentId!!)) }
     }
 
     navController.popBackStack()
@@ -181,7 +179,7 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
 
     LazyColumn(
         state = reorderableState.listState,
-        modifier = Modifier.reorderable(reorderableState).fillMaxWidth()
+        modifier = Modifier.reorderable(reorderableState).fillMaxSize()
     ) {
         items(nodes.value!!, { it.nodeId }) { node ->
             ReorderableItem(

@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.dialog
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.ui.components.NodeIconAndText
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
@@ -82,6 +84,7 @@ private fun Option(
             interactionSource,
             indication,
             onClick = {
+                Log.d(TAG, "User selected YES: $text")
                 visible.value = false
                 onClick()
             }
