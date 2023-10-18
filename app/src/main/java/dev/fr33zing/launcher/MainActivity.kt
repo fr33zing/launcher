@@ -88,8 +88,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun Main(db: AppDatabase) {
+        // TODO investigate bug that causes tree to slide horizontally instead of vertically
         val navController = rememberNavController()
-
         NavHost(
             navController,
             startDestination = "home",
