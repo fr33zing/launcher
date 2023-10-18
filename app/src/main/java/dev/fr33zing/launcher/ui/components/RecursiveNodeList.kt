@@ -639,7 +639,6 @@ private fun RecursiveNodeListRow(
         Box(
             Modifier.height(IntrinsicSize.Min)
                 .combinedClickable(
-                    enabled = !optionsVisible,
                     interactionSource = interactionSource,
                     indication = indication,
                     onClick = onClick,
@@ -727,7 +726,15 @@ private fun NodeOptionButtons(
         }
     val showInfoButton = remember(permissions) { node.kind == NodeKind.Application }
 
-    NodeOptionButtonsLayout(Modifier.fillMaxHeight().background(Background.copy(alpha = 0.75f))) {
+    NodeOptionButtonsLayout(
+        Modifier.fillMaxHeight()
+            .background(Background.copy(alpha = 0.75f))
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = { /* Prevent tapping node underneath */}
+            )
+    ) {
         if (showTrashButton)
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Trash") {
                 sendNotice(
