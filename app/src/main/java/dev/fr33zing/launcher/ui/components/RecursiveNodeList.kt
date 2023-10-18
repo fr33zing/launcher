@@ -529,8 +529,8 @@ private fun RecursiveNodeList(
                     },
                 )
 
+            Log.v(TAG, "+ Node subscribed to database events: $node")
             onDispose {
-                Log.v(TAG, "+ Node subscribed to database events: $node")
                 Log.v(TAG, "- Node disposed subscriptions to database events: $node")
                 subscriptions.forEach(Disposable::dispose)
             }
