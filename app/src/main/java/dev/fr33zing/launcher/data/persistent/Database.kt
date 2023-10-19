@@ -27,6 +27,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Note
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.persistent.payloads.Reminder
+import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
@@ -45,6 +46,7 @@ import kotlin.reflect.typeOf
             Reference::class,
             Reminder::class,
             WebLink::class,
+            Setting::class,
         ],
     version = 1
 )
@@ -69,6 +71,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun webLinkDao(): WebLinkDao
 
+    abstract fun settingDao(): SettingDao
+
     fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
         val payloadClass =
             when (nodeKind) {
@@ -81,6 +85,7 @@ abstract class AppDatabase : RoomDatabase() {
                 NodeKind.Reference -> Reference::class
                 NodeKind.Reminder -> Reminder::class
                 NodeKind.WebLink -> WebLink::class
+                NodeKind.Setting -> Setting::class
             }
         val constructor =
             payloadClass.constructors.firstOrNull {
@@ -102,6 +107,7 @@ abstract class AppDatabase : RoomDatabase() {
             NodeKind.Reference -> referenceDao().getPayloadByNodeId(nodeId)
             NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
             NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
+            NodeKind.Setting -> settingDao().getPayloadByNodeId(nodeId)
         }
 
     suspend fun insert(entity: Any) {
@@ -117,6 +123,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().insert(entity)
             is Reminder -> reminderDao().insert(entity)
             is WebLink -> webLinkDao().insert(entity)
+            is Setting -> settingDao().insert(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
@@ -134,6 +141,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().insertMany(entities as List<Reference>)
             is Reminder -> reminderDao().insertMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().insertMany(entities as List<WebLink>)
+            is Setting -> settingDao().insertMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
@@ -151,6 +159,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().update(entity)
             is Reminder -> reminderDao().update(entity)
             is WebLink -> webLinkDao().update(entity)
+            is Setting -> settingDao().update(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
@@ -168,6 +177,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().updateMany(entities as List<Reference>)
             is Reminder -> reminderDao().updateMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().updateMany(entities as List<WebLink>)
+            is Setting -> settingDao().updateMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
@@ -185,6 +195,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().delete(entity)
             is Reminder -> reminderDao().delete(entity)
             is WebLink -> webLinkDao().delete(entity)
+            is Setting -> settingDao().delete(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
     }
@@ -202,6 +213,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Reference -> referenceDao().deleteMany(entities as List<Reference>)
             is Reminder -> reminderDao().deleteMany(entities as List<Reminder>)
             is WebLink -> webLinkDao().deleteMany(entities as List<WebLink>)
+            is Setting -> settingDao().deleteMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
     }
@@ -394,4 +406,24 @@ interface WebLinkDao {
 
     @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): WebLink?
+}
+
+@Dao
+interface SettingDao {
+    @Insert suspend fun insert(entity: Setting)
+
+    @Transaction @Insert suspend fun insertMany(entities: List<Setting>)
+
+    @Update suspend fun update(entity: Setting)
+
+    @Transaction @Update suspend fun updateMany(entities: List<Setting>)
+
+    @Delete suspend fun delete(entity: Setting)
+
+    @Transaction @Delete suspend fun deleteMany(entities: List<Setting>)
+
+    @Query("SELECT * FROM Setting") suspend fun getAllPayloads(): List<Setting>
+
+    @Query("SELECT * FROM Setting WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Setting?
 }

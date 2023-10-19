@@ -29,6 +29,7 @@ tasks {
                 "Reference",
                 "Reminder",
                 "WebLink",
+                "Setting",
             )
         val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap =
@@ -42,6 +43,7 @@ tasks {
                 "Reference" to "Reference",
                 "Reminder" to "Reminder",
                 "WebLink" to "WebLink",
+                "Setting" to "Setting",
             )
 
         // Generate the file.

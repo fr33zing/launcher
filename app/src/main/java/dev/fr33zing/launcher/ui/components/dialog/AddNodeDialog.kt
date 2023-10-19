@@ -33,19 +33,7 @@ fun AddNodeDialog(
     val localDensity = LocalDensity.current
     val fontSize = Preferences.fontSizeDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
-    val kinds = remember {
-        listOf(
-            NodeKind.Reference,
-            NodeKind.Directory,
-            NodeKind.Application,
-            NodeKind.WebLink,
-            NodeKind.File,
-            NodeKind.Location,
-            NodeKind.Note,
-            NodeKind.Checkbox,
-            NodeKind.Reminder,
-        )
-    }
+    val kinds = remember { NodeKind.values() }
 
     BaseDialog(
         visible,

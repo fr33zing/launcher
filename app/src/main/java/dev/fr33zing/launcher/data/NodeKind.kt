@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,7 +53,10 @@ enum class NodeKind {
     Checkbox,
 
     /** A time/date alert, optionally recurring */
-    Reminder;
+    Reminder,
+
+    /** Opens system settings to a specific setting group */
+    Setting;
 
     fun implemented(): Boolean =
         when (this) {
@@ -61,6 +65,7 @@ enum class NodeKind {
             Application -> true
             WebLink -> true
             Location -> true
+            Setting -> true
             else -> false
         }
 
@@ -103,6 +108,7 @@ enum class NodeKind {
             Note -> Catppuccin.Current.pink
             Checkbox -> Catppuccin.Current.green
             Reminder -> Catppuccin.Current.red
+            Setting -> Catppuccin.Current.subtext0
         }
 
     fun lineThrough(payload: Payload? = null, ignoreState: Boolean = false): Boolean =
@@ -148,6 +154,7 @@ enum class NodeKind {
             Note -> Icons.Filled.Notes
             Checkbox -> Icons.Filled.CheckBoxOutlineBlank
             Reminder -> Icons.Filled.Notifications
+            Setting -> Icons.Filled.Settings
         }
 
     fun label(): String =
@@ -161,6 +168,7 @@ enum class NodeKind {
             Note -> "Text note"
             Checkbox -> "Checkbox"
             Reminder -> "Reminder"
+            Setting -> "Setting"
         }
 
     val color
