@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -55,7 +54,6 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
-    val haptics = LocalHapticFeedback.current
     var initialRootNodeId by remember { mutableStateOf<Int?>(null) }
     val selectedNode = remember { mutableStateOf<Node?>(null) }
     var movingNode by remember { mutableStateOf<Node?>(null) }
