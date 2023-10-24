@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -19,19 +20,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -115,6 +112,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+val RecursiveNodeListHorizontalPadding = 16.dp
 private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
 
 private data class NodeListDimensions(
@@ -202,23 +200,20 @@ fun NodeIconAndText(
 }
 
 @Composable
-fun RecursiveNodeListSetup(db: AppDatabase, navController: NavController, rootNodeId: Int?) {
+fun RecursiveNodeListSetup(
+    db: AppDatabase,
+    navController: NavController,
+    rootNodeId: Int?,
+    scrollState: ScrollState,
+    shadowHeight: Dp,
+) {
     //
     // State
     //
 
     val context = LocalContext.current
-    val density = LocalDensity.current
-    val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
-    val navigationBarsBottom =
-        with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
-    val verticalPadding =
-        remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
-            listOf(statusBarsTop, navigationBarsBottom).max()
-        }
     val scale = remember { mutableFloatStateOf(1f) }
     val dimensions = rememberNodeListDimensions(scale)
-    val scrollState = rememberScrollState()
     var optionsVisibleNodeId by remember { mutableStateOf<Int?>(null) }
     var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
 
@@ -298,39 +293,31 @@ fun RecursiveNodeListSetup(db: AppDatabase, navController: NavController, rootNo
         }
     }
 
-    val hiddenRatio = 0.666f
-    val shadowRatio = 1f - hiddenRatio
-    val hiddenHeight = verticalPadding * hiddenRatio
-    val shadowHeight = verticalPadding * shadowRatio
-    Box(Modifier.padding(vertical = hiddenHeight)) {
-        Box(Modifier.verticalScrollShadows(shadowHeight)) {
-            if (rootNode != null && payload != null) {
-                Column(
-                    Modifier.fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(vertical = shadowHeight)
-                ) {
-                    RecursiveNodeList(
-                        db = db,
-                        navController = navController,
-                        depth = -1,
-                        node = rootNode!!,
-                        payload = payload!!,
-                        permissions = permissions,
-                        dimensions = dimensions,
-                        optionsVisibleNodeId = optionsVisibleNodeId,
-                        onNodeClick = ::onNodeClick,
-                        onNodeLongClick = ::onNodeLongClick,
-                        onNodeChildrenVisibilityChange = ::onNodeChildrenVisibilityChange,
-                        onAddNodeDialogOpened = ::onAddNodeDialogOpened,
-                        onAddNodeDialogClosed = ::onAddNodeDialogClosed,
-                        onAddNode = ::onAddNode
-                    )
-                }
+    Box(Modifier.verticalScrollShadows(shadowHeight)) {
+        if (rootNode != null && payload != null) {
+            Column(
+                Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
+            ) {
+                RecursiveNodeList(
+                    db = db,
+                    navController = navController,
+                    depth = -1,
+                    node = rootNode!!,
+                    payload = payload!!,
+                    permissions = permissions,
+                    dimensions = dimensions,
+                    optionsVisibleNodeId = optionsVisibleNodeId,
+                    onNodeClick = ::onNodeClick,
+                    onNodeLongClick = ::onNodeLongClick,
+                    onNodeChildrenVisibilityChange = ::onNodeChildrenVisibilityChange,
+                    onAddNodeDialogOpened = ::onAddNodeDialogOpened,
+                    onAddNodeDialogClosed = ::onAddNodeDialogClosed,
+                    onAddNode = ::onAddNode
+                )
             }
         }
-        ZoomDetector(scaleState = scale)
     }
+    ZoomDetector(scaleState = scale)
 }
 
 @Composable
@@ -614,7 +601,10 @@ private fun RecursiveNodeListRow(
 
     val rowModifier =
         remember(depth, dimensions.spacing, dimensions.indent) {
-            Modifier.padding(vertical = dimensions.spacing / 2, horizontal = 12.dp)
+            Modifier.padding(
+                    vertical = dimensions.spacing / 2,
+                    horizontal = RecursiveNodeListHorizontalPadding,
+                )
                 .padding(start = dimensions.indent * depth)
                 .fillMaxWidth()
         }

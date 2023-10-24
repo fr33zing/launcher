@@ -1,5 +1,9 @@
 package dev.fr33zing.launcher.ui.components
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -9,12 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.PlatformTextStyle
@@ -33,11 +39,9 @@ import dev.fr33zing.launcher.R
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Timer
-import kotlin.concurrent.timerTask
+import kotlinx.coroutines.DelicateCoroutinesApi
 
-const val CLOCK_MINIMUM_GRANULARITY: Long = 60_000 // milliseconds
-const val CLOCK_REFRESH_INTERVAL: Long = 500 // milliseconds
+private const val REFRESH_INTERVAL: Long = 60_000_000_000 // nanoseconds
 
 @OptIn(ExperimentalTextApi::class)
 private fun makeFontFamily(weight: Int) =
@@ -65,6 +69,7 @@ private fun AnnotatedString.Builder.spacer() {
     withStyle(spacerStyle) { append(" ") }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun Clock(horizontalPadding: Dp) {
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
@@ -94,21 +99,17 @@ fun Clock(horizontalPadding: Dp) {
         }
     }
 
+    val context = LocalContext.current
+    LaunchedEffect(Unit) { updateTime() }
     DisposableEffect(Unit) {
-        var lastUpdateTimeMinGranularity: Long = 0
-        val timer = Timer()
-        timer.scheduleAtFixedRate(
-            timerTask {
-                val currentTimeMinGranularity =
-                    System.currentTimeMillis() / CLOCK_MINIMUM_GRANULARITY
-                if (currentTimeMinGranularity == lastUpdateTimeMinGranularity) return@timerTask
-                lastUpdateTimeMinGranularity = currentTimeMinGranularity
-                updateTime()
-            },
-            0,
-            CLOCK_REFRESH_INTERVAL
-        )
-        onDispose { timer.cancel() }
+        val receiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    updateTime()
+                }
+            }
+        context.registerReceiver(receiver, IntentFilter(Intent.ACTION_TIME_TICK))
+        onDispose { context.unregisterReceiver(receiver) }
     }
 
     Column {

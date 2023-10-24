@@ -32,10 +32,18 @@ fun rememberCustomIndication(
     overrideAlpha: Float = 0.333f,
     useHaptics: Boolean = true,
     circular: Boolean = false,
+    circularSizeFactor: Float = 1.0f,
     longPressable: Boolean = false,
 ) =
     remember(color, overrideAlpha) {
-        CustomIndication(color, overrideAlpha, useHaptics, circular, longPressable)
+        CustomIndication(
+            color,
+            overrideAlpha,
+            useHaptics,
+            circular,
+            circularSizeFactor,
+            longPressable
+        )
     }
 
 class CustomIndication(
@@ -43,6 +51,7 @@ class CustomIndication(
     private val overrideAlpha: Float,
     private val useHaptics: Boolean,
     private val circular: Boolean,
+    private val circularSizeFactor: Float,
     private val longPressable: Boolean,
 ) : Indication {
     private val longPressTimeout = getLongPressTimeout().toLong()
@@ -51,12 +60,16 @@ class CustomIndication(
 
     private class CustomIndicationInstance(
         private val circular: Boolean,
+        private val circularSizeFactor: Float,
         private val colorState: State<Color>,
     ) : IndicationInstance {
 
         override fun ContentDrawScope.drawIndication() {
             if (circular)
-                drawCircle(color = colorState.value, radius = hypot(size.width, size.height) / 2)
+                drawCircle(
+                    color = colorState.value,
+                    radius = (hypot(size.width, size.height) / 2) * circularSizeFactor
+                )
             else drawRect(color = colorState.value, size = size)
             drawContent()
         }
@@ -100,6 +113,8 @@ class CustomIndication(
             }
         }
 
-        return remember(interactionSource) { CustomIndicationInstance(circular, colorState) }
+        return remember(interactionSource) {
+            CustomIndicationInstance(circular, circularSizeFactor, colorState)
+        }
     }
 }
