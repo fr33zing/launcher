@@ -276,7 +276,6 @@ private fun SearchResults(
 
     Box(
         Modifier.absolutePadding(
-                top = shadowHeight,
                 bottom =
                     androidx.compose.ui.unit.max(
                         WindowInsets.ime.asPaddingValues().calculateBottomPadding() -
