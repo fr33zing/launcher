@@ -48,10 +48,18 @@ interface NodeDao {
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
 
-    @Query("SELECT * FROM Node ORDER BY nodeID DESC LIMIT 1") fun getLastNode(): Node
+    @Query("SELECT * FROM Node WHERE parentId == :parentId AND label == :label")
+    suspend fun getChildNodeByLabel(parentId: Int?, label: String): Node?
 
-    @Query("SELECT nodeId FROM Node ORDER BY nodeID DESC LIMIT 1") fun getLastNodeId(): Int
+    @Query("SELECT * FROM Node ORDER BY nodeId DESC LIMIT 1") fun getLastNode(): Node
+
+    @Query("SELECT nodeId FROM Node ORDER BY nodeId DESC LIMIT 1") fun getLastNodeId(): Int
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
+
+    @Query(
+        "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1"
+    )
+    suspend fun getLastNodeOrder(parentId: Int?): Int
 }

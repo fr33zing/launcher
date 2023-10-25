@@ -139,6 +139,12 @@ fun database(
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}
 
+        inline fun <reified T : Payload> nodeKindForPayloadClass(): NodeKind =
+            when (T::class) {
+${nodeKindToPayloadClassMap.map { "${indent(4)}${it.value}::class -> NodeKind.${it.key}" }.joinToString("\n")}
+                else -> throw Exception("Invalid payload class: ${"$"}{T::class}")
+            }
+
         fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
             val payloadClass =
                 when (nodeKind) {

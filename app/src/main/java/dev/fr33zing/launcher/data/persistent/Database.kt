@@ -73,6 +73,21 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun settingDao(): SettingDao
 
+    inline fun <reified T : Payload> nodeKindForPayloadClass(): NodeKind =
+        when (T::class) {
+            Application::class -> NodeKind.Application
+            Checkbox::class -> NodeKind.Checkbox
+            Directory::class -> NodeKind.Directory
+            File::class -> NodeKind.File
+            Location::class -> NodeKind.Location
+            Note::class -> NodeKind.Note
+            Reference::class -> NodeKind.Reference
+            Reminder::class -> NodeKind.Reminder
+            WebLink::class -> NodeKind.WebLink
+            Setting::class -> NodeKind.Setting
+            else -> throw Exception("Invalid payload class: ${T::class}")
+        }
+
     fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
         val payloadClass =
             when (nodeKind) {

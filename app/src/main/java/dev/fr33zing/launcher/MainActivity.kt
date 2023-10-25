@@ -24,7 +24,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
+import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.autoCategorizeNewApplications
 import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
@@ -72,9 +75,12 @@ class MainActivity : ComponentActivity() {
                     // Check for new apps
                     LaunchedEffect(Unit) {
                         CoroutineScope(Dispatchers.IO).launch {
+                            val isFirstRun = db.nodeDao().getNodeById(ROOT_NODE_ID) == null
                             val activityInfos = getActivityInfos(applicationContext)
-                            db.createNewApplications(activityInfos)
-                            // TODO add auto-categorize feature
+                            db.withTransaction {
+                                db.createNewApplications(activityInfos)
+                                if (isFirstRun) db.autoCategorizeNewApplications(applicationContext)
+                            }
                         }
                     }
                 }

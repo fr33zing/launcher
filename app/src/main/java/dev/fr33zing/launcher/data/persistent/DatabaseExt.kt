@@ -1,5 +1,7 @@
 package dev.fr33zing.launcher.data.persistent
 
+import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
@@ -8,6 +10,7 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.runBlocking
 
@@ -30,37 +33,81 @@ data class RelativeNodePosition(val relativeToNodeId: Int, val offset: RelativeN
 /** Create Nodes and Applications for newly installed apps. Returns the number of new apps added. */
 suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivityInfo>): Int {
     var newApps = 0
-    val applicationsDirectory = getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
 
-    activityInfos
-        .filter { activityInfo ->
-            applicationDao().getAllPayloads().find { app ->
-                app.appName == activityInfo.label.toString()
-            } == null
-        }
-        .forEachIndexed { index, activityInfo ->
-            nodeDao()
-                .insert(
-                    Node(
-                        nodeId = 0,
-                        parentId = applicationsDirectory.nodeId,
-                        kind = NodeKind.Application,
-                        order = index,
-                        label = activityInfo.label.toString()
+    withTransaction {
+        val newApplicationsDirectory =
+            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+
+        activityInfos
+            .filter { activityInfo ->
+                applicationDao().getAllPayloads().find { app ->
+                    app.appName == activityInfo.label.toString()
+                } == null
+            }
+            .forEachIndexed { index, activityInfo ->
+                nodeDao()
+                    .insert(
+                        Node(
+                            nodeId = 0,
+                            parentId = newApplicationsDirectory.nodeId,
+                            kind = NodeKind.Application,
+                            order = index,
+                            label = activityInfo.label.toString()
+                        )
                     )
-                )
-            applicationDao()
-                .insert(
-                    Application(
-                        payloadId = 0,
-                        nodeId = nodeDao().getLastNodeId(),
-                        activityInfo = activityInfo,
+                applicationDao()
+                    .insert(
+                        Application(
+                            payloadId = 0,
+                            nodeId = nodeDao().getLastNodeId(),
+                            activityInfo = activityInfo,
+                        )
                     )
-                )
-            newApps++
-        }
+                newApps++
+            }
+
+        if (newApps == 0) deleteRecursively(newApplicationsDirectory)
+    }
 
     return newApps
+}
+
+suspend fun AppDatabase.autoCategorizeNewApplications(context: Context) {
+    withTransaction {
+        val newApplicationsDirectory =
+            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+        val nodesWithPayloads =
+            nodeDao().getChildNodes(newApplicationsDirectory.nodeId).associateWith {
+                (getPayloadByNodeId(it.kind, it.nodeId) ?: throw Exception("Node has no payload"))
+                    as Application
+            }
+        val categoryDirectories =
+            mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
+
+        nodesWithPayloads.forEach { (node, payload) ->
+            val applicationInfo = mainPackageManager.getApplicationInfo(payload.packageName, 0)
+            val appCategory = applicationInfo.category
+            var categoryTitle = "Uncategorized"
+            try {
+                categoryTitle = ApplicationInfo.getCategoryTitle(context, appCategory).toString()
+            } catch (_: Exception) {}
+            val (directory, order) =
+                categoryDirectories[categoryTitle]
+                    ?: Pair(
+                        getOrCreateDirectoryByPath("Applications", categoryTitle) {
+                            it.initialVisibility = Directory.InitialVisibility.Remember
+                        },
+                        0
+                    )
+
+            node.parentId = directory.nodeId
+            node.order = order
+            categoryDirectories[categoryTitle] = Pair(directory, order + 1)
+        }
+
+        updateMany(nodesWithPayloads.map { it.key })
+        deleteRecursively(newApplicationsDirectory)
+    }
 }
 
 /**
@@ -98,6 +145,42 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
     }
     event?.let { NodeCreatedSubject.onNext(it) }
     return createdNodeId
+}
+
+suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
+    parentId: Int,
+    label: String,
+    crossinline mutateFunction: (T) -> Unit = {}
+): Node = withTransaction {
+    val nodeKind = nodeKindForPayloadClass<T>()
+    insert(
+        Node(
+            nodeId = 0,
+            parentId = parentId,
+            kind = nodeKind,
+            order = nodeDao().getLastNodeOrder(parentId),
+            label = label,
+        )
+    )
+    val lastNodeId = nodeDao().getLastNodeId()
+    val payload = createDefaultPayloadForNode(nodeKind, lastNodeId)
+    mutateFunction(payload as T)
+    insert(payload)
+
+    nodeDao().getNodeById(lastNodeId)!!
+}
+
+suspend fun AppDatabase.getOrCreateDirectoryByPath(
+    vararg path: String,
+    mutateFunction: (Directory) -> Unit = {}
+): Node {
+    var current = getRootNode()
+    path.forEach { pathSegment ->
+        current =
+            nodeDao().getChildNodeByLabel(current.nodeId, pathSegment)
+                ?: createNodeWithPayload(current.nodeId, pathSegment, mutateFunction)
+    }
+    return current
 }
 
 suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node {
