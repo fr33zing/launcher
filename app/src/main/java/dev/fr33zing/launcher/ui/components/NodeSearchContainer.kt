@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -77,9 +78,11 @@ import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
+import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
+import dev.fr33zing.launcher.ui.util.mix
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.lang.Float.max
@@ -283,7 +286,9 @@ private fun SearchResults(
             )
             .verticalScrollShadows(shadowHeight)
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
+        ) {
             Column {
                 matches
                     .filter { result -> result.score > 0 }
@@ -382,6 +387,23 @@ private fun SearchBox(
                     fontFamily = MainFontFamily,
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
                 ),
+            decorationBox = { textField ->
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (query.value.isEmpty())
+                        Text(
+                            "Begin typing to search...",
+                            style =
+                                TextStyle(
+                                    color = Background.mix(Foreground, 0.25f),
+                                    fontSize = fontSize * 0.85f,
+                                    fontFamily = MainFontFamily,
+                                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                ),
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    textField()
+                }
+            },
             cursorBrush = SolidColor(Foreground),
             modifier = Modifier.focusRequester(focusRequester).weight(1f)
         )
