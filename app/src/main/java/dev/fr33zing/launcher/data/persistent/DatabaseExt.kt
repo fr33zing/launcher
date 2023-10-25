@@ -72,46 +72,49 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     return newApps
 }
 
+// TODO make this handle interruption gracefully
 suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
-    val newApplicationsDirectory =
-        getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
-    val nodesWithPayloads =
-        nodeDao().getChildNodes(newApplicationsDirectory.nodeId).associateWith {
-            (getPayloadByNodeId(it.kind, it.nodeId) ?: throw Exception("Node has no payload"))
-                as Application
+    withTransaction {
+        val newApplicationsDirectory =
+            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+        val nodesWithPayloads =
+            nodeDao().getChildNodes(newApplicationsDirectory.nodeId).associateWith {
+                (getPayloadByNodeId(it.kind, it.nodeId) ?: throw Exception("Node has no payload"))
+                    as Application
+            }
+        val categoryDirectories =
+            mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
+
+        nodesWithPayloads.forEach { (node, payload) ->
+            val category = getApplicationCategoryName(context, payload.packageName)
+            val (directory, order) =
+                categoryDirectories[category]
+                    ?: Pair(
+                        getOrCreateDirectoryByPath("Applications", category) {
+                            it.initialVisibility = Directory.InitialVisibility.Remember
+                        },
+                        0
+                    )
+
+            node.parentId = directory.nodeId
+            node.order = order
+            categoryDirectories[category] = Pair(directory, order + 1)
+
+            onCategorized()
         }
-    val categoryDirectories =
-        mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
 
-    nodesWithPayloads.forEach { (node, payload) ->
-        val category = getApplicationCategoryName(context, payload.packageName)
-        val (directory, order) =
-            categoryDirectories[category]
-                ?: Pair(
-                    getOrCreateDirectoryByPath("Applications", category) {
-                        it.initialVisibility = Directory.InitialVisibility.Remember
-                    },
-                    0
-                )
+        categoryDirectories.values
+            .sortedBy {
+                // HACK to force uncategorized apps directory to bottom
+                // TODO create function: fixOrderRecursively
+                if (it.first.label == DEFAULT_CATEGORY_NAME) "Z".repeat(256) else it.first.label
+            }
+            .forEachIndexed { index, (node, _) -> node.order = index }
 
-        node.parentId = directory.nodeId
-        node.order = order
-        categoryDirectories[category] = Pair(directory, order + 1)
-
-        onCategorized()
+        updateMany(categoryDirectories.values.map { it.first })
+        updateMany(nodesWithPayloads.map { it.key })
+        deleteRecursively(newApplicationsDirectory)
     }
-
-    categoryDirectories.values
-        .sortedBy {
-            // HACK to force uncategorized apps directory to bottom
-            // TODO create function: fixOrderRecursively
-            if (it.first.label == DEFAULT_CATEGORY_NAME) "Z".repeat(256) else it.first.label
-        }
-        .forEachIndexed { index, (node, _) -> node.order = index }
-
-    updateMany(categoryDirectories.values.map { it.first })
-    updateMany(nodesWithPayloads.map { it.key })
-    deleteRecursively(newApplicationsDirectory)
 }
 
 /**
