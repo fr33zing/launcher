@@ -83,20 +83,16 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
     val categoryDirectories =
         mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
 
-    var uncategorizedDirectory: Node? = null
-
     nodesWithPayloads.forEach { (node, payload) ->
         val category = getApplicationCategoryName(context, payload.packageName)
         val (directory, order) =
             categoryDirectories[category]
-                ?: run {
-                    val directory =
-                        getOrCreateDirectoryByPath("Applications", category) {
-                            it.initialVisibility = Directory.InitialVisibility.Remember
-                        }
-                    if (category == DEFAULT_CATEGORY_NAME) uncategorizedDirectory = directory
-                    Pair(directory, 0)
-                }
+                ?: Pair(
+                    getOrCreateDirectoryByPath("Applications", category) {
+                        it.initialVisibility = Directory.InitialVisibility.Remember
+                    },
+                    0
+                )
 
         node.parentId = directory.nodeId
         node.order = order
@@ -113,10 +109,6 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
         }
         .forEachIndexed { index, (node, _) -> node.order = index }
 
-    //    uncategorizedDirectory?.let {
-    //        it.order = Int.MAX_VALUE
-    //        update(it)
-    //    }
     updateMany(categoryDirectories.values.map { it.first })
     updateMany(nodesWithPayloads.map { it.key })
     deleteRecursively(newApplicationsDirectory)
