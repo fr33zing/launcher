@@ -393,7 +393,7 @@ private fun SearchBox(
                             "Begin typing to search...",
                             style =
                                 TextStyle(
-                                    color = Background.mix(Foreground, 0.25f),
+                                    color = Foreground.mix(Background, 0.5f),
                                     fontSize = fontSize * 0.85f,
                                     fontFamily = MainFontFamily,
                                     platformStyle = PlatformTextStyle(includeFontPadding = false),
@@ -446,14 +446,29 @@ fun SearchFilters(nodeKindFilter: SnapshotStateList<NodeKind>, lineHeight: Dp) {
 
                 Box(
                     Modifier.clickable(interactionSource, indication) {
-                        if (enabled) nodeKindFilter.remove(nodeKind)
-                        else nodeKindFilter.add(nodeKind)
-                    }
+                            if (enabled) nodeKindFilter.remove(nodeKind)
+                            else nodeKindFilter.add(nodeKind)
+                        }
+                        .drawBehind {
+                            if (enabled) {
+                                val radius = 2.5.dp
+                                val offsetY = 6.dp
+                                drawCircle(
+                                    color = color.copy(alpha = 0.5f),
+                                    radius = radius.toPx(),
+                                    center =
+                                        Offset(
+                                            x = size.width / 2,
+                                            y = size.height + offsetY.toPx(),
+                                        )
+                                )
+                            }
+                        }
                 ) {
                     Icon(
                         icon,
                         contentDescription = null,
-                        tint = if (enabled) color else color.copy(alpha = 0.3f),
+                        tint = if (enabled) color else color.copy(alpha = 0.5f),
                         modifier = Modifier.size(lineHeight)
                     )
                 }
