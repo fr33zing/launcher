@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.ui.components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -11,10 +12,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
@@ -28,6 +32,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -44,11 +49,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.PlatformTextStyle
@@ -64,11 +73,15 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.helper.conditional
 import dev.fr33zing.launcher.helper.verticalScrollShadows
+import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import io.reactivex.rxjava3.subjects.PublishSubject
 import java.lang.Float.max
 import kotlin.math.pow
 import kotlinx.coroutines.launch
@@ -79,6 +92,10 @@ private val searchPanelExtraPaddingTop = 16.dp
 
 private const val ALLOWED_OVERSCROLL_FACTOR = 1.5f
 private const val OVERSCROLL_RESISTANCE_EXPONENT = 3
+
+private const val SHOW_SCORE_INDICATOR = false
+
+private val activateBestMatchSubject = PublishSubject.create<Unit>()
 
 @Composable
 fun NodeSearchContainer(
@@ -214,17 +231,19 @@ fun NodeSearchContainer(
         }
 
         if (query.value.isEmpty() || !panelVisible) content(scrollState)
-        else SearchResults(shadowHeight, nodePayloads, nodeKindFilter, query.value)
+        else SearchResults(db, shadowHeight, nodePayloads, nodeKindFilter, query.value)
     }
 }
 
 @Composable
 private fun SearchResults(
+    db: AppDatabase,
     shadowHeight: Dp,
     nodePayloads: SnapshotStateList<Pair<Node, Payload>>,
     nodeKindFilter: SnapshotStateList<NodeKind>,
     query: String
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     val scale = remember { mutableFloatStateOf(1f) }
     val dimensions = rememberNodeListDimensions(scale)
@@ -244,30 +263,69 @@ private fun SearchResults(
             }
         }
 
-    Box(Modifier.verticalScrollShadows(shadowHeight)) {
-        Column(
-            Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
-        ) {
+    DisposableEffect(matches) {
+        val subscription =
+            activateBestMatchSubject.subscribe {
+                matches.firstOrNull()?.referent?.second?.activate(db, context)
+            }
+        onDispose { subscription.dispose() }
+    }
+
+    Box(
+        Modifier.absolutePadding(
+                top = shadowHeight,
+                bottom =
+                    androidx.compose.ui.unit.max(
+                        WindowInsets.ime.asPaddingValues().calculateBottomPadding() -
+                            shadowHeight * 2,
+                        shadowHeight
+                    )
+            )
+            .verticalScrollShadows(shadowHeight)
+    ) {
+        Column(Modifier.fillMaxSize().verticalScroll(scrollState)) {
             Column {
                 matches
                     .filter { result -> result.score > 0 }
                     .forEach { result ->
                         val (node, payload) = result.referent
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier =
-                                Modifier.padding(
-                                    vertical = dimensions.spacing / 2,
-                                    horizontal = RecursiveNodeListHorizontalPadding
-                                )
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val indication = rememberCustomIndication(color = node.kind.color)
+
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .conditional(SHOW_SCORE_INDICATOR) {
+                                    drawBehind {
+                                        val width = size.width * (result.score / 100f)
+                                        drawRect(
+                                            node.kind.color.copy(alpha = 0.075f),
+                                            size = size.copy(width = width),
+                                            topLeft = Offset(x = size.width - width, y = 0f)
+                                        )
+                                    }
+                                }
+                                .clickable(interactionSource, indication) {
+                                    payload.activate(db, context)
+                                }
                         ) {
-                            NodeIconAndText(
-                                fontSize = dimensions.fontSize,
-                                lineHeight = dimensions.lineHeight,
-                                label = node.label,
-                                color = node.kind.color(payload),
-                                icon = node.kind.icon(payload)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier =
+                                    Modifier.padding(
+                                        vertical = dimensions.spacing / 2,
+                                        horizontal = RecursiveNodeListHorizontalPadding
+                                    )
+                            ) {
+                                val ignoreState = payload is Directory
+                                NodeIconAndText(
+                                    fontSize = dimensions.fontSize,
+                                    lineHeight = dimensions.lineHeight,
+                                    label = node.label,
+                                    color = node.kind.color(payload, ignoreState),
+                                    icon = node.kind.icon(payload, ignoreState),
+                                    lineThrough = node.kind.lineThrough(payload, ignoreState)
+                                )
+                            }
                         }
                     }
             }
@@ -283,6 +341,16 @@ private fun SearchBox(
     fontSize: TextUnit,
     lineHeight: Dp,
 ) {
+    val clearButtonColor by
+        animateColorAsState(
+            targetValue =
+                if (query.value.isNotEmpty()) Catppuccin.Current.red else Color.Transparent,
+            label = "search clear button color"
+        )
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(color = Catppuccin.Current.red, circular = true)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(lineHeight / 2),
@@ -296,14 +364,15 @@ private fun SearchBox(
                 KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
                     autoCorrect = false,
-                    imeAction = ImeAction.Done,
+                    imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Password // Disable auto-suggestions
                 ),
             keyboardActions =
                 KeyboardActions(
-                    onDone = {
+                    onGo = {
                         focusRequester.freeFocus()
                         focusManager.clearFocus(true)
+                        activateBestMatchSubject.onNext(Unit)
                     }
                 ),
             textStyle =
@@ -317,7 +386,19 @@ private fun SearchBox(
             modifier = Modifier.focusRequester(focusRequester).weight(1f)
         )
 
-        Icon(Icons.Filled.Close, contentDescription = "search")
+        Icon(
+            Icons.Filled.Close,
+            contentDescription = "clear query",
+            tint = clearButtonColor,
+            modifier =
+                Modifier.clickable(
+                    interactionSource,
+                    indication,
+                    enabled = query.value.isNotEmpty()
+                ) {
+                    query.value = ""
+                }
+        )
     }
 }
 
