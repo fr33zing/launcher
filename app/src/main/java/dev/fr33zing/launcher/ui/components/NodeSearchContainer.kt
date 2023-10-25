@@ -114,6 +114,9 @@ fun NodeSearchContainer(
                     if (!scrolledToTop || panelFullyVisible || animatedPanelHeight.isRunning)
                         return@awaitEachGesture
 
+                    var totalChangePx = 0f
+                    val touchSlop = viewConfiguration.touchSlop
+
                     // Pressed
                     do {
                         val event = awaitPointerEvent()
@@ -121,6 +124,12 @@ fun NodeSearchContainer(
 
                         val change = event.changes[0]
                         val changePx = change.position.y - change.previousPosition.y
+
+                        if (changePx < 0) break
+
+                        totalChangePx += changePx
+                        if (totalChangePx < touchSlop) continue
+
                         val heightChange =
                             if ((currentPanelHeight + changePx) <= maxPanelHeight) changePx
                             else {
