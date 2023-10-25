@@ -117,7 +117,7 @@ import kotlinx.coroutines.launch
 val RecursiveNodeListHorizontalPadding = 16.dp
 private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
 
-private data class NodeListDimensions(
+data class NodeListDimensions(
     val fontSize: TextUnit,
     val spacing: Dp,
     val indent: Dp,
@@ -125,7 +125,7 @@ private data class NodeListDimensions(
 )
 
 @Composable
-private fun rememberNodeListDimensions(
+fun rememberNodeListDimensions(
     scale: MutableFloatState,
 ): NodeListDimensions {
     val preferences = Preferences(LocalContext.current)

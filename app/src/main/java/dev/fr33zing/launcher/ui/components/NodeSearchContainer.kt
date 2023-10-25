@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,11 +22,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -57,13 +60,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.helper.verticalScrollShadows
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import java.lang.Float.max
 import kotlin.math.pow
 import kotlinx.coroutines.launch
+import me.xdrop.fuzzywuzzy.FuzzySearch
 
 private val searchPanelHeight = 128.dp
 private val searchPanelExtraPaddingTop = 16.dp
@@ -73,8 +82,10 @@ private const val OVERSCROLL_RESISTANCE_EXPONENT = 3
 
 @Composable
 fun NodeSearchContainer(
+    db: AppDatabase,
     containerVerticalPadding: Dp,
     panelVerticalPadding: Dp,
+    shadowHeight: Dp,
     content: @Composable (ScrollState) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
@@ -96,6 +107,24 @@ fun NodeSearchContainer(
 
     val query = remember { mutableStateOf("") }
     val nodeKindFilter = remember { mutableStateListOf<NodeKind>() }
+    val nodePayloads = remember { mutableStateListOf<Pair<Node, Payload>>() }
+
+    LaunchedEffect(panelVisible) {
+        if (!panelVisible) {
+            nodePayloads.clear()
+            query.value = ""
+        } else {
+            db.nodeDao()
+                .getAll()
+                .map { node ->
+                    val payload =
+                        db.getPayloadByNodeId(node.kind, node.nodeId)
+                            ?: throw Exception("Payload is null")
+                    Pair(node, payload)
+                }
+                .let { nodePayloads.addAll(it) }
+        }
+    }
 
     BackHandler(enabled = panelVisible) {
         currentPanelHeight = 0f
@@ -184,7 +213,65 @@ fun NodeSearchContainer(
             }
         }
 
-        content(scrollState)
+        if (query.value.isEmpty() || !panelVisible) content(scrollState)
+        else SearchResults(shadowHeight, nodePayloads, nodeKindFilter, query.value)
+    }
+}
+
+@Composable
+private fun SearchResults(
+    shadowHeight: Dp,
+    nodePayloads: SnapshotStateList<Pair<Node, Payload>>,
+    nodeKindFilter: SnapshotStateList<NodeKind>,
+    query: String
+) {
+    val scrollState = rememberScrollState()
+    val scale = remember { mutableFloatStateOf(1f) }
+    val dimensions = rememberNodeListDimensions(scale)
+
+    val matches by
+        remember(nodePayloads, nodeKindFilter, query) {
+            derivedStateOf {
+                FuzzySearch.extractSorted(
+                    query,
+                    nodePayloads.filter {
+                        it.first.nodeId != ROOT_NODE_ID &&
+                            (nodeKindFilter.isEmpty() || it.first.kind in nodeKindFilter)
+                    }
+                ) {
+                    it.first.label
+                }
+            }
+        }
+
+    Box(Modifier.verticalScrollShadows(shadowHeight)) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
+        ) {
+            Column {
+                matches
+                    .filter { result -> result.score > 0 }
+                    .forEach { result ->
+                        val (node, payload) = result.referent
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.padding(
+                                    vertical = dimensions.spacing / 2,
+                                    horizontal = RecursiveNodeListHorizontalPadding
+                                )
+                        ) {
+                            NodeIconAndText(
+                                fontSize = dimensions.fontSize,
+                                lineHeight = dimensions.lineHeight,
+                                label = node.label,
+                                color = node.kind.color(payload),
+                                icon = node.kind.icon(payload)
+                            )
+                        }
+                    }
+            }
+        }
     }
 }
 

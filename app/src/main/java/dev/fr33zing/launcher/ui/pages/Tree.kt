@@ -8,8 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.components.RecursiveNodeListSetup
 import dev.fr33zing.launcher.ui.components.NodeSearchContainer
+import dev.fr33zing.launcher.ui.components.RecursiveNodeListSetup
 
 @Composable
 fun Tree(db: AppDatabase, navController: NavController, rootNodeId: Int?) {
@@ -26,8 +26,12 @@ fun Tree(db: AppDatabase, navController: NavController, rootNodeId: Int?) {
     val hiddenHeight = verticalPadding * hiddenRatio
     val shadowHeight = verticalPadding * shadowRatio
 
-    NodeSearchContainer(containerVerticalPadding = hiddenHeight, panelVerticalPadding = shadowHeight) {
-        scrollState ->
+    NodeSearchContainer(
+        db,
+        containerVerticalPadding = hiddenHeight,
+        panelVerticalPadding = shadowHeight,
+        shadowHeight = shadowHeight,
+    ) { scrollState ->
         RecursiveNodeListSetup(db, navController, rootNodeId, scrollState, shadowHeight)
     }
 }
