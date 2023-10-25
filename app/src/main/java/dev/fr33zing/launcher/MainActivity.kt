@@ -84,9 +84,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     var remainingAppsToCategorize by remember { mutableStateOf<Int?>(null) }
-                    var initialAppsToCategory by remember { mutableStateOf<Float?>(null) }
+                    var initialAppsToCategorize by remember { mutableStateOf<Float?>(null) }
 
-                    if (remainingAppsToCategorize == 0) {
+                    if (remainingAppsToCategorize == 0 || remainingAppsToCategorize == null) {
                         Box {
                             Main(db)
                             Notices()
@@ -110,13 +110,13 @@ class MainActivity : ComponentActivity() {
                                 textAlign = TextAlign.Center
                             )
                             if (
-                                remainingAppsToCategorize != null && initialAppsToCategory != null
+                                remainingAppsToCategorize != null && initialAppsToCategorize != null
                             ) {
                                 Spacer(Modifier.height(32.dp))
                                 LinearProgressIndicator(
                                     modifier = Modifier.fillMaxWidth(0.5f),
                                     progress =
-                                        1 - remainingAppsToCategorize!! / initialAppsToCategory!!,
+                                        1 - remainingAppsToCategorize!! / initialAppsToCategorize!!,
                                     color = Foreground,
                                     trackColor = Background.mix(Foreground, 0.1f),
                                 )
@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
                             val newApps = db.createNewApplications(activityInfos)
 
                             if (isFirstRun) {
-                                initialAppsToCategory = newApps.toFloat()
+                                initialAppsToCategorize = newApps.toFloat()
                                 remainingAppsToCategorize = newApps
                                 db.autoCategorizeNewApplications(applicationContext) {
                                     remainingAppsToCategorize = remainingAppsToCategorize!! - 1
