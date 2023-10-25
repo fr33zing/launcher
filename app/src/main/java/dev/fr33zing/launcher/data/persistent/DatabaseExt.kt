@@ -1,7 +1,6 @@
 package dev.fr33zing.launcher.data.persistent
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
@@ -10,7 +9,8 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
+import dev.fr33zing.launcher.helper.DEFAULT_CATEGORY_NAME
+import dev.fr33zing.launcher.helper.getApplicationCategoryName
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.runBlocking
 
@@ -72,42 +72,54 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     return newApps
 }
 
-suspend fun AppDatabase.autoCategorizeNewApplications(context: Context) {
-    withTransaction {
-        val newApplicationsDirectory =
-            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
-        val nodesWithPayloads =
-            nodeDao().getChildNodes(newApplicationsDirectory.nodeId).associateWith {
-                (getPayloadByNodeId(it.kind, it.nodeId) ?: throw Exception("Node has no payload"))
-                    as Application
-            }
-        val categoryDirectories =
-            mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
-
-        nodesWithPayloads.forEach { (node, payload) ->
-            val applicationInfo = mainPackageManager.getApplicationInfo(payload.packageName, 0)
-            val appCategory = applicationInfo.category
-            var categoryTitle = "Uncategorized"
-            try {
-                categoryTitle = ApplicationInfo.getCategoryTitle(context, appCategory).toString()
-            } catch (_: Exception) {}
-            val (directory, order) =
-                categoryDirectories[categoryTitle]
-                    ?: Pair(
-                        getOrCreateDirectoryByPath("Applications", categoryTitle) {
-                            it.initialVisibility = Directory.InitialVisibility.Remember
-                        },
-                        0
-                    )
-
-            node.parentId = directory.nodeId
-            node.order = order
-            categoryDirectories[categoryTitle] = Pair(directory, order + 1)
+suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
+    val newApplicationsDirectory =
+        getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+    val nodesWithPayloads =
+        nodeDao().getChildNodes(newApplicationsDirectory.nodeId).associateWith {
+            (getPayloadByNodeId(it.kind, it.nodeId) ?: throw Exception("Node has no payload"))
+                as Application
         }
+    val categoryDirectories =
+        mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
 
-        updateMany(nodesWithPayloads.map { it.key })
-        deleteRecursively(newApplicationsDirectory)
+    var uncategorizedDirectory: Node? = null
+
+    nodesWithPayloads.forEach { (node, payload) ->
+        val category = getApplicationCategoryName(context, payload.packageName)
+        val (directory, order) =
+            categoryDirectories[category]
+                ?: run {
+                    val directory =
+                        getOrCreateDirectoryByPath("Applications", category) {
+                            it.initialVisibility = Directory.InitialVisibility.Remember
+                        }
+                    if (category == DEFAULT_CATEGORY_NAME) uncategorizedDirectory = directory
+                    Pair(directory, 0)
+                }
+
+        node.parentId = directory.nodeId
+        node.order = order
+        categoryDirectories[category] = Pair(directory, order + 1)
+
+        onCategorized()
     }
+
+    categoryDirectories.values
+        .sortedBy {
+            // HACK to force uncategorized apps directory to bottom
+            // TODO create function: fixOrderRecursively
+            if (it.first.label == DEFAULT_CATEGORY_NAME) "Z".repeat(256) else it.first.label
+        }
+        .forEachIndexed { index, (node, _) -> node.order = index }
+
+    //    uncategorizedDirectory?.let {
+    //        it.order = Int.MAX_VALUE
+    //        update(it)
+    //    }
+    updateMany(categoryDirectories.values.map { it.first })
+    updateMany(nodesWithPayloads.map { it.key })
+    deleteRecursively(newApplicationsDirectory)
 }
 
 /**
@@ -150,10 +162,10 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
 suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
     parentId: Int,
     label: String,
-    crossinline mutateFunction: (T) -> Unit = {}
+    crossinline payloadMutateFunction: (T) -> Unit = {}
 ): Node = withTransaction {
     val nodeKind = nodeKindForPayloadClass<T>()
-    insert(
+    val node =
         Node(
             nodeId = 0,
             parentId = parentId,
@@ -161,10 +173,10 @@ suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
             order = nodeDao().getLastNodeOrder(parentId),
             label = label,
         )
-    )
+    insert(node)
     val lastNodeId = nodeDao().getLastNodeId()
     val payload = createDefaultPayloadForNode(nodeKind, lastNodeId)
-    mutateFunction(payload as T)
+    payloadMutateFunction(payload as T)
     insert(payload)
 
     nodeDao().getNodeById(lastNodeId)!!
@@ -172,13 +184,17 @@ suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
 
 suspend fun AppDatabase.getOrCreateDirectoryByPath(
     vararg path: String,
-    mutateFunction: (Directory) -> Unit = {}
+    payloadMutateFunction: (Directory) -> Unit = {},
 ): Node {
     var current = getRootNode()
     path.forEach { pathSegment ->
         current =
-            nodeDao().getChildNodeByLabel(current.nodeId, pathSegment)
-                ?: createNodeWithPayload(current.nodeId, pathSegment, mutateFunction)
+            nodeDao().getChildNodeByLabel(parentId = current.nodeId, label = pathSegment)
+                ?: createNodeWithPayload(
+                    parentId = current.nodeId,
+                    label = pathSegment,
+                    payloadMutateFunction = payloadMutateFunction,
+                )
     }
     return current
 }

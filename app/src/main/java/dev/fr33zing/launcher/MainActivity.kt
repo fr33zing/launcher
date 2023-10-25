@@ -13,18 +13,31 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
-import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.autoCategorizeNewApplications
@@ -40,7 +53,10 @@ import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Reorder
 import dev.fr33zing.launcher.ui.pages.Tree
+import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
+import dev.fr33zing.launcher.ui.util.mix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,9 +83,45 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    Box {
-                        Main(db)
-                        Notices()
+                    var remainingAppsToCategorize by remember { mutableStateOf<Int?>(null) }
+                    var initialAppsToCategory by remember { mutableStateOf<Float?>(null) }
+
+                    if (remainingAppsToCategorize == 0) {
+                        Box {
+                            Main(db)
+                            Notices()
+                        }
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                buildString {
+                                    append("Automatically categorizing applications.")
+                                    append("\n\n")
+                                    append(
+                                        "This is done slowly to reduce the load on any network services used to determine application categories."
+                                    )
+                                    append("\n\n")
+                                    append("Remaining: $remainingAppsToCategorize")
+                                },
+                                textAlign = TextAlign.Center
+                            )
+                            if (
+                                remainingAppsToCategorize != null && initialAppsToCategory != null
+                            ) {
+                                Spacer(Modifier.height(32.dp))
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(0.5f),
+                                    progress =
+                                        1 - remainingAppsToCategorize!! / initialAppsToCategory!!,
+                                    color = Foreground,
+                                    trackColor = Background.mix(Foreground, 0.1f),
+                                )
+                            }
+                        }
                     }
 
                     // Check for new apps
@@ -77,10 +129,15 @@ class MainActivity : ComponentActivity() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val isFirstRun = db.nodeDao().getNodeById(ROOT_NODE_ID) == null
                             val activityInfos = getActivityInfos(applicationContext)
-                            db.withTransaction {
-                                db.createNewApplications(activityInfos)
-                                if (isFirstRun) db.autoCategorizeNewApplications(applicationContext)
-                            }
+                            val newApps = db.createNewApplications(activityInfos)
+
+                            if (isFirstRun) {
+                                initialAppsToCategory = newApps.toFloat()
+                                remainingAppsToCategorize = newApps
+                                db.autoCategorizeNewApplications(applicationContext) {
+                                    remainingAppsToCategorize = remainingAppsToCategorize!! - 1
+                                }
+                            } else remainingAppsToCategorize = 0
                         }
                     }
                 }

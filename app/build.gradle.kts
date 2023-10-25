@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.android)
 
     id("com.google.devtools.ksp")
+
+    kotlin("plugin.serialization") version "1.4.20"
 }
 
 android {
@@ -59,4 +61,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.fuzzywuzzy)
     implementation(libs.reorderable)
+    implementation("com.charleskorn.kaml:kaml:0.55.0")
 }
