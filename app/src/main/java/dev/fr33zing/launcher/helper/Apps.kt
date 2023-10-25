@@ -1,9 +1,11 @@
 package dev.fr33zing.launcher.helper
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.os.UserManager
 import android.util.Log
 import com.charleskorn.kaml.Yaml
@@ -18,22 +20,70 @@ import kotlinx.coroutines.withContext
 
 const val DEFAULT_CATEGORY_NAME = "Uncategorized"
 
+private var intentActivities: Map<String, List<String>>? = null
+
 suspend fun getActivityInfos(context: Context): List<LauncherActivityInfo> {
     return withContext(Dispatchers.IO) {
         val userManager = context.getSystemService(Context.USER_SERVICE) as UserManager
         val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+        val result =
+            userManager.userProfiles
+                .map { launcherApps.getActivityList(null, it) }
+                .reduce { acc, activityInfos -> acc + activityInfos }
+                .sortedBy { it.label.toString() } // as ArrayList<LauncherActivityInfo>
 
-        userManager.userProfiles
-            .map { launcherApps.getActivityList(null, it) }
-            .reduce { acc, activityInfos -> acc + activityInfos }
-            .sortedBy { it.label.toString() } // as ArrayList<LauncherActivityInfo>
+        intentActivities = null
+        result
     }
 }
 
 fun getApplicationCategoryName(context: Context, packageName: String): String {
-    return getFirstFDroidApplicationCategory(packageName)
+    return getApplicationCategoryByIntentActivitiesQuery(packageName)
+        ?: getFirstFDroidApplicationCategory(packageName)
         ?: getApplicationInfoCategoryTitle(context, packageName)
         ?: DEFAULT_CATEGORY_NAME
+}
+
+/**
+ * Attempts to find the category for a package via PackageManager.queryIntentActivities, but only
+ * when there are multiple matches per category.
+ */
+fun getApplicationCategoryByIntentActivitiesQuery(packageName: String): String? {
+    if (intentActivities == null)
+        intentActivities =
+            mapOf(
+                    Intent.CATEGORY_APP_BROWSER to "Web Browsers",
+                    Intent.CATEGORY_APP_CALCULATOR to "Calculators",
+                    Intent.CATEGORY_APP_CALENDAR to "Calendars",
+                    Intent.CATEGORY_APP_CONTACTS to "Contacts",
+                    Intent.CATEGORY_APP_EMAIL to "Email Clients",
+                    Intent.CATEGORY_APP_FILES to "File Browsers",
+                    Intent.CATEGORY_APP_FITNESS to "Fitness",
+                    Intent.CATEGORY_APP_GALLERY to "Galleries",
+                    Intent.CATEGORY_APP_MAPS to "Navigation",
+                    Intent.CATEGORY_APP_MARKET to "Markets",
+                    Intent.CATEGORY_APP_MESSAGING to "Messaging",
+                    Intent.CATEGORY_APP_MUSIC to "Music Players",
+                    Intent.CATEGORY_APP_WEATHER to "Weather",
+                )
+                .mapNotNull { (intentCategory, categoryName) ->
+                    val resolveInfos =
+                        mainPackageManager.queryIntentActivities(
+                            Intent().setAction(Intent.ACTION_MAIN).addCategory(intentCategory),
+                            PackageManager.MATCH_DEFAULT_ONLY
+                        )
+                    if (resolveInfos.size < 2) null
+                    else
+                        Pair(
+                            categoryName,
+                            resolveInfos.map { resolveInfo -> resolveInfo.activityInfo.packageName }
+                        )
+                }
+                .toMap()
+
+    return intentActivities!!.keys.firstOrNull { category ->
+        packageName in intentActivities!![category]!!
+    }
 }
 
 /**
