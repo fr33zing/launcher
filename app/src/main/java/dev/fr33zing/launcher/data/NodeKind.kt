@@ -64,7 +64,6 @@ enum class NodeKind {
             Application -> true
             WebLink -> true
             Location -> true
-            Setting -> true
             else -> false
         }
 
