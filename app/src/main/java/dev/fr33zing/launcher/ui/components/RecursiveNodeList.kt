@@ -316,8 +316,8 @@ fun RecursiveNodeListSetup(
                 )
             }
         }
+        ZoomDetector(scaleState = scale)
     }
-    ZoomDetector(scaleState = scale)
 }
 
 @Composable
