@@ -60,7 +60,6 @@ enum class NodeKind {
 
     fun implemented(): Boolean =
         when (this) {
-            Reference -> false // partially implemented
             Directory -> true
             Application -> true
             WebLink -> true

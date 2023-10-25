@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -96,6 +97,7 @@ import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.helper.detectZoom
 import dev.fr33zing.launcher.helper.verticalScrollShadows
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
@@ -259,7 +261,10 @@ fun RecursiveNodeListSetup(
     }
 
     fun onNodeChildrenVisibilityChange(payload: Payload, visible: Boolean) {
-        val directory = payload as? Directory ?: throw Exception("Payload is not Directory")
+        val directory =
+            payload as? Directory
+                ?: if (payload is Reference) return
+                else throw Exception("Payload is not Directory or Reference")
         directory.collapsed = !visible
         CoroutineScope(Dispatchers.IO).launch { db.update(directory) }
     }
@@ -337,12 +342,28 @@ private fun RecursiveNodeList(
     onAddNodeDialogClosed: () -> Unit,
     onAddNode: (NodeKind) -> Unit,
 ) {
-    val canHaveChildren = remember { payload is Directory }
+    val canHaveChildren = remember { payload is Directory || payload is Reference }
     val children = remember { mutableStateListOf<Pair<Node, Payload>>() }
     var childrenVisible by remember {
         mutableStateOf(if (payload is Directory) !payload.initiallyCollapsed else false)
     }
     val childrenVisibleTransition = remember { MutableTransitionState(childrenVisible) }
+
+    var referenceTarget by remember { mutableStateOf<Pair<Node, Payload>?>(null) }
+    val referenceNode by remember { derivedStateOf { referenceTarget?.first } }
+    val referencePayload by remember { derivedStateOf { referenceTarget?.second } }
+
+    LaunchedEffect(payload) {
+        // Get target node and payload for references.
+        if (payload !is Reference || payload.targetId == null) return@LaunchedEffect
+        val targetNode = db.nodeDao().getNodeById(payload.targetId!!) ?: return@LaunchedEffect
+        val targetPayload =
+            db.getPayloadByNodeId(targetNode.kind, targetNode.nodeId) ?: return@LaunchedEffect
+        referenceTarget = Pair(targetNode, targetPayload)
+
+        // Determine children visibility for directory references.
+        (referencePayload as? Directory)?.initiallyCollapsed?.let { childrenVisible = !it }
+    }
 
     // Determine permissions.
     val ownPermissions =
@@ -377,6 +398,7 @@ private fun RecursiveNodeList(
             depth = depth,
             node = node,
             payload = payload,
+            referenceTarget = referenceTarget,
             childrenVisible = childrenVisible,
             parentPermissions = permissions,
             ownPermissions = ownPermissions,
@@ -404,29 +426,36 @@ private fun RecursiveNodeList(
                     payload.collapsed = !childrenVisible
                     db.update(payload)
                 }
-            } else throw Exception("Payload is not a Directory")
+            } else if (payload !is Reference)
+                throw Exception("Payload is not a Directory or Reference")
 
             // Load children when expand animation starts.
             childrenVisibleTransition.targetState = childrenVisible
-            if (childrenVisible)
-                db.nodeDao()
-                    .getChildNodes(node.nodeId)
-                    .mapNotNull { childNode ->
-                        db.getPayloadByNodeId(childNode.kind, childNode.nodeId)?.let { childPayload
-                            ->
-                            Pair(childNode, childPayload)
+            if (childrenVisible) {
+                val showChildrenOfNodeId =
+                    if (payload is Directory) node.nodeId else referenceTarget?.first?.nodeId
+
+                if (showChildrenOfNodeId != null)
+                    db.nodeDao()
+                        .getChildNodes(showChildrenOfNodeId)
+                        .mapNotNull { childNode ->
+                            db.getPayloadByNodeId(childNode.kind, childNode.nodeId)?.let {
+                                childPayload ->
+                                Pair(childNode, childPayload)
+                            }
                         }
-                    }
-                    .sortedBy { it.first.order }
-                    .let { result ->
-                        result.forEachIndexed { index, child ->
-                            if (children.size > index)
-                                children.removeAt(index) // This prevents duplication.
-                            children.add(index, child)
-                            if (index == result.size) childrenVisibleTransition.targetState = true
-                            else delay(1) // This prevents a lag spike.
+                        .sortedBy { it.first.order }
+                        .let { result ->
+                            result.forEachIndexed { index, child ->
+                                if (children.size > index)
+                                    children.removeAt(index) // This prevents duplication.
+                                children.add(index, child)
+                                if (index == result.size)
+                                    childrenVisibleTransition.targetState = true
+                                else delay(1) // This prevents a lag spike.
+                            }
                         }
-                    }
+            }
         }
 
         // Unload children when collapse animation finishes.
@@ -565,6 +594,7 @@ private fun RecursiveNodeListRow(
     depth: Int,
     node: Node,
     payload: Payload,
+    referenceTarget: Pair<Node, Payload>?,
     childrenVisible: Boolean,
     parentPermissions: PermissionMap,
     ownPermissions: PermissionMap,
@@ -577,11 +607,26 @@ private fun RecursiveNodeListRow(
     onAddNode: (NodeKind) -> Unit,
 ) {
     if (payload is Directory) payload.collapsed = !childrenVisible
+    else if (referenceTarget?.second is Directory)
+        (referenceTarget.second as Directory).collapsed = !childrenVisible
 
     val label = remember(node) { node.label }
-    val color = remember(payload, childrenVisible) { node.kind.color(payload) }
-    val icon = remember(payload, childrenVisible) { node.kind.icon(payload) }
-    val lineThrough = remember(payload) { node.kind.lineThrough(payload) }
+    val color =
+        remember(payload, childrenVisible, referenceTarget) {
+            node.kind.color(payload).let {
+                if (referenceTarget == null) it
+                else it.copy(alpha = referenceTarget.first.kind.color(referenceTarget.second).alpha)
+            }
+        }
+    val icon =
+        remember(payload, childrenVisible, referenceTarget) {
+            (referenceTarget?.first ?: node).kind.icon(referenceTarget?.second ?: payload)
+        }
+    val lineThrough =
+        remember(payload, referenceTarget) {
+            node.kind.lineThrough(payload) ||
+                (referenceTarget?.first?.kind?.lineThrough(referenceTarget.second)) == true
+        }
 
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color = color, longPressable = true)
