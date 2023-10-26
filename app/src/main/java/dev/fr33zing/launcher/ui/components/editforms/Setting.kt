@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.editforms
 
+import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
@@ -13,6 +14,7 @@ import androidx.compose.ui.text.withStyle
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
+import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.ui.components.EditFormColumn
 import dev.fr33zing.launcher.ui.components.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
@@ -24,20 +26,20 @@ private const val SETTINGS_SUFFIX = "_SETTINGS"
 
 private val substitutions =
     mapOf(
-            "apn" to "APN",
-            "ui" to "UI",
-            "nfc" to "NFC",
-            "uri" to "URI",
-            "vpn" to "VPN",
-            "vr" to "VR",
-            "wifi" to "WiFi",
-            "ip" to "IP",
-            "sim" to "SIM"
-        )
-        .map { (from, to) -> Pair(from.toRegex(RegexOption.IGNORE_CASE), to) }
-        .toMap()
+        "Apn" to "APN",
+        "ui" to "UI",
+        "Nfc" to "NFC",
+        "uri" to "URI",
+        "url" to "URL",
+        "Vpn" to "VPN",
+        "Vr" to "VR",
+        "Wifi" to "WiFi",
+        "ip" to "IP",
+        "sim" to "SIM",
+        "mms" to "MMS",
+        "Mms" to "MMS",
+    )
 
-// TODO improve performance OR make a static map
 private fun formatSettingName(setting: String): String =
     setting
         .split('.')
@@ -63,7 +65,7 @@ fun SettingEditForm(
     val allSettings = remember {
         Settings::class
             .staticProperties
-            .toList()
+            .asSequence()
             .mapNotNull {
                 try {
                     (it.get() as? String)
@@ -72,11 +74,13 @@ fun SettingEditForm(
                 }
             }
             .filter { it.startsWith(SETTINGS_PREFIX) }
+            .filter { mainPackageManager.resolveActivity(Intent(it), 0) != null }
             .sortedBy { formatSettingName(it) }
+            .toList()
     }
 
     val setting = payload as Setting
-    val settingState = remember { mutableStateOf("") }
+    val settingState = remember { mutableStateOf(setting.setting) }
     val settingPickerVisible = remember { mutableStateOf(false) }
 
     EditFormColumn(innerPadding) {
@@ -98,6 +102,9 @@ fun SettingEditForm(
             }
         },
         showAnnotatedString = { _, distinct -> !distinct },
-        onItemPicked = { settingState.value = it },
+        onItemPicked = {
+            settingState.value = it
+            setting.setting = it
+        },
     )
 }
