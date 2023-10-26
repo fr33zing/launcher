@@ -350,7 +350,6 @@ private fun RecursiveNodeList(
     val childrenVisibleTransition = remember { MutableTransitionState(childrenVisible) }
 
     var referenceTarget by remember { mutableStateOf<Pair<Node, Payload>?>(null) }
-    val referenceNode by remember { derivedStateOf { referenceTarget?.first } }
     val referencePayload by remember { derivedStateOf { referenceTarget?.second } }
 
     LaunchedEffect(payload) {

@@ -36,3 +36,27 @@ import androidx.room.Entity
 Relevant file: [[file:../buildSrc/build.gradle.kts][buildSrc/build.gradle.kts]]
 
 Update the ~payloadClasses~ and ~nodeKindToPayloadClassMap~ variables.
+
+** Create an edit form
+
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/EditForm.kt][EditForm.kt]]
+
+Create an edit form in the ~ui.components.editforms~ package, then update the
+~EditForm~ composable function.
+
+*** Example implementation
+
+#+BEGIN_SRC kotlin
+@Composable
+fun ExampleEditForm(
+    innerPadding: PaddingValues,
+    payload: Payload?,
+    node: Node,
+) {
+    val example = payload as Example
+
+    EditFormColumn(innerPadding) {
+        NodePropertyTextField(node::label)
+    }
+}
+#+END_SRC

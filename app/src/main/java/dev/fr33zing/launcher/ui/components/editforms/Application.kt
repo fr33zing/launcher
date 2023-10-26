@@ -85,6 +85,7 @@ fun ApplicationEditForm(
     }
 }
 
+// TODO make this reusable and use it for Setting payload edit form
 @Composable
 private fun PickAppButton(onAppPicked: (LauncherActivityInfo) -> Unit) {
     val appPickerVisible = remember { mutableStateOf(false) }

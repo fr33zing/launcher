@@ -25,6 +25,7 @@ import dev.fr33zing.launcher.ui.components.editforms.DefaultEditForm
 import dev.fr33zing.launcher.ui.components.editforms.DirectoryEditForm
 import dev.fr33zing.launcher.ui.components.editforms.LocationEditForm
 import dev.fr33zing.launcher.ui.components.editforms.ReferenceEditForm
+import dev.fr33zing.launcher.ui.components.editforms.SettingEditForm
 import dev.fr33zing.launcher.ui.components.editforms.WebLinkEditForm
 
 val EditFormExtraPadding = 16.dp
@@ -38,6 +39,7 @@ fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: 
         NodeKind.Reference -> ReferenceEditForm(db, innerPadding, payload, node)
         NodeKind.WebLink -> WebLinkEditForm(innerPadding, payload, node)
         NodeKind.Location -> LocationEditForm(innerPadding, payload, node)
+        NodeKind.Setting -> SettingEditForm(innerPadding, payload, node)
         else -> DefaultEditForm(innerPadding, node)
     }
 }
