@@ -57,7 +57,7 @@ fun NodePropertyTextField(
     val keyboardController = LocalSoftwareKeyboardController.current
     val annotation = remember { property.getUserEditableAnnotation() }
     val input = remember { state ?: mutableStateOf(property.get()) }
-    var initialValue by remember { mutableStateOf(defaultValue ?: input.value) }
+    var initialValue by remember(defaultValue) { mutableStateOf(defaultValue ?: input.value) }
     val locked = remember { mutableStateOf(annotation.locked) }
     var enabled by remember { mutableStateOf(true) }
 

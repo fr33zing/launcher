@@ -60,10 +60,12 @@ enum class NodeKind {
 
     fun implemented(): Boolean =
         when (this) {
+            Reference -> true
             Directory -> true
             Application -> true
             WebLink -> true
             Location -> true
+            Setting -> true
             else -> false
         }
 
