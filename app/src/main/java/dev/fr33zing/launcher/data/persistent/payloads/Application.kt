@@ -6,6 +6,7 @@ import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.os.UserManager
+import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.Ignore
 import dev.fr33zing.launcher.data.persistent.AppDatabase
@@ -17,6 +18,7 @@ lateinit var mainPackageManager: PackageManager
 lateinit var launcherApps: LauncherApps
 lateinit var userManager: UserManager
 
+@Keep
 @Entity
 class Application(
     payloadId: Int,

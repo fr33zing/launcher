@@ -2,10 +2,12 @@ package dev.fr33zing.launcher.data.persistent.payloads
 
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.Keep
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.util.UserEditable
 
+@Keep
 @Entity
 class Setting(
     payloadId: Int,

@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 
 // TODO detect cycles and display "infinite loop" error
 
+@Keep
 @Entity
 class Reference(payloadId: Int, nodeId: Int, var targetId: Int? = null) :
     Payload(payloadId, nodeId) {

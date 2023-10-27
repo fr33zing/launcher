@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.data.persistent.payloads
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.Keep
 import androidx.core.content.ContextCompat.startActivity
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
@@ -20,6 +21,7 @@ val UrlRegex =
         })
         .toRegex()
 
+@Keep
 @Entity
 class WebLink(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String = "") :
     Payload(payloadId, nodeId) {

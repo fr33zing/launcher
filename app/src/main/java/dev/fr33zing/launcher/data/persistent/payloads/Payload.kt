@@ -1,10 +1,12 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 
+@Keep
 @Entity
 abstract class Payload(
     @PrimaryKey(autoGenerate = true) val payloadId: Int,

@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.data.persistent.payloads
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.Keep
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat.startActivity
 import androidx.room.Entity
@@ -14,6 +15,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.text.DecimalFormat
 
+@Keep
 @Entity
 class Location(
     payloadId: Int,
