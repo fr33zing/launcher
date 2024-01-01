@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,13 +58,22 @@ import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import dev.fr33zing.launcher.ui.util.mix
+import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 const val TAG = "dev.fr33zing.launcher"
 
+val GoHomeSubject = PublishSubject.create<Unit>()
+
 class MainActivity : ComponentActivity() {
+
+    override fun onPause() {
+        super.onPause()
+        GoHomeSubject.onNext(Unit)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -149,6 +159,16 @@ class MainActivity : ComponentActivity() {
     private fun Main(db: AppDatabase) {
         // TODO investigate bug that causes tree to slide horizontally instead of vertically
         val navController = rememberNavController()
+
+        DisposableEffect(Unit) {
+            val subscription =
+                GoHomeSubject.subscribe {
+                    if (navController.currentDestination?.route != "home")
+                        navController.navigate("home")
+                }
+            onDispose { subscription.dispose() }
+        }
+
         NavHost(
             navController,
             startDestination = "home",
