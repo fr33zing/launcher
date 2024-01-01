@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.pages
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,10 @@ private val horizontalPadding = 16.dp
 fun Home(db: AppDatabase, navController: NavController) {
     fun onFlingUp() {
         navController.navigate("home/tree/$ROOT_NODE_ID")
+    }
+
+    BackHandler {
+        // Prevent back button loop
     }
 
     Column(
