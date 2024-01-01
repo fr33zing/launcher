@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import androidx.annotation.Keep
 import androidx.room.Entity
 
-@Entity class Note(payloadId: Int, nodeId: Int) : Payload(payloadId, nodeId)
+@Keep @Entity class Note(payloadId: Int, nodeId: Int) : Payload(payloadId, nodeId)

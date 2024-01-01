@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.persistent
 
+import androidx.annotation.Keep
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Entity
@@ -20,6 +21,7 @@ fun List<Node>.fixOrder(): List<Node> {
     return this
 }
 
+@Keep
 @Entity
 data class Node(
     @PrimaryKey(autoGenerate = true) val nodeId: Int,

@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import androidx.annotation.Keep
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NewReleases
@@ -20,6 +21,7 @@ import dev.fr33zing.launcher.data.hasPermission
 // TODO rename "collapsed" to "childrenVisible", invert conditionals, search entire project for
 // "collapsed" so comments are fixed too
 
+@Keep
 @Entity
 class Directory(
     payloadId: Int,

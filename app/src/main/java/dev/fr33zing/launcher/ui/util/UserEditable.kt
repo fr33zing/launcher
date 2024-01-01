@@ -1,7 +1,9 @@
 package dev.fr33zing.launcher.ui.util
 
+import androidx.annotation.Keep
 import kotlin.reflect.KMutableProperty0
 
+@Keep
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class UserEditable(
