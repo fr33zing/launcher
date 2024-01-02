@@ -40,9 +40,6 @@ import dev.fr33zing.launcher.R
 import dev.fr33zing.launcher.ui.util.rememberCustomIndication
 import java.text.SimpleDateFormat
 import java.util.Date
-import kotlinx.coroutines.DelicateCoroutinesApi
-
-private const val REFRESH_INTERVAL: Long = 60_000_000_000 // nanoseconds
 
 @OptIn(ExperimentalTextApi::class)
 private fun makeFontFamily(weight: Int) =
@@ -70,7 +67,6 @@ private fun AnnotatedString.Builder.spacer() {
     withStyle(spacerStyle) { append(" ") }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun Clock(horizontalPadding: Dp) {
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
