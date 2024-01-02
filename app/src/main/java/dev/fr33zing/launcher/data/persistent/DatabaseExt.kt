@@ -6,6 +6,7 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.getApplicationCategoryOverrides
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
@@ -84,9 +85,10 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
             }
         val categoryDirectories =
             mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
+        val applicationCategoryOverrides = getApplicationCategoryOverrides()
 
         nodesWithPayloads.forEach { (node, payload) ->
-            val category = getApplicationCategoryName(context, payload.packageName)
+            val category = getApplicationCategoryName(context, payload.packageName, applicationCategoryOverrides)
             val (directory, order) =
                 categoryDirectories[category]
                     ?: Pair(

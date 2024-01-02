@@ -37,8 +37,13 @@ suspend fun getActivityInfos(context: Context): List<LauncherActivityInfo> {
     }
 }
 
-fun getApplicationCategoryName(context: Context, packageName: String): String {
-    return getApplicationCategoryByIntentActivitiesQuery(packageName)
+fun getApplicationCategoryName(
+    context: Context,
+    packageName: String,
+    applicationCategoryOverrides: Map<String, String>
+): String {
+    return applicationCategoryOverrides[packageName]
+        ?: getApplicationCategoryByIntentActivitiesQuery(packageName)
         ?: getFirstFDroidApplicationCategory(packageName)
         ?: getApplicationInfoCategoryTitle(context, packageName)
         ?: DEFAULT_CATEGORY_NAME
