@@ -6,8 +6,11 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
-    <!-- Used to get webpage titles-->
+    <!-- Used to get webpage titles -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Used to launch default clock app when clicking home screen clock -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
 
     <application
         android:allowBackup="true"

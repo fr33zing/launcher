@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.provider.AlarmClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -113,17 +114,31 @@ fun Clock(horizontalPadding: Dp) {
     }
 
     Column {
-        Element(currentTime, horizontalPadding, verticalPadding = 0.dp)
-        Element(currentDate, horizontalPadding, verticalPadding = 8.dp)
+        // TODO add setting to choose default clock and calendar app
+        Element(currentTime, horizontalPadding, verticalPadding = 0.dp) {
+            val clockIntent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
+            clockIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(clockIntent)
+        }
+        Element(currentDate, horizontalPadding, verticalPadding = 8.dp) {
+            val calendarIntent = Intent(Intent.ACTION_MAIN)
+            calendarIntent.addCategory(Intent.CATEGORY_APP_CALENDAR)
+            context.startActivity(calendarIntent)
+        }
     }
 }
 
 @Composable
-private fun Element(text: AnnotatedString, horizontalPadding: Dp, verticalPadding: Dp) {
+private fun Element(
+    text: AnnotatedString,
+    horizontalPadding: Dp,
+    verticalPadding: Dp,
+    onClick: () -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication()
 
-    Box(Modifier.fillMaxWidth().clickable(interactionSource, indication) {}) {
+    Box(Modifier.fillMaxWidth().clickable(interactionSource, indication, onClick = onClick)) {
         Text(
             text,
             style = noFontPaddingTextStyle,
