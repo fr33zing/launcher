@@ -898,6 +898,8 @@ private fun NodeOptionButtonsLayout(
     }
 }
 
+// TODO fix "Add item below" button being cut off when showing for items near the end of the list
+// Maybe scroll into view if not fully on screen?
 @Composable
 private fun AddNodeButton(
     dimensions: NodeListDimensions,
