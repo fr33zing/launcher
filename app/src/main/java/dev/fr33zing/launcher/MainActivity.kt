@@ -53,6 +53,7 @@ import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Reorder
+import dev.fr33zing.launcher.ui.pages.Settings
 import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -66,12 +67,16 @@ import kotlinx.coroutines.launch
 const val TAG = "dev.fr33zing.launcher"
 
 val GoHomeSubject = PublishSubject.create<Unit>()
+private var goHomeOnNextPause = true
+
+fun doNotGoHomeOnNextPause() {
+    goHomeOnNextPause = false
+}
 
 class MainActivity : ComponentActivity() {
-
     override fun onPause() {
         super.onPause()
-        GoHomeSubject.onNext(Unit)
+        if (goHomeOnNextPause) GoHomeSubject.onNext(Unit) else goHomeOnNextPause = true
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,6 +206,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
         ) {
+            composable("settings") { Settings(db) }
             composable("home") { Home(db, navController) }
             composable("home/tree/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")

@@ -6,12 +6,12 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
-import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.DEFAULT_CATEGORY_NAME
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
+import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.runBlocking
 
@@ -88,7 +88,12 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
         val applicationCategoryOverrides = getApplicationCategoryOverrides()
 
         nodesWithPayloads.forEach { (node, payload) ->
-            val category = getApplicationCategoryName(context, payload.packageName, applicationCategoryOverrides)
+            val category =
+                getApplicationCategoryName(
+                    context,
+                    payload.packageName,
+                    applicationCategoryOverrides
+                )
             val (directory, order) =
                 categoryDirectories[category]
                     ?: Pair(
@@ -344,4 +349,11 @@ suspend fun AppDatabase.checkPermission(
         } else true
     }
     return parentsAllow
+}
+
+/** Run wal_checkpoint and return the database path. */
+fun AppDatabase.checkpoint(): String {
+    if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
+        throw Exception("Database checkpoint failed")
+    return openHelper.writableDatabase.path ?: throw Exception("Database path is null")
 }

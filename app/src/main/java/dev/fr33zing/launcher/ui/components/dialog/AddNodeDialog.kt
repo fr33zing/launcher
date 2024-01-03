@@ -16,6 +16,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -30,8 +31,9 @@ fun AddNodeDialog(
     onDismissRequest: () -> Unit,
     onKindChosen: (NodeKind) -> Unit
 ) {
+    val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = Preferences.fontSizeDefault
+    val fontSize = preferences.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
     val kinds = remember { NodeKind.values() }
 
@@ -41,7 +43,7 @@ fun AddNodeDialog(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.width(IntrinsicSize.Min)
     ) { padding ->
-        val verticalPadding = remember { padding - Preferences.spacingDefault / 2 }
+        val verticalPadding = remember { padding - preferences.spacing.mappedDefault / 2 }
         Column(modifier = Modifier.padding(vertical = verticalPadding)) {
             kinds.forEach { Option(padding, fontSize, lineHeight, it) { onKindChosen(it) } }
         }
@@ -56,6 +58,7 @@ private fun Option(
     nodeKind: NodeKind,
     onClick: () -> Unit
 ) {
+    val preferences = Preferences(LocalContext.current)
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color = nodeKind.color)
 
@@ -64,7 +67,7 @@ private fun Option(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = padding, vertical = Preferences.spacingDefault / 2)
+                    .padding(horizontal = padding, vertical = preferences.spacing.mappedDefault / 2)
         ) {
             NodeIconAndText(
                 fontSize = fontSize,

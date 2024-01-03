@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -43,17 +44,17 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
-import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,6 +68,7 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
+    val preferences = Preferences(LocalContext.current)
     var parentNode by remember { mutableStateOf<Node?>(null) }
     val nodes = remember { mutableStateOf<List<Node>?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
@@ -134,7 +136,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
             Modifier.fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = extraPadding)
-                .verticalScrollShadows(Preferences.spacingDefault)
+                .verticalScrollShadows(preferences.spacing.mappedDefault)
         ) {
             ReorderableList(parentNode!!, nodes)
         }
@@ -160,11 +162,12 @@ private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: 
 
 @Composable
 private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) {
+    val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = Preferences.fontSizeDefault
-    val spacing = Preferences.spacingDefault
+    val fontSize = preferences.fontSize.mappedDefault
+    val spacing = preferences.spacing.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
-    val indent = remember { nodeIndent(1, Preferences.indentDefault, lineHeight) }
+    val indent = remember { nodeIndent(1, preferences.indent.mappedDefault, lineHeight) }
 
     val listState = rememberLazyListState()
     val reorderableState =

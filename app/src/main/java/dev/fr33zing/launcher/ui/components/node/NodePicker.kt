@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
@@ -47,12 +48,12 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -121,10 +122,11 @@ private fun NodePickerRowList(
     setRootNode: (Int?, Int) -> Unit,
     nodeBlockedReason: suspend (Node) -> String?,
 ) {
+    val preferences = Preferences(LocalContext.current)
     val haptics = LocalHapticFeedback.current
     val density = LocalDensity.current
-    val fontSize = Preferences.fontSizeDefault
-    val spacing = Preferences.spacingDefault
+    val fontSize = preferences.fontSize.mappedDefault
+    val spacing = preferences.spacing.mappedDefault
     val lineHeight = with(density) { fontSize.toDp() }
 
     BackHandler(enabled = rootNode.parentId != null) { setRootNode(rootNode.parentId, -1) }

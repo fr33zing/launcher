@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -39,11 +40,11 @@ import dev.fr33zing.launcher.data.persistent.checkPermission
 import dev.fr33zing.launcher.data.persistent.moveNode
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
-import dev.fr33zing.launcher.ui.components.node.NodePath
-import dev.fr33zing.launcher.ui.components.node.NodePicker
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.node.NodePath
+import dev.fr33zing.launcher.ui.components.node.NodePicker
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +55,7 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
+    val preferences = Preferences(LocalContext.current)
     var initialRootNodeId by remember { mutableStateOf<Int?>(null) }
     val selectedNode = remember { mutableStateOf<Node?>(null) }
     var movingNode by remember { mutableStateOf<Node?>(null) }
@@ -124,7 +126,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(extraPadding)) {
             if (movingNode != null && initialRootNodeId != null) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(Preferences.spacingDefault),
+                    verticalArrangement = Arrangement.spacedBy(preferences.spacing.mappedDefault),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {

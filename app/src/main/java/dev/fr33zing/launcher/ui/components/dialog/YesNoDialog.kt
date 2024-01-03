@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -47,8 +48,9 @@ fun YesNoDialog(
     onYes: () -> Unit = {},
     onNo: () -> Unit = {},
 ) {
+    val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = Preferences.fontSizeDefault
+    val fontSize = preferences.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
     BaseDialog(visible, icon, onDismissRequest = onDismissRequest) { padding ->
@@ -57,7 +59,7 @@ fun YesNoDialog(
             if (backAction == YesNoDialogBackAction.Yes) onYes() else onNo()
         }
 
-        val verticalPadding = remember { padding - Preferences.spacingDefault / 2 }
+        val verticalPadding = remember { padding - preferences.spacing.mappedDefault / 2 }
         Column(modifier = Modifier.width(IntrinsicSize.Max).padding(vertical = verticalPadding)) {
             Option(visible, padding, fontSize, lineHeight, noText, noColor, noIcon, onNo)
             Option(visible, padding, fontSize, lineHeight, yesText, yesColor, yesIcon, onYes)
@@ -76,6 +78,7 @@ private fun Option(
     icon: ImageVector,
     onClick: () -> Unit,
 ) {
+    val preferences = Preferences(LocalContext.current)
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color = color)
 
@@ -94,7 +97,7 @@ private fun Option(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = padding, vertical = Preferences.spacingDefault / 2)
+                    .padding(horizontal = padding, vertical = preferences.spacing.mappedDefault / 2)
         ) {
             NodeIconAndText(
                 fontSize = fontSize,
