@@ -34,12 +34,12 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
+import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.utility.detectFlingUp
+import dev.fr33zing.launcher.ui.utility.longPressable
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
-
-private val horizontalPadding = 16.dp
 
 @Composable
 fun Home(db: AppDatabase, navController: NavController) {
@@ -47,20 +47,18 @@ fun Home(db: AppDatabase, navController: NavController) {
         navController.navigate("home/tree/$ROOT_NODE_ID")
     }
 
-    BackHandler {
-        // Prevent back button loop
-    }
+    BackHandler { /* Prevent back button loop */}
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
         modifier =
-            Modifier.systemBarsPadding().padding(vertical = 32.dp).fillMaxSize().pointerInput(
-                Unit
-            ) {
-                detectFlingUp(::onFlingUp)
-            },
+            Modifier.systemBarsPadding()
+                .padding(vertical = 32.dp)
+                .fillMaxSize()
+                .pointerInput(Unit) { detectFlingUp(::onFlingUp) }
+                .longPressable { navController.navigate("settings") },
     ) {
-        Clock(horizontalPadding)
+        Clock(ScreenHorizontalPadding)
         HomeNodeList(db, modifier = Modifier.weight(1f))
     }
 }
@@ -113,7 +111,7 @@ private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: D
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =
                     Modifier.fillMaxWidth()
-                        .padding(horizontal = horizontalPadding, vertical = spacing / 2)
+                        .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
             ) {
                 NodeIconAndText(
                     fontSize = fontSize,
