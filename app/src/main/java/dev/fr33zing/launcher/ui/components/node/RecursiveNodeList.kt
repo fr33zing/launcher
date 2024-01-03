@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components
+package dev.fr33zing.launcher.ui.components.node
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -98,14 +98,15 @@ import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
-import dev.fr33zing.launcher.helper.detectZoom
-import dev.fr33zing.launcher.helper.verticalScrollShadows
+import dev.fr33zing.launcher.ui.utility.detectZoom
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
+import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.lang.Float.*

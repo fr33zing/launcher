@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.editforms
+package dev.fr33zing.launcher.ui.components.editform
 
 import android.content.pm.LauncherActivityInfo
 import android.os.Process
@@ -39,14 +39,13 @@ import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.helper.getActivityInfos
-import dev.fr33zing.launcher.ui.components.EditFormColumn
-import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.data.utility.getActivityInfos
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
-import dev.fr33zing.launcher.ui.components.refreshNodePropertyTextFields
+import dev.fr33zing.launcher.ui.components.node.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
 fun ApplicationEditForm(

@@ -6,12 +6,12 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
-import dev.fr33zing.launcher.data.getApplicationCategoryOverrides
+import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.helper.DEFAULT_CATEGORY_NAME
-import dev.fr33zing.launcher.helper.getApplicationCategoryName
+import dev.fr33zing.launcher.data.utility.DEFAULT_CATEGORY_NAME
+import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.runBlocking
 

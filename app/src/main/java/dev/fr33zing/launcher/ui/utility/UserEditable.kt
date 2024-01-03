@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.util
+package dev.fr33zing.launcher.ui.utility
 
 import androidx.annotation.Keep
 import kotlin.reflect.KMutableProperty0

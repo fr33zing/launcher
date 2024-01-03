@@ -3,7 +3,7 @@ package dev.fr33zing.launcher.ui.theme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 
 val DisabledTextFieldColor = Foreground.mix(Background, 0.666f)
 val DisabledTextFieldLabelColor = Foreground.mix(Background, 0.25f)

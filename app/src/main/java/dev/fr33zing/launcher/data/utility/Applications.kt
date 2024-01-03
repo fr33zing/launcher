@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.helper
+package dev.fr33zing.launcher.data.utility
 
 import android.content.Context
 import android.content.Intent

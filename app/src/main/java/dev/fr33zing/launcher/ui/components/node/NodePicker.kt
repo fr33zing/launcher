@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components
+package dev.fr33zing.launcher.ui.components.node
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -46,12 +46,13 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.helper.conditional
-import dev.fr33zing.launcher.helper.verticalScrollShadows
+import dev.fr33zing.launcher.ui.components.sendNotice
+import dev.fr33zing.launcher.ui.utility.conditional
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

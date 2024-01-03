@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.helper.conditional
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 
 @Composable

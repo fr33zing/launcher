@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.Timer
 import java.util.UUID

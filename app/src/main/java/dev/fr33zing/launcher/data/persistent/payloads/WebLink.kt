@@ -9,7 +9,7 @@ import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.util.UserEditable
+import dev.fr33zing.launcher.ui.utility.UserEditable
 
 val UrlRegex =
     (buildString {

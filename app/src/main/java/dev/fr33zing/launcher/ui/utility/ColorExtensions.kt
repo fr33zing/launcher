@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.util
+package dev.fr33zing.launcher.ui.utility
 
 import androidx.compose.ui.graphics.Color
 

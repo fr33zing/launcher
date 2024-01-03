@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components
+package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,13 +20,6 @@ import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.editforms.ApplicationEditForm
-import dev.fr33zing.launcher.ui.components.editforms.DefaultEditForm
-import dev.fr33zing.launcher.ui.components.editforms.DirectoryEditForm
-import dev.fr33zing.launcher.ui.components.editforms.LocationEditForm
-import dev.fr33zing.launcher.ui.components.editforms.ReferenceEditForm
-import dev.fr33zing.launcher.ui.components.editforms.SettingEditForm
-import dev.fr33zing.launcher.ui.components.editforms.WebLinkEditForm
 
 val EditFormExtraPadding = 16.dp
 val EditFormSpacing = 16.dp

@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.room.Entity
 import androidx.room.Ignore
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.util.UserEditable
+import dev.fr33zing.launcher.ui.utility.UserEditable
 import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder

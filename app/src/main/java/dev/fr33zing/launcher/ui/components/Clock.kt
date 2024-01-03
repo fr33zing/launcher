@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import dev.fr33zing.launcher.R
-import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import java.text.SimpleDateFormat
 import java.util.Date
 

@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.editforms
+package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,11 +19,9 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
-import dev.fr33zing.launcher.ui.components.EditFormExtraPadding
-import dev.fr33zing.launcher.ui.components.EditFormSpacing
-import dev.fr33zing.launcher.ui.components.NodePath
-import dev.fr33zing.launcher.ui.components.NodePicker
-import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.node.NodePath
+import dev.fr33zing.launcher.ui.components.node.NodePicker
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 
 @Composable

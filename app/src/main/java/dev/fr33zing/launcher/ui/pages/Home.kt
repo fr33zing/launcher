@@ -34,10 +34,10 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.helper.detectFlingUp
+import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.components.Clock
-import dev.fr33zing.launcher.ui.components.NodeIconAndText
-import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 private val horizontalPadding = 16.dp
 

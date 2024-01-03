@@ -26,7 +26,7 @@ import dev.fr33zing.launcher.data.persistent.NodeDeletedSubject
 import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.CancelButton
-import dev.fr33zing.launcher.ui.components.EditForm
+import dev.fr33zing.launcher.ui.components.editform.EditForm
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction

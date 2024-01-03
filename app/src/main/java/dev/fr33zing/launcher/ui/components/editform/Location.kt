@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.editforms
+package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,8 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Location
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.EditFormColumn
-import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import kotlin.text.Typography.degree
 import kotlinx.coroutines.CoroutineScope

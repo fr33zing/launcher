@@ -11,7 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 
 private val catppuccinDark = Catppuccin.Frappe
 private val catppuccinLight = Catppuccin.Latte

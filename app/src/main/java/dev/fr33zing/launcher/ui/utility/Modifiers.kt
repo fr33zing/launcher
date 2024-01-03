@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.helper
+package dev.fr33zing.launcher.ui.utility
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.Modifier

@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.editforms
+package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -23,13 +23,12 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.EditFormColumn
-import dev.fr33zing.launcher.ui.components.NodePath
-import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.node.NodePath
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
 fun DirectoryEditForm(

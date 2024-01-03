@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components
+package dev.fr33zing.launcher.ui.components.node
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,12 +25,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import dev.fr33zing.launcher.helper.conditional
-import dev.fr33zing.launcher.helper.longPressable
+import dev.fr33zing.launcher.ui.components.Notice
+import dev.fr33zing.launcher.ui.utility.conditional
+import dev.fr33zing.launcher.ui.utility.longPressable
 import dev.fr33zing.launcher.ui.theme.DisabledTextFieldColor
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
-import dev.fr33zing.launcher.ui.util.getUserEditableAnnotation
+import dev.fr33zing.launcher.ui.utility.getUserEditableAnnotation
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlin.reflect.KMutableProperty0
 import kotlinx.coroutines.CoroutineScope

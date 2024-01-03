@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.util
+package dev.fr33zing.launcher.ui.utility
 
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.compose.animation.Animatable

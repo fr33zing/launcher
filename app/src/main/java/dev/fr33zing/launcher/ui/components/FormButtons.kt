@@ -17,7 +17,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.util.rememberCustomIndication
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
 fun CancelButton(onClick: () -> Unit) =

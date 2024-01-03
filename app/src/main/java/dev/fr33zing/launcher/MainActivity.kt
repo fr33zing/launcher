@@ -46,7 +46,7 @@ import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.data.persistent.payloads.userManager
-import dev.fr33zing.launcher.helper.getActivityInfos
+import dev.fr33zing.launcher.data.utility.getActivityInfos
 import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
@@ -57,7 +57,7 @@ import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

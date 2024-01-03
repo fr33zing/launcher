@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components
+package dev.fr33zing.launcher.ui.components.node
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent

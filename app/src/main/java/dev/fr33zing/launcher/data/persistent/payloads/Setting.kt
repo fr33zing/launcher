@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.annotation.Keep
 import androidx.room.Entity
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.util.UserEditable
+import dev.fr33zing.launcher.ui.utility.UserEditable
 
 @Keep
 @Entity

@@ -39,8 +39,8 @@ import dev.fr33zing.launcher.data.persistent.checkPermission
 import dev.fr33zing.launcher.data.persistent.moveNode
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
-import dev.fr33zing.launcher.ui.components.NodePath
-import dev.fr33zing.launcher.ui.components.NodePicker
+import dev.fr33zing.launcher.ui.components.node.NodePath
+import dev.fr33zing.launcher.ui.components.node.NodePicker
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction

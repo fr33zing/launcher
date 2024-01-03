@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.editforms
+package dev.fr33zing.launcher.ui.components.editform
 
 import android.content.Intent
 import android.provider.Settings
@@ -15,8 +15,7 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
-import dev.fr33zing.launcher.ui.components.EditFormColumn
-import dev.fr33zing.launcher.ui.components.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
 import kotlin.reflect.full.staticProperties
 

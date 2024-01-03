@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.data
+package dev.fr33zing.launcher.data.utility
 
 /**
  * Get overrides for applications' categories so that some applications can have their default

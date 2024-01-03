@@ -10,7 +10,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
-import dev.fr33zing.launcher.ui.util.UserEditable
+import dev.fr33zing.launcher.ui.utility.UserEditable
 
 /**
  * Ensure that all node order values are unique and sequential. Mutates this List and returns itself

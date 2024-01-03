@@ -21,7 +21,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.util.mix
+import dev.fr33zing.launcher.ui.utility.mix
 
 private val directoryColor = Catppuccin.Current.sapphire
 private val rootDirectoryColor = Foreground.mix(Background, 0.5f)
