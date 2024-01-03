@@ -2,14 +2,25 @@
 
 This is the project wiki.
 
-* Adding a new kind of node
+* Override an application's default category
+
+Relevant file: [[file:~/AndroidStudioProjects/launcher/app/src/main/java/dev/fr33zing/launcher/data/utility/AppCategoryOverrides.kt][AppCategoryOverrides.kt]]
+
+On first run, the launcher attempts to automatically categorize each installed
+application based on information from multiple sources. For some applications,
+this can lead to nonsensical default categories. For others, it may fail
+entirely, defaulting to the "Uncategorized" category. In order to explicitly
+override an application's default category, add the application's package to the
+~applicationCategoryOverrideDefinitions~ function.
+
+* Add a new kind of node
 
 Adding a new kind of node requires changes to a handful of different files.
 Follow these instructions carefully.
 
 ** Update NodeKind enum class
 
-Relevant File: [[file:../app/src/main/java/dev/fr33zing/launcher/data/NodeKind.kt][NodeKind.kt]]
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/data/NodeKind.kt][NodeKind.kt]]
 
 Add your new node kind to the ~NodeKind~ enum class and update the functions
 below it. For the ~color~ function, pick a color from ~Catppuccin.Current~.
