@@ -47,6 +47,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.data.utility.getActivityInfos
+import dev.fr33zing.launcher.data.utility.setupDefaultHomeScreen
 import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
@@ -152,6 +153,7 @@ class MainActivity : ComponentActivity() {
                                 db.autoCategorizeNewApplications(applicationContext) {
                                     remainingAppsToCategorize = remainingAppsToCategorize!! - 1
                                 }
+                                setupDefaultHomeScreen(db)
                             } else remainingAppsToCategorize = 0
                         }
                     }

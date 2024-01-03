@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import dev.fr33zing.launcher.R
+import dev.fr33zing.launcher.data.utility.launchCalendarApplication
+import dev.fr33zing.launcher.data.utility.launchClockApplication
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -112,14 +114,10 @@ fun Clock(horizontalPadding: Dp) {
     Column {
         // TODO add setting to choose default clock and calendar app
         Element(currentTime, horizontalPadding, verticalPadding = 0.dp) {
-            val clockIntent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
-            clockIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(clockIntent)
+           launchClockApplication(context)
         }
         Element(currentDate, horizontalPadding, verticalPadding = 8.dp) {
-            val calendarIntent = Intent(Intent.ACTION_MAIN)
-            calendarIntent.addCategory(Intent.CATEGORY_APP_CALENDAR)
-            context.startActivity(calendarIntent)
+            launchCalendarApplication(context)
         }
     }
 }
