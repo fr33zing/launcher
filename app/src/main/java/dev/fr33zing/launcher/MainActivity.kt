@@ -53,8 +53,8 @@ import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
+import dev.fr33zing.launcher.ui.pages.Preferences
 import dev.fr33zing.launcher.ui.pages.Reorder
-import dev.fr33zing.launcher.ui.pages.Settings
 import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -153,6 +153,8 @@ class MainActivity : ComponentActivity() {
                                 db.autoCategorizeNewApplications(applicationContext) {
                                     remainingAppsToCategorize = remainingAppsToCategorize!! - 1
                                 }
+
+                                // Add some notes to help new users
                                 setupDefaultHomeScreen(db)
                             } else remainingAppsToCategorize = 0
                         }
@@ -208,7 +210,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
         ) {
-            composable("settings") { Settings(db) }
+            composable("settings") { Preferences(db) }
             composable("home") { Home(db, navController) }
             composable("home/tree/{nodeId}") { backStackEntry ->
                 val nodeId = backStackEntry.arguments?.getString("nodeId")

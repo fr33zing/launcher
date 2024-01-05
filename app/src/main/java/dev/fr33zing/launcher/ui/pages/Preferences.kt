@@ -56,7 +56,7 @@ private val sectionTitleSpacing = 16.dp
 private val preferenceSpacing = 32.dp
 
 @Composable
-fun Settings(db: AppDatabase) {
+fun Preferences(db: AppDatabase) {
     val preferences = Preferences(LocalContext.current)
 
     Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
