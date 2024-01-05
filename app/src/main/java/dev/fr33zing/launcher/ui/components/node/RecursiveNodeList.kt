@@ -135,7 +135,13 @@ fun rememberNodeListDimensions(
     val unscaledSpacing by preferences.spacing.state
     val unscaleIndent by preferences.indent.state
 
-    return remember(localDensity, scale.floatValue) {
+    return remember(
+        localDensity,
+        scale.floatValue,
+        unscaledFontSize,
+        unscaledSpacing,
+        unscaleIndent
+    ) {
         val fontSize = unscaledFontSize * scale.floatValue
         val spacing = unscaledSpacing * scale.floatValue
         val indent = unscaleIndent * scale.floatValue

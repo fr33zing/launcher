@@ -21,10 +21,10 @@ val Context.preferencesDataStore: DataStore<Preferences> by
 class Preference<UnderlyingType, MappedType>(
     private val context: Context,
     private val key: Preferences.Key<UnderlyingType>,
-    private val default: UnderlyingType,
+    val default: UnderlyingType,
     map: (UnderlyingType) -> MappedType,
 ) {
-    private val flow: Flow<UnderlyingType> =
+    val flow: Flow<UnderlyingType> =
         context.preferencesDataStore.data.map {
             if (it[key] == null)
                 context.preferencesDataStore.edit { preferences -> preferences[key] = default }
@@ -41,7 +41,7 @@ class Preference<UnderlyingType, MappedType>(
     }
 }
 
-class Preferences(private val context: Context) {
+class Preferences(context: Context) {
     val fontSize = Preference(context, intPreferencesKey("fontSize"), 22, Int::sp)
     val spacing = Preference(context, intPreferencesKey("spacing"), 22, Int::dp)
     val indent = Preference(context, intPreferencesKey("indent"), 22, Int::dp)
