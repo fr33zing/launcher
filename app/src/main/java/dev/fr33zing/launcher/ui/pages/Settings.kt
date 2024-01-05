@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -19,7 +23,10 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.utility.createBackupArchive
 import dev.fr33zing.launcher.data.utility.generateExportFilename
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
+import dev.fr33zing.launcher.ui.components.NoticeKind
+import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import java.util.Date
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,15 +37,7 @@ fun Settings(db: AppDatabase) {
         modifier =
             Modifier.systemBarsPadding().padding(horizontal = ScreenHorizontalPadding).fillMaxSize()
     ) {
-        Section("Database backup") {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(onClick = { /*TODO*/}) { Text(text = "Import") }
-                ExportButton(db)
-            }
-        }
+        BackupSection(db)
     }
 }
 
@@ -54,22 +53,45 @@ private fun Section(
 }
 
 @Composable
-private fun ExportButton(db: AppDatabase) {
+fun BackupSection(db: AppDatabase) {
+    Section("Database backup") {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ExportButton(db)
+        }
+    }
+}
+
+@Composable
+private fun ExportButton(
+    db: AppDatabase,
+) {
+    var exportDate by remember { mutableStateOf<Date?>(null) }
     val context = LocalContext.current
-    val launcher =
+    val createDocumentLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/zip")
-        ) { exportFile ->
-            exportFile ?: throw Exception("Export file is null")
-            CoroutineScope(Dispatchers.IO).launch { createBackupArchive(context, db, exportFile) }
+        ) { exportUri ->
+            if (exportUri != null)
+                CoroutineScope(Dispatchers.IO).launch {
+                    createBackupArchive(context, db, exportUri, exportDate!!)
+                }
+            else
+                sendNotice(
+                    "backup-export-failed-uri-null",
+                    "Backup failed: No export path was provided.",
+                    NoticeKind.Error
+                )
         }
 
-    Button(
-        onClick = {
-            doNotGoHomeOnNextPause()
-            launcher.launch(generateExportFilename(context))
-        }
-    ) {
-        Text(text = "Export")
+    fun export() {
+        doNotGoHomeOnNextPause()
+        exportDate = Date()
+        val filename = generateExportFilename(context, exportDate!!)
+        createDocumentLauncher.launch(filename)
     }
+
+    Button(::export) { Text(text = "Export") }
 }

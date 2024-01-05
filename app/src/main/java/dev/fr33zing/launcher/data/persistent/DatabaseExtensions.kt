@@ -13,6 +13,7 @@ import dev.fr33zing.launcher.data.utility.DEFAULT_CATEGORY_NAME
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
 import io.reactivex.rxjava3.subjects.PublishSubject
+import java.io.File
 import kotlinx.coroutines.runBlocking
 
 const val ROOT_NODE_ID = -1
@@ -351,9 +352,9 @@ suspend fun AppDatabase.checkPermission(
     return parentsAllow
 }
 
-/** Run wal_checkpoint and return the database path. */
-fun AppDatabase.checkpoint(): String {
+/** Run wal_checkpoint and return the database file. */
+fun AppDatabase.getCheckpointedDatabaseFile(): File {
     if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
         throw Exception("Database checkpoint failed")
-    return openHelper.writableDatabase.path ?: throw Exception("Database path is null")
+    return File(openHelper.writableDatabase.path ?: throw Exception("Database path is null"))
 }

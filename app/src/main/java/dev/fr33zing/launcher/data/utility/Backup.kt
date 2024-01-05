@@ -2,46 +2,100 @@ package dev.fr33zing.launcher.data.utility
 
 import android.content.Context
 import android.net.Uri
+import androidx.datastore.preferences.preferencesDataStoreFile
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.persistent.checkpoint
+import dev.fr33zing.launcher.data.persistent.PREFERENCES_DATASTORE_NAME
+import dev.fr33zing.launcher.data.persistent.getCheckpointedDatabaseFile
+import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-fun generateExportFilename(context: Context): String {
+fun generateExportFilename(context: Context, date: Date): String {
     val packageName = context.packageName.replace('.', '-')
-    val timestamp: String = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())
-    return listOf("BACKUP", packageName, timestamp, "zip").joinToString(".")
+    val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(date)
+    return listOf("backup", packageName, timestamp, "zip").joinToString(".")
 }
 
-suspend fun createBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri) {
-    val outputFile = outputFileUri.toString()
-    val databaseFile = db.checkpoint()
-    val preferencesYaml = Preferences(context).export().toYaml()
+fun createBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, date: Date) {
+    val copyFromStorageEntries =
+        mapOf(
+            "database" to db.getCheckpointedDatabaseFile(),
+            "preferences" to context.preferencesDataStoreFile(PREFERENCES_DATASTORE_NAME),
+        )
+    val inMemoryEntries =
+        mapOf(
+            "README.html" to createBackupArchiveReadme(context, date),
+        )
 
-    ZipOutputStream(BufferedOutputStream(FileOutputStream(outputFile))).use { zipOutputStream ->
-        // Add database to archive
-        FileInputStream(databaseFile).use { fileInputStream ->
-            BufferedInputStream(fileInputStream).use { bufferedInputStream ->
-                val entry = ZipEntry(databaseFile.substring(databaseFile.lastIndexOf("/")))
-                zipOutputStream.putNextEntry(entry)
-                bufferedInputStream.copyTo(zipOutputStream, 1024)
+    context.contentResolver.openOutputStream(outputFileUri)?.use { fileOutputStream ->
+        ZipOutputStream(BufferedOutputStream(fileOutputStream)).use { zipOutputStream ->
+            for ((name, file) in copyFromStorageEntries) {
+                BufferedInputStream(file.inputStream()).use { bufferedInputStream ->
+                    zipOutputStream.putNextEntry(ZipEntry(name))
+                    bufferedInputStream.copyTo(zipOutputStream, 1024)
+                }
+            }
+            for ((name, data) in inMemoryEntries) {
+                zipOutputStream.putNextEntry(ZipEntry(name))
+                zipOutputStream.writer().use { it.write(data) }
             }
         }
+    } ?: throw Exception("Failed to open output stream")
+}
 
-        // Add preferences to archive
-        zipOutputStream.putNextEntry(ZipEntry("preferences.yaml"))
-        zipOutputStream.bufferedWriter().write(preferencesYaml)
-
-        // Add README.txt
-        zipOutputStream.putNextEntry(ZipEntry("README.txt"))
-        zipOutputStream.bufferedWriter().write("Backup generated")
-    }
+private fun createBackupArchiveReadme(context: Context, date: Date): String {
+    val title = "Backup"
+    val version = mainPackageManager.getPackageInfo(context.packageName, 0).versionName
+    val timestamp = SimpleDateFormat("MMMM d, yyyy @ h:mm:ss a", Locale.US).format(date)
+    return """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>$title</title>
+            <style>
+                body { font-family: sans-serif; }
+                code { font-size: 1rem; }
+                th, td { text-align: left; padding-right: 1em; }
+            </style>
+        </head>
+        <body>
+            <h1>$title</h1>
+            <p>
+                Package: <code>${context.packageName}</code><br/>
+                Version: <code>$version</code><br/>
+                Generated on: <code>$timestamp</code>
+            </p>
+            <h2>Archive contents</h2>
+            <table>
+                <tr>
+                    <th>File</th>
+                    <th>Description</th>
+                    <th>Format</th>
+                </tr>
+                <tr>
+                    <td>README.html</td>
+                    <td>Information</td>
+                    <td>HTML</td>
+                </tr>
+                <tr>
+                    <td>database</td>
+                    <td>Room database</td>
+                    <td>SQLite db</td>
+                </tr>
+                <tr>
+                    <td>preferences</td>
+                    <td>User preferences</td>
+                    <td>preferences_pb</td>
+                </tr>
+            </table>
+        </body>
+    """
+        .trimIndent()
 }
