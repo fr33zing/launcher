@@ -1,0 +1,14 @@
+#+TITLE: Known issues
+
+* Tree view
+
+Issues regarding the tree view, i.e. [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/node/RecursiveNodeList.kt::package dev.fr33zing.launcher.ui.components.node][RecursiveNodeList]].
+
+** Last few nodes can be cut off
+
+1. Scroll to bottom of tree view.
+2. Long press the last node or one of the last 3(ish) nodes.
+
+** Inconsistent navigation animations
+
+Using home button in tree view displays an incorrect navigation animation.

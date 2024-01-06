@@ -1,0 +1,71 @@
+#+TITLE: Common Tasks
+
+* Override an application's default category
+
+Relevant file: [[file:~/AndroidStudioProjects/launcher/app/src/main/java/dev/fr33zing/launcher/data/utility/AppCategoryOverrides.kt][AppCategoryOverrides.kt]]
+
+On first run, the launcher attempts to automatically categorize each installed
+application based on information from multiple sources. For some applications,
+this can lead to nonsensical default categories. For others, it may fail
+entirely, defaulting to the "Uncategorized" category. In order to explicitly
+override an application's default category, add the application's package to the
+~applicationCategoryOverrideDefinitions~ function.
+
+* Add a new kind of node
+
+Adding a new kind of node requires changes to a handful of different files.
+Follow these instructions carefully.
+
+** Update NodeKind enum class
+
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/data/NodeKind.kt][NodeKind.kt]]
+
+Add your new node kind to the ~NodeKind~ enum class and update the functions
+below it. For the ~color~ function, pick a color from ~Catppuccin.Current~.
+
+** Create a Payload class
+
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/data/persistent/payloads/Payload.kt][Payload.kt]]
+
+Create a class that inherits from ~Payload~ in the ~data.persistent.payloads~
+package. See other payload classes in the package for reference.
+
+*** Example implementation
+
+#+BEGIN_SRC kotlin
+package dev.fr33zing.launcher.data.persistent.payloads
+
+import androidx.room.Entity
+
+@Entity class Example(payloadId: Int, nodeId: Int) : Payload(payloadId, nodeId)
+#+END_SRC
+
+** Update database code generator
+
+Relevant file: [[file:../buildSrc/build.gradle.kts][buildSrc/build.gradle.kts]]
+
+Update the ~payloadClasses~ and ~nodeKindToPayloadClassMap~ variables.
+
+** Create an edit form
+
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/editform/EditForm.kt][EditForm.kt]]
+
+Create an edit form in the ~ui.components.editform~ package, then update the
+~EditForm~ composable function.
+
+*** Example implementation
+
+#+BEGIN_SRC kotlin
+@Composable
+fun ExampleEditForm(
+    innerPadding: PaddingValues,
+    payload: Payload?,
+    node: Node,
+) {
+    val example = payload as Example
+
+    EditFormColumn(innerPadding) {
+        NodePropertyTextField(node::label)
+    }
+}
+#+END_SRC
