@@ -20,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,18 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.utility.getActivityInfos
+import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
-import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
 import dev.fr33zing.launcher.ui.components.node.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -147,28 +141,5 @@ private fun PickAppButton(onAppPicked: (LauncherActivityInfo) -> Unit) {
         }
     }
 
-    val context = LocalContext.current
-    val activityInfos = remember { mutableListOf<LauncherActivityInfo>() }
-    LaunchedEffect(Unit) { getActivityInfos(context).forEach { activityInfos.add(it) } }
-
-    FuzzyPickerDialog(
-        visible = appPickerVisible,
-        items = activityInfos,
-        itemToString = { app -> app.label.toString() },
-        itemToAnnotatedString = { app, fontSize, color ->
-            buildAnnotatedString {
-                val labelStyle = SpanStyle(color = color, fontSize = fontSize)
-                val packageNameStyle =
-                    SpanStyle(
-                        color = Foreground.mix(Background, 0.4f),
-                        fontSize = fontSize * 0.65f,
-                    )
-
-                withStyle(labelStyle) { append("${app.label} ") }
-                withStyle(packageNameStyle) { append("(${app.applicationInfo.packageName})") }
-            }
-        },
-        showAnnotatedString = { _, distinct -> !distinct },
-        onItemPicked = onAppPicked,
-    )
+    ApplicationPickerDialog(appPickerVisible, onAppPicked)
 }
