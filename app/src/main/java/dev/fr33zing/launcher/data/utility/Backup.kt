@@ -1,11 +1,13 @@
 package dev.fr33zing.launcher.data.utility
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.PREFERENCES_DATASTORE_NAME
 import dev.fr33zing.launcher.data.persistent.getCheckpointedDatabaseFile
+import dev.fr33zing.launcher.data.persistent.getDatabaseFile
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -13,7 +15,36 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+
+fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
+    context.contentResolver.openInputStream(inputFileUri)?.use { fileInputStream ->
+        ZipInputStream(BufferedInputStream(fileInputStream)).use { zipInputStream ->
+            var zipEntry = zipInputStream.nextEntry
+            while (zipEntry != null) {
+                when (zipEntry.name) {
+                    "database" -> {
+                        db.getDatabaseFile().outputStream().use { outputStream ->
+                            db.openHelper.close()
+                            zipInputStream.copyTo(outputStream, 1024)
+                        }
+                    }
+                    "preferences" -> {
+                        context
+                            .preferencesDataStoreFile(PREFERENCES_DATASTORE_NAME)
+                            .outputStream()
+                            .use { outputStream -> zipInputStream.copyTo(outputStream, 1024) }
+                    }
+                    else -> {}
+                }
+                zipEntry = zipInputStream.nextEntry
+            }
+        }
+
+        restartApplication(context)
+    }
+}
 
 fun generateExportFilename(context: Context, date: Date): String {
     val packageName = context.packageName.replace('.', '-')
@@ -21,7 +52,7 @@ fun generateExportFilename(context: Context, date: Date): String {
     return listOf("backup", packageName, timestamp, "zip").joinToString(".")
 }
 
-fun createBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, date: Date) {
+fun exportBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, date: Date) {
     val copyFromStorageEntries =
         mapOf(
             "database" to db.getCheckpointedDatabaseFile(),
@@ -46,6 +77,17 @@ fun createBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, d
             }
         }
     } ?: throw Exception("Failed to open output stream")
+}
+
+private fun restartApplication(context: Context) {
+    val launchIntent = mainPackageManager.getLaunchIntentForPackage(context.packageName)
+    val restartIntent =
+        Intent.makeRestartActivityTask(
+            launchIntent?.component
+                ?: throw Exception("Failed to restart application, intent component is null")
+        )
+    context.startActivity(restartIntent)
+    Runtime.getRuntime().exit(0)
 }
 
 private fun createBackupArchiveReadme(context: Context, date: Date): String {

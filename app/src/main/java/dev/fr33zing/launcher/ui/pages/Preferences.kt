@@ -34,8 +34,9 @@ import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preference
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.utility.createBackupArchive
+import dev.fr33zing.launcher.data.utility.exportBackupArchive
 import dev.fr33zing.launcher.data.utility.generateExportFilename
+import dev.fr33zing.launcher.data.utility.importBackupArchive
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
@@ -52,7 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 private val sectionSpacing = 42.dp
-private val sectionTitleSpacing = 16.dp
+private val sectionHeaderSpacing = 18.dp
 private val preferenceSpacing = 32.dp
 
 @Composable
@@ -77,13 +78,16 @@ fun Preferences(db: AppDatabase) {
 @Composable
 private fun Section(
     name: String,
+    description: String? = null,
     children: @Composable () -> Unit,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(sectionTitleSpacing),
+        verticalArrangement = Arrangement.spacedBy(sectionHeaderSpacing),
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(text = name, style = typography.titleLarge)
+        if (description != null) Text(text = description, style = typography.bodyMedium)
+
         Column(
             verticalArrangement = Arrangement.spacedBy(preferenceSpacing),
             modifier = Modifier.fillMaxWidth()
@@ -166,7 +170,9 @@ private fun PreferenceSlider(
 
 @Composable
 fun TextAndSpacingSection(preferences: Preferences) {
-    Section("Node text and spacing") {
+    Section(
+        "Node text and spacing",
+    ) {
         PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
         PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
         PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
@@ -175,44 +181,82 @@ fun TextAndSpacingSection(preferences: Preferences) {
 
 @Composable
 fun BackupSection(db: AppDatabase) {
-    Section("Database backup") {
+    Section(
+        "Backup & restore",
+        buildString {
+            appendLine("Backup database and preferences into a ZIP archive.")
+            append("Restoring a backup will cause the application to restart.")
+        }
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            ExportButton(db)
+            ExportButton(db, Modifier.weight(1f))
+            ImportButton(db, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun ExportButton(
-    db: AppDatabase,
-) {
+private fun ImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val openDocumentLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { importUri ->
+            if (importUri == null) {
+                sendNotice(
+                    "backup-import-failed-uri-null",
+                    "Backup import failed: No import path was provided.",
+                    NoticeKind.Error
+                )
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    importBackupArchive(context, db, importUri)
+                }
+            }
+        }
+
+    Button(
+        onClick = {
+            doNotGoHomeOnNextPause()
+            openDocumentLauncher.launch(arrayOf("application/zip"))
+        },
+        modifier = modifier
+    ) {
+        Text(text = "Restore")
+    }
+}
+
+@Composable
+private fun ExportButton(db: AppDatabase, modifier: Modifier = Modifier) {
     var exportDate by remember { mutableStateOf<Date?>(null) }
     val context = LocalContext.current
     val createDocumentLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/zip")
         ) { exportUri ->
-            if (exportUri != null)
-                CoroutineScope(Dispatchers.IO).launch {
-                    createBackupArchive(context, db, exportUri, exportDate!!)
-                }
-            else
+            if (exportUri == null) {
                 sendNotice(
                     "backup-export-failed-uri-null",
-                    "Backup failed: No export path was provided.",
+                    "Backup export failed: No export path was provided.",
                     NoticeKind.Error
                 )
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    exportBackupArchive(context, db, exportUri, exportDate!!)
+                }
+            }
         }
 
-    fun export() {
-        doNotGoHomeOnNextPause()
-        exportDate = Date()
-        val filename = generateExportFilename(context, exportDate!!)
-        createDocumentLauncher.launch(filename)
+    Button(
+        onClick = {
+            doNotGoHomeOnNextPause()
+            exportDate = Date()
+            val filename = generateExportFilename(context, exportDate!!)
+            createDocumentLauncher.launch(filename)
+        },
+        modifier = modifier
+    ) {
+        Text(text = "Backup")
     }
-
-    Button(::export) { Text(text = "Export") }
 }

@@ -352,9 +352,13 @@ suspend fun AppDatabase.checkPermission(
     return parentsAllow
 }
 
+fun AppDatabase.getDatabaseFile(): File {
+    return File(openHelper.writableDatabase.path ?: throw Exception("Database path is null"))
+}
+
 /** Run wal_checkpoint and return the database file. */
 fun AppDatabase.getCheckpointedDatabaseFile(): File {
     if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
         throw Exception("Database checkpoint failed")
-    return File(openHelper.writableDatabase.path ?: throw Exception("Database path is null"))
+    return getDatabaseFile()
 }
