@@ -88,6 +88,8 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
             mutableMapOf<String, Pair<Node, Int>>() // category -> (directory, order)
         val applicationCategoryOverrides = getApplicationCategoryOverrides()
 
+        getOrCreateDirectoryByPath("Applications") { it.collapsed = false }
+
         nodesWithPayloads.forEach { (node, payload) ->
             val category =
                 getApplicationCategoryName(
@@ -100,6 +102,7 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
                     ?: Pair(
                         getOrCreateDirectoryByPath("Applications", category) {
                             it.initialVisibility = Directory.InitialVisibility.Remember
+                            it.collapsed = true
                         },
                         0
                     )
