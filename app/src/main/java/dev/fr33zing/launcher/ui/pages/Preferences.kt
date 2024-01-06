@@ -50,6 +50,7 @@ import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.theme.typography
 import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.wholeScreenVerticalScrollShadows
 import java.util.Date
 import kotlin.reflect.KProperty0
 import kotlinx.coroutines.CoroutineScope
@@ -66,18 +67,20 @@ private val lineSpacing = 8.dp
 fun Preferences(db: AppDatabase) {
     val preferences = Preferences(LocalContext.current)
 
-    Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(sectionSpacing),
-            modifier =
-                Modifier.systemBarsPadding()
-                    .padding(horizontal = ScreenHorizontalPadding)
-                    .padding(bottom = preferenceSpacing)
-                    .fillMaxSize()
-        ) {
-            ConfirmationDialogsSection(preferences)
-            TextAndSpacingSection(preferences)
-            BackupSection(db)
+    Box(Modifier.fillMaxSize().systemBarsPadding().wholeScreenVerticalScrollShadows()) {
+        Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(sectionSpacing),
+                modifier =
+                    Modifier.systemBarsPadding()
+                        .padding(horizontal = ScreenHorizontalPadding)
+                        .padding(bottom = preferenceSpacing)
+                        .fillMaxSize()
+            ) {
+                ConfirmationDialogsSection(preferences)
+                TextAndSpacingSection(preferences)
+                BackupSection(db)
+            }
         }
     }
 }
