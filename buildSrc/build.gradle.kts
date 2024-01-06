@@ -13,6 +13,7 @@ tasks {
         val domain = "dev.fr33zing.launcher"
         val nodeKindPackage = "$domain.data"
         val payloadsPackage = "$domain.data.persistent.payloads"
+        val convertersPackage = "$domain.data.utility"
         val targetPackage = "$domain.data.persistent"
         val targetFileName = "Database.kt"
 
@@ -31,28 +32,19 @@ tasks {
                 "WebLink",
                 "Setting",
             )
+        val autoMigrations = """
+            // Migrations go here
+            """
         val entityClasses = listOf("Node") + payloadClasses
-        val nodeKindToPayloadClassMap =
-            mapOf(
-                "Application" to "Application",
-                "Checkbox" to "Checkbox",
-                "Directory" to "Directory",
-                "File" to "File",
-                "Location" to "Location",
-                "Note" to "Note",
-                "Reference" to "Reference",
-                "Reminder" to "Reminder",
-                "WebLink" to "WebLink",
-                "Setting" to "Setting",
-            )
+        val nodeKindToPayloadClassMap = payloadClasses.associateWith { it }
 
         // Generate the file.
         val textParts =
             listOf(
                 headerComment(thisFile),
                 packageDeclaration(targetPackage),
-                imports(nodeKindPackage, payloadsPackage, payloadClasses),
-                database(databaseVersion, entityClasses, nodeKindToPayloadClassMap),
+                imports(nodeKindPackage, payloadsPackage, payloadClasses, convertersPackage),
+                database(databaseVersion, autoMigrations, entityClasses, nodeKindToPayloadClassMap),
                 allPayloadDaos(payloadClasses),
             )
         val text = textParts.joinToString("\n\n") + "\n"
@@ -75,11 +67,18 @@ fun headerComment(thisFile: String) =
     // - NodeKind or payload paths or class names change.
     // - New NodeKind variants are added.
     // - New payload classes are added.
+    // - Database schema changes for any reason.
     """
         .trimIndent()
 
-fun imports(nodeKindPackage: String, payloadsPackage: String, payloadClasses: List<String>) =
+fun imports(
+    nodeKindPackage: String,
+    payloadsPackage: String,
+    payloadClasses: List<String>,
+    convertersPackage: String
+) =
     """
+    import androidx.room.AutoMigration
     import androidx.room.Dao
     import androidx.room.Database
     import androidx.room.Delete
@@ -87,9 +86,11 @@ fun imports(nodeKindPackage: String, payloadsPackage: String, payloadClasses: Li
     import androidx.room.Query
     import androidx.room.RoomDatabase
     import androidx.room.Transaction
+    import androidx.room.TypeConverters
     import androidx.room.Update
     import $nodeKindPackage.NodeKind
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
+    import $convertersPackage.Converters
     import kotlin.reflect.KParameter
     import kotlin.reflect.typeOf
     """
@@ -124,17 +125,23 @@ fun allPayloadDaos(payloadClasses: List<String>) =
 
 fun database(
     databaseVersion: String,
+    autoMigrations: String,
     payloadClasses: List<String>,
     nodeKindToPayloadClassMap: Map<String, String>,
 ) =
     """
     @Suppress("UNCHECKED_CAST")
+    @TypeConverters(Converters::class)
     @Database(
+        version = $databaseVersion,
+        autoMigrations =
+            [
+                ${autoMigrations.trim()}
+            ],
         entities =
             [
-                ${payloadClasses.joinToString(",\n${indent(4)}") { "$it::class" }},
-            ],
-        version = $databaseVersion
+                ${payloadClasses.joinToString(",\n${indent(4)}") { "$it::class" }}
+            ]
     )
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}

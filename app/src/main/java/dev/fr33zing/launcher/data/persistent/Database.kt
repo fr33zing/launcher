@@ -6,9 +6,11 @@
 // - NodeKind or payload paths or class names change.
 // - New NodeKind variants are added.
 // - New payload classes are added.
+// - Database schema changes for any reason.
 
 package dev.fr33zing.launcher.data.persistent
 
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -16,6 +18,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.TypeConverters
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.payloads.Application
@@ -29,11 +32,18 @@ import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.persistent.payloads.Reminder
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink
+import dev.fr33zing.launcher.data.utility.Converters
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
 
 @Suppress("UNCHECKED_CAST")
+@TypeConverters(Converters::class)
 @Database(
+    version = 1,
+    autoMigrations =
+        [
+            AutoMigration(from = 1, to = 2),
+        ],
     entities =
         [
             Node::class,
@@ -46,9 +56,8 @@ import kotlin.reflect.typeOf
             Reference::class,
             Reminder::class,
             WebLink::class,
-            Setting::class,
-        ],
-    version = 1
+            Setting::class
+        ]
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun nodeDao(): NodeDao
