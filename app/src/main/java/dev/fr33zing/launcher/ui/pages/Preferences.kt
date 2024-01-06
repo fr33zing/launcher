@@ -74,7 +74,7 @@ fun Preferences(db: AppDatabase) {
                 modifier =
                     Modifier.systemBarsPadding()
                         .padding(horizontal = ScreenHorizontalPadding)
-                        .padding(bottom = preferenceSpacing)
+                        .padding(top = lineSpacing, bottom = preferenceSpacing)
                         .fillMaxSize()
             ) {
                 ConfirmationDialogsSection(preferences)
@@ -266,7 +266,7 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
 
 @Composable
 private fun TextAndSpacingSection(preferences: Preferences) {
-    Section("Node text and spacing") {
+    Section("Node text & spacing") {
         PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
         PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
         PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
