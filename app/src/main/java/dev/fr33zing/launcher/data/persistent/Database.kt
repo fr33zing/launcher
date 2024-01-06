@@ -39,7 +39,7 @@ import kotlin.reflect.typeOf
 @Suppress("UNCHECKED_CAST")
 @TypeConverters(Converters::class)
 @Database(
-    version = 1,
+    version = 2,
     autoMigrations =
         [
             AutoMigration(from = 1, to = 2),
