@@ -165,6 +165,7 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
 suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
     parentId: Int,
     label: String,
+    crossinline nodeMutateFunction: (Node) -> Unit = {},
     crossinline payloadMutateFunction: (T) -> Unit = {}
 ): Node = withTransaction {
     val nodeKind = nodeKindForPayloadClass<T>()
@@ -176,6 +177,7 @@ suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
             order = nodeDao().getLastNodeOrder(parentId),
             label = label,
         )
+    nodeMutateFunction(node)
     insert(node)
     val lastNodeId = nodeDao().getLastNodeId()
     val payload = createDefaultPayloadForNode(nodeKind, lastNodeId)

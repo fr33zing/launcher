@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.AlarmClock
 import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.createNodeWithPayload
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
@@ -27,14 +28,20 @@ fun launchCalendarApplication(context: Context) {
 suspend fun setupDefaultHomeScreen(db: AppDatabase) {
     val home = db.getOrCreateSingletonDirectory(Directory.SpecialMode.Home)
 
-    suspend fun note(text: String) {
+    suspend fun homeNote(text: String) {
         db.createNodeWithPayload<Note>(home.nodeId, text)
     }
 
+    suspend fun rootNote(text: String) {
+        db.createNodeWithPayload<Note>(ROOT_NODE_ID, text, nodeMutateFunction = { it.order = -1 })
+    }
+
     db.withTransaction {
-        note("Swipe up to enter tree view and see all your apps.")
-        note("Items in the Home directory show up on the home screen.")
-        note("Long press items in the tree view to modify them or add new items adjacent to them.")
-        note("Long press in empty space on the home screen to view the preferences page.")
+        rootNote("Nodes in the Home directory show up on the home screen.")
+        rootNote("Long press nodes to modify them or add new nodes adjacent to them.")
+        rootNote("Tap directory nodes to expand or collapse them.")
+
+        homeNote("Swipe up to enter tree view and see all your apps.")
+        homeNote("Long press in empty space on the home screen to view the preferences page.")
     }
 }
