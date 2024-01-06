@@ -168,12 +168,14 @@ private fun PreferenceCheckbox(
             }
             Text(text = label, style = typography.bodyLarge)
         }
-        Text(
-            text = "Default: $default",
-            style = typography.bodyMedium,
-            color = Foreground.mix(Background, 0.5f)
-        )
-        ResetButton(preference, default, state)
+        Row(horizontalArrangement = Arrangement.spacedBy(inlineSpacing)) {
+            Text(
+                text = "Default: ${if (default) "Checked" else "Unchecked"}",
+                style = typography.bodyMedium,
+                color = Foreground.mix(Background, 0.5f)
+            )
+            ResetButton(preference, default, state)
+        }
     }
 }
 
@@ -347,7 +349,7 @@ private fun ItemAppearanceSection(preferences: Preferences) {
 
 @Composable
 private fun HomeSection(preferences: Preferences) {
-    Section("Home", "Adjust the appearance and functionality of the home screen.") {
+    Section("Home", "Adjust the appearance and function of the home screen.") {
         PreferenceCheckbox(property = preferences.home::use24HourTime, label = "Use 24-hour time")
         ApplicationPreference(preferences.home.defaultApplications::clock, "Clock application")
         ApplicationPreference(
@@ -376,7 +378,7 @@ private fun ApplicationPreference(property: KProperty0<Preference<String, String
         PreferenceTextField(property, "Use system default")
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Default: ${default.ifEmpty { "<empty>" }}",
+                text = "Default: ${default.ifEmpty { "Use system default" }}",
                 style = typography.bodyMedium,
                 color = Foreground.mix(Background, 0.5f)
             )
