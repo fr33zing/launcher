@@ -58,8 +58,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 private val sectionSpacing = 42.dp
+private val sectionTitleSpacing = 4.dp
 private val sectionHeaderSpacing = 18.dp
-private val preferenceSpacing = 32.dp
+private val preferenceSpacing = 20.dp
 private val inlineSpacing = 6.dp
 private val lineSpacing = 8.dp
 
@@ -77,8 +78,8 @@ fun Preferences(db: AppDatabase) {
                         .padding(top = lineSpacing, bottom = preferenceSpacing)
                         .fillMaxSize()
             ) {
+                ItemAppearanceSection(preferences)
                 ConfirmationDialogsSection(preferences)
-                TextAndSpacingSection(preferences)
                 BackupSection(db)
             }
         }
@@ -88,16 +89,23 @@ fun Preferences(db: AppDatabase) {
 @Composable
 private fun Section(
     name: String,
-    description: String? = null,
+    description: String,
     children: @Composable () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(sectionHeaderSpacing),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = name, style = typography.titleLarge)
-        if (description != null) Text(text = description, style = typography.bodyMedium)
-
+        Column(
+            verticalArrangement = Arrangement.spacedBy(sectionTitleSpacing),
+        ) {
+            Text(text = name, style = typography.titleLarge)
+            Text(
+                text = description,
+                style = typography.bodyMedium,
+                color = Foreground.mix(Background, 0.5f)
+            )
+        }
         Column(
             verticalArrangement = Arrangement.spacedBy(preferenceSpacing),
             modifier = Modifier.fillMaxWidth()
@@ -235,6 +243,18 @@ private fun <T> ResetButton(
 }
 
 @Composable
+private fun ItemAppearanceSection(preferences: Preferences) {
+    Section(
+        "Item appearance",
+        "Adjust the style and layout of items in the tree view and on the home screen."
+    ) {
+        PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
+        PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
+        PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
+    }
+}
+
+@Composable
 private fun ConfirmationDialogsSection(preferences: Preferences) {
     @Composable
     fun Subsection(label: String, children: @Composable () -> Unit) {
@@ -244,20 +264,23 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
         }
     }
 
-    Section("Confirmation dialogs") {
-        Subsection(label = "Creating node") {
+    Section(
+        "Confirmation dialogs",
+        "Control which actions ask for additional confirmation, and under what circumstances."
+    ) {
+        Subsection(label = "Creating item") {
             PreferenceCheckbox(preferences::askOnCreateNodeAccept, "Accept")
             PreferenceCheckbox(preferences::askOnCreateNodeReject, "Reject")
         }
-        Subsection(label = "Editing node") {
+        Subsection(label = "Editing item") {
             PreferenceCheckbox(preferences::askOnEditNodeAccept, "Accept")
             PreferenceCheckbox(preferences::askOnEditNodeReject, "Reject")
         }
-        Subsection(label = "Moving node") {
+        Subsection(label = "Moving item") {
             PreferenceCheckbox(preferences::askOnMoveNodeAccept, "Accept")
             PreferenceCheckbox(preferences::askOnMoveNodeReject, "Reject")
         }
-        Subsection(label = "Reordering nodes") {
+        Subsection(label = "Reordering item") {
             PreferenceCheckbox(preferences::askOnReorderNodesAccept, "Accept")
             PreferenceCheckbox(preferences::askOnReorderNodesReject, "Reject")
         }
@@ -265,22 +288,10 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
 }
 
 @Composable
-private fun TextAndSpacingSection(preferences: Preferences) {
-    Section("Node text & spacing") {
-        PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
-        PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
-        PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
-    }
-}
-
-@Composable
 private fun BackupSection(db: AppDatabase) {
     Section(
         "Backup & restore",
-        buildString {
-            appendLine("Backup database and preferences into a ZIP archive.")
-            append("Restoring a backup will cause the application to restart.")
-        }
+        "Backup database and preferences into a ZIP archive. Restoring a backup will cause the application to restart."
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
