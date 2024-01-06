@@ -71,10 +71,13 @@ private fun AnnotatedString.Builder.spacer() {
 
 @Composable
 fun Clock(horizontalPadding: Dp) {
+    val context = LocalContext.current
+    val preferences = Preferences(context)
+    val use24HourTime by preferences.home.use24HourTime.state
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
-    // SimpleDateFormat reference:
-    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/SimpleDateFormat.html
-    val timeFormat = remember(locale) { SimpleDateFormat("hh:mm", locale) }
+
+    val timeFormat12Hour = remember(locale) { SimpleDateFormat("hh:mm", locale) }
+    val timeFormat24Hour = remember(locale) { SimpleDateFormat("HH:mm", locale) }
     val amPmFormat = remember(locale) { SimpleDateFormat("a", locale) }
     val dateFormat = remember(locale) { SimpleDateFormat("EEEE, MMM d", locale) }
     val weekFormat = remember(locale) { SimpleDateFormat("w", locale) }
@@ -84,9 +87,17 @@ fun Clock(horizontalPadding: Dp) {
     fun updateTime() {
         val now = Date()
         currentTime = buildAnnotatedString {
-            withStyle(timeSpanStyle) { append(timeFormat.format(now).trimStart('0')) }
-            spacer()
-            withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
+            withStyle(timeSpanStyle) {
+                append(
+                    (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
+                        .format(now)
+                        .trimStart('0')
+                )
+            }
+            if (!use24HourTime) {
+                spacer()
+                withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
+            }
         }
         currentDate = buildAnnotatedString {
             withStyle(dateSpanStyle) { append(dateFormat.format(now)) }
@@ -98,12 +109,13 @@ fun Clock(horizontalPadding: Dp) {
         }
     }
 
-    val context = LocalContext.current
-    val preferences = Preferences(context)
     val clockPackage by preferences.home.defaultApplications.clock.state
     val calendarPackage by preferences.home.defaultApplications.calendar.state
 
-    LaunchedEffect(Unit) { updateTime() }
+    LaunchedEffect(Unit) {
+        updateTime()
+        preferences.home.use24HourTime.flow.collect { updateTime() }
+    }
     DisposableEffect(Unit) {
         val receiver =
             object : BroadcastReceiver() {

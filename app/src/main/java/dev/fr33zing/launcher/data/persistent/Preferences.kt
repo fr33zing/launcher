@@ -64,6 +64,8 @@ class HomePreferences(context: Context) {
         val calendar = defaultApplicationPreference(context, "calendar")
     }
 
+    val use24HourTime =
+        Preference(context, booleanPreferencesKey("home.use24HourTime"), false, ::noMap)
     val defaultApplications = DefaultApplicationPreferences(context)
 }
 

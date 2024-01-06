@@ -347,7 +347,8 @@ private fun ItemAppearanceSection(preferences: Preferences) {
 
 @Composable
 private fun HomeSection(preferences: Preferences) {
-    Section("Home", "Adjust the appearance(TODO) and functionality of the home screen.") {
+    Section("Home", "Adjust the appearance and functionality of the home screen.") {
+        PreferenceCheckbox(property = preferences.home::use24HourTime, label = "Use 24-hour time")
         ApplicationPreference(preferences.home.defaultApplications::clock, "Clock application")
         ApplicationPreference(
             preferences.home.defaultApplications::calendar,
