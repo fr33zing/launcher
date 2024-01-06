@@ -215,19 +215,27 @@ class MainActivity : ComponentActivity() {
                 Tree(db, navController, nodeId?.toInt())
             }
             composable("edit/{nodeId}") { backStackEntry ->
-                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                val nodeId =
+                    backStackEntry.arguments?.getString("nodeId")
+                        ?: throw Exception("nodeId is null")
                 Edit(db, navController, nodeId.toInt())
             }
             composable("create/{nodeId}") { backStackEntry ->
-                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                val nodeId =
+                    backStackEntry.arguments?.getString("nodeId")
+                        ?: throw Exception("nodeId is null")
                 Create(db, navController, nodeId.toInt())
             }
             composable("reorder/{nodeId}") { backStackEntry ->
-                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                val nodeId =
+                    backStackEntry.arguments?.getString("nodeId")
+                        ?: throw Exception("nodeId is null")
                 Reorder(db, navController, nodeId.toInt())
             }
             composable("move/{nodeId}") { backStackEntry ->
-                val nodeId = backStackEntry.arguments?.getString("nodeId")!!
+                val nodeId =
+                    backStackEntry.arguments?.getString("nodeId")
+                        ?: throw Exception("nodeId is null")
                 Move(db, navController, nodeId.toInt())
             }
         }

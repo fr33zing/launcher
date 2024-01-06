@@ -51,12 +51,9 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             node = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node does not exist")
-            // UI updates here and assumes payload always defined if node is defined
             payload =
                 db.getPayloadByNodeId(node!!.kind, node!!.nodeId)
                     ?: throw Exception("Payload does not exist")
-            // Thought UI would always wait til here to update, but it doesn't because it's in a
-            // different coroutine scope
         }
     }
 
