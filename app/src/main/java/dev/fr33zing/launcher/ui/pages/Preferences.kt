@@ -248,9 +248,9 @@ private fun ItemAppearanceSection(preferences: Preferences) {
         "Item appearance",
         "Adjust the style and layout of items in the tree view and on the home screen."
     ) {
-        PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
-        PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
-        PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
+        PreferenceSlider(preferences.nodeAppearance::fontSize, "Font size", 12f..32f, "sp")
+        PreferenceSlider(preferences.nodeAppearance::indent, "Indentation width", 12f..32f, "dp")
+        PreferenceSlider(preferences.nodeAppearance::spacing, "Vertical spacing", 12f..32f, "dp")
     }
 }
 
@@ -268,21 +268,23 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
         "Confirmation dialogs",
         "Control which actions ask for additional confirmation, and under what circumstances."
     ) {
-        Subsection(label = "Creating item") {
-            PreferenceCheckbox(preferences::askOnCreateNodeAccept, "Accept")
-            PreferenceCheckbox(preferences::askOnCreateNodeReject, "Reject")
-        }
-        Subsection(label = "Editing item") {
-            PreferenceCheckbox(preferences::askOnEditNodeAccept, "Accept")
-            PreferenceCheckbox(preferences::askOnEditNodeReject, "Reject")
-        }
-        Subsection(label = "Moving item") {
-            PreferenceCheckbox(preferences::askOnMoveNodeAccept, "Accept")
-            PreferenceCheckbox(preferences::askOnMoveNodeReject, "Reject")
-        }
-        Subsection(label = "Reordering item") {
-            PreferenceCheckbox(preferences::askOnReorderNodesAccept, "Accept")
-            PreferenceCheckbox(preferences::askOnReorderNodesReject, "Reject")
+        with(preferences.confirmationDialogs) {
+            Subsection(label = "Creating item") {
+                PreferenceCheckbox(createNode::askOnAccept, "Accept")
+                PreferenceCheckbox(createNode::askOnReject, "Reject")
+            }
+            Subsection(label = "Editing item") {
+                PreferenceCheckbox(editNode::askOnAccept, "Accept")
+                PreferenceCheckbox(editNode::askOnReject, "Reject")
+            }
+            Subsection(label = "Moving item") {
+                PreferenceCheckbox(moveNode::askOnAccept, "Accept")
+                PreferenceCheckbox(moveNode::askOnReject, "Reject")
+            }
+            Subsection(label = "Reordering item") {
+                PreferenceCheckbox(reorderNodes::askOnAccept, "Accept")
+                PreferenceCheckbox(reorderNodes::askOnReject, "Reject")
+            }
         }
     }
 }

@@ -70,8 +70,8 @@ private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
 
-    val fontSize by preferences.fontSize.state
-    val spacing by preferences.spacing.state
+    val fontSize by preferences.nodeAppearance.fontSize.state
+    val spacing by preferences.nodeAppearance.spacing.state
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
     LaunchedEffect(Unit) {

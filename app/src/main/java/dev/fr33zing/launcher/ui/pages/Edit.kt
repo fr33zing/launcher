@@ -45,8 +45,8 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     val saveDialogVisible = remember { mutableStateOf(false) }
 
     val preferences = Preferences(LocalContext.current)
-    val askOnAccept by preferences.askOnEditNodeAccept.state
-    val askOnReject by preferences.askOnEditNodeReject.state
+    val askOnAccept by preferences.confirmationDialogs.editNode.askOnAccept.state
+    val askOnReject by preferences.confirmationDialogs.editNode.askOnReject.state
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {

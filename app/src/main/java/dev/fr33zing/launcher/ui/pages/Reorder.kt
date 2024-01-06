@@ -74,8 +74,8 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     val saveDialogVisible = remember { mutableStateOf(false) }
 
     val preferences = Preferences(LocalContext.current)
-    val askOnAccept by preferences.askOnReorderNodesAccept.state
-    val askOnReject by preferences.askOnReorderNodesReject.state
+    val askOnAccept by preferences.confirmationDialogs.reorderNodes.askOnAccept.state
+    val askOnReject by preferences.confirmationDialogs.reorderNodes.askOnReject.state
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -147,7 +147,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
             Modifier.fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = extraPadding)
-                .verticalScrollShadows(preferences.spacing.mappedDefault)
+                .verticalScrollShadows(preferences.nodeAppearance.spacing.mappedDefault)
         ) {
             ReorderableList(parentNode!!, nodes)
         }
@@ -175,10 +175,12 @@ private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: 
 private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = preferences.fontSize.mappedDefault
-    val spacing = preferences.spacing.mappedDefault
+    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
+    val spacing = preferences.nodeAppearance.spacing.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
-    val indent = remember { nodeIndent(1, preferences.indent.mappedDefault, lineHeight) }
+    val indent = remember {
+        nodeIndent(1, preferences.nodeAppearance.indent.mappedDefault, lineHeight)
+    }
 
     val listState = rememberLazyListState()
     val reorderableState =

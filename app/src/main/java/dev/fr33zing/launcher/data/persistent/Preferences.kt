@@ -43,28 +43,28 @@ class Preference<UnderlyingType, MappedType>(
 }
 
 class Preferences(context: Context) {
-    // Node text & spacing
-    val fontSize = Preference(context, intPreferencesKey("fontSize"), 22, Int::sp)
-    val spacing = Preference(context, intPreferencesKey("spacing"), 22, Int::dp)
-    val indent = Preference(context, intPreferencesKey("indent"), 22, Int::dp)
+    val nodeAppearance = NodeAppearancePreferences(context)
+    val confirmationDialogs = ConfirmationDialogPreferences(context)
+}
 
-    // Confirmation dialogs
-    val askOnCreateNodeAccept =
-        Preference(context, booleanPreferencesKey("askOnCreateNodeAccept"), false, ::noMap)
-    val askOnCreateNodeReject =
-        Preference(context, booleanPreferencesKey("askOnCreateNodeReject"), true, ::noMap)
-    val askOnEditNodeAccept =
-        Preference(context, booleanPreferencesKey("askOnEditNodeAccept"), false, ::noMap)
-    val askOnEditNodeReject =
-        Preference(context, booleanPreferencesKey("askOnEditNodeReject"), true, ::noMap)
-    val askOnMoveNodeAccept =
-        Preference(context, booleanPreferencesKey("askOnMoveNodeAccept"), false, ::noMap)
-    val askOnMoveNodeReject =
-        Preference(context, booleanPreferencesKey("askOnMoveNodeReject"), true, ::noMap)
-    val askOnReorderNodesAccept =
-        Preference(context, booleanPreferencesKey("askOnReorderNodesAccept"), false, ::noMap)
-    val askOnReorderNodesReject =
-        Preference(context, booleanPreferencesKey("askOnReorderNodesReject"), true, ::noMap)
+class NodeAppearancePreferences(context: Context) {
+    val fontSize = Preference(context, intPreferencesKey("nodeAppearance.fontSize"), 22, Int::sp)
+    val spacing = Preference(context, intPreferencesKey("nodeAppearance.spacing"), 22, Int::dp)
+    val indent = Preference(context, intPreferencesKey("nodeAppearance.indent"), 22, Int::dp)
+}
+
+class ConfirmationDialogPreferences(context: Context) {
+    class PreferenceGroup(context: Context, key: String) {
+        private val askOnAcceptKey = "confirmationDialogs.$key.askOnAccept"
+        private val askOnRejectKey = "confirmationDialogs.$key.askOnReject"
+        val askOnAccept = Preference(context, booleanPreferencesKey(askOnAcceptKey), false, ::noMap)
+        val askOnReject = Preference(context, booleanPreferencesKey(askOnRejectKey), true, ::noMap)
+    }
+
+    val createNode = PreferenceGroup(context, "createNode")
+    val editNode = PreferenceGroup(context, "editNode")
+    val moveNode = PreferenceGroup(context, "moveNode")
+    val reorderNodes = PreferenceGroup(context, "reorderNodes")
 }
 
 private fun <T> noMap(value: T): T = value

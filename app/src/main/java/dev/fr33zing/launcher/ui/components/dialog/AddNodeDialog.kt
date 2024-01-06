@@ -33,7 +33,7 @@ fun AddNodeDialog(
 ) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = preferences.fontSize.mappedDefault
+    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
     val kinds = remember { NodeKind.values() }
 
@@ -43,7 +43,9 @@ fun AddNodeDialog(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.width(IntrinsicSize.Min)
     ) { padding ->
-        val verticalPadding = remember { padding - preferences.spacing.mappedDefault / 2 }
+        val verticalPadding = remember {
+            padding - preferences.nodeAppearance.spacing.mappedDefault / 2
+        }
         Column(modifier = Modifier.padding(vertical = verticalPadding)) {
             kinds.forEach { Option(padding, fontSize, lineHeight, it) { onKindChosen(it) } }
         }
@@ -67,7 +69,10 @@ private fun Option(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = padding, vertical = preferences.spacing.mappedDefault / 2)
+                    .padding(
+                        horizontal = padding,
+                        vertical = preferences.nodeAppearance.spacing.mappedDefault / 2
+                    )
         ) {
             NodeIconAndText(
                 fontSize = fontSize,

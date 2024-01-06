@@ -131,9 +131,9 @@ fun rememberNodeListDimensions(
 ): NodeListDimensions {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val unscaledFontSize by preferences.fontSize.state
-    val unscaledSpacing by preferences.spacing.state
-    val unscaleIndent by preferences.indent.state
+    val unscaledFontSize by preferences.nodeAppearance.fontSize.state
+    val unscaledSpacing by preferences.nodeAppearance.spacing.state
+    val unscaleIndent by preferences.nodeAppearance.indent.state
 
     return remember(
         localDensity,

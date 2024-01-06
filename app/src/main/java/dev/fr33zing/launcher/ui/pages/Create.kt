@@ -46,8 +46,8 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
     val saveDialogVisible = remember { mutableStateOf(false) }
 
     val preferences = Preferences(LocalContext.current)
-    val askOnAccept by preferences.askOnCreateNodeAccept.state
-    val askOnReject by preferences.askOnCreateNodeReject.state
+    val askOnAccept by preferences.confirmationDialogs.createNode.askOnAccept.state
+    val askOnReject by preferences.confirmationDialogs.createNode.askOnReject.state
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {

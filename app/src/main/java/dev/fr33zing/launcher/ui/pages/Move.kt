@@ -64,8 +64,8 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
     val saveDialogVisible = remember { mutableStateOf(false) }
 
     val preferences = Preferences(LocalContext.current)
-    val askOnAccept by preferences.askOnMoveNodeAccept.state
-    val askOnReject by preferences.askOnMoveNodeReject.state
+    val askOnAccept by preferences.confirmationDialogs.moveNode.askOnAccept.state
+    val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
     LaunchedEffect(nodeId) {
         movingNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("node is null")
@@ -141,7 +141,8 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(extraPadding)) {
             if (movingNode != null && initialRootNodeId != null) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(preferences.spacing.mappedDefault),
+                    verticalArrangement =
+                        Arrangement.spacedBy(preferences.nodeAppearance.spacing.mappedDefault),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {

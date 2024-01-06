@@ -50,7 +50,7 @@ fun YesNoDialog(
 ) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
-    val fontSize = preferences.fontSize.mappedDefault
+    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
 
     BaseDialog(visible, icon, onDismissRequest = onDismissRequest) { padding ->
@@ -59,7 +59,9 @@ fun YesNoDialog(
             if (backAction == YesNoDialogBackAction.Yes) onYes() else onNo()
         }
 
-        val verticalPadding = remember { padding - preferences.spacing.mappedDefault / 2 }
+        val verticalPadding = remember {
+            padding - preferences.nodeAppearance.spacing.mappedDefault / 2
+        }
         Column(modifier = Modifier.width(IntrinsicSize.Max).padding(vertical = verticalPadding)) {
             Option(visible, padding, fontSize, lineHeight, noText, noColor, noIcon, onNo)
             Option(visible, padding, fontSize, lineHeight, yesText, yesColor, yesIcon, onYes)
@@ -97,7 +99,10 @@ private fun Option(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = padding, vertical = preferences.spacing.mappedDefault / 2)
+                    .padding(
+                        horizontal = padding,
+                        vertical = preferences.nodeAppearance.spacing.mappedDefault / 2
+                    )
         ) {
             NodeIconAndText(
                 fontSize = fontSize,

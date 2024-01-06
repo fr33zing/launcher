@@ -125,8 +125,8 @@ private fun NodePickerRowList(
     val preferences = Preferences(LocalContext.current)
     val haptics = LocalHapticFeedback.current
     val density = LocalDensity.current
-    val fontSize = preferences.fontSize.mappedDefault
-    val spacing = preferences.spacing.mappedDefault
+    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
+    val spacing = preferences.nodeAppearance.spacing.mappedDefault
     val lineHeight = with(density) { fontSize.toDp() }
 
     BackHandler(enabled = rootNode.parentId != null) { setRootNode(rootNode.parentId, -1) }

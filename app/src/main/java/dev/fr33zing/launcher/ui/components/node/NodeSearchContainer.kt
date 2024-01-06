@@ -118,7 +118,7 @@ fun NodeSearchContainer(
 
     val preferences = Preferences(LocalContext.current)
     val density = LocalDensity.current
-    val fontSize = preferences.fontSize.mappedDefault
+    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
     val lineHeight = with(density) { fontSize.toDp() }
 
     var currentPanelHeight by remember { mutableFloatStateOf(0f) }
