@@ -58,65 +58,64 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
         }
     }
 
-    if (node == null) {
-        Text(text = "Node does not exist!")
-    } else {
-        YesNoDialog(
-            visible = cancelDialogVisible,
-            icon = Icons.Filled.Close,
-            yesText = "Cancel creation",
-            yesColor = Catppuccin.Current.red,
-            yesIcon = Icons.Filled.Close,
-            noText = "Continue editing",
-            noIcon = Icons.Filled.ArrowBack,
-            backAction = YesNoDialogBackAction.Yes,
-            onYes = { onCancelCreation(navController, db, node!!, payload) },
-        )
+    YesNoDialog(
+        visible = cancelDialogVisible,
+        icon = Icons.Filled.Close,
+        yesText = "Cancel creation",
+        yesColor = Catppuccin.Current.red,
+        yesIcon = Icons.Filled.Close,
+        noText = "Continue editing",
+        noIcon = Icons.Filled.ArrowBack,
+        backAction = YesNoDialogBackAction.Yes,
+        onYes = { onCancelCreation(navController, db, node!!, payload) },
+    )
 
-        YesNoDialog(
-            visible = saveDialogVisible,
-            icon = Icons.Filled.Check,
-            yesText = "Create ${node!!.kind.label}",
-            yesColor = Catppuccin.Current.green,
-            yesIcon = Icons.Filled.Check,
-            noText = "Continue editing",
-            noIcon = Icons.Filled.ArrowBack,
-            onYes = { onSaveChanges(navController, db, node!!, payload) },
-        )
+    YesNoDialog(
+        visible = saveDialogVisible,
+        icon = Icons.Filled.Check,
+        yesText = "Create ${node!!.kind.label}",
+        yesColor = Catppuccin.Current.green,
+        yesIcon = Icons.Filled.Check,
+        noText = "Continue editing",
+        noIcon = Icons.Filled.ArrowBack,
+        onYes = { onSaveChanges(navController, db, node!!, payload) },
+    )
 
-        BackHandler {
-            if (askOnReject) cancelDialogVisible.value = true
-            else onCancelCreation(navController, db, node!!, payload)
-        }
+    BackHandler {
+        if (askOnReject) cancelDialogVisible.value = true
+        else onCancelCreation(navController, db, node!!, payload)
+    }
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            buildAnnotatedString {
-                                append("Creating ")
-                                withStyle(SpanStyle(color = node!!.kind.color)) {
-                                    append(node!!.kind.label)
-                                }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        buildAnnotatedString {
+                            append("Creating ")
+                            if (node == null) return@buildAnnotatedString
+                            withStyle(SpanStyle(color = node!!.kind.color)) {
+                                append(node!!.kind.label)
                             }
-                        )
-                    },
-                    actions = {
-                        CancelButton {
-                            if (askOnReject) cancelDialogVisible.value = true
-                            else onCancelCreation(navController, db, node!!, payload)
                         }
-                        FinishButton {
-                            if (askOnAccept) saveDialogVisible.value = true
-                            else onSaveChanges(navController, db, node!!, payload)
-                        }
-                    },
-                )
-            }
-        ) { innerPadding ->
-            EditForm(db, innerPadding, node!!, payload!!)
+                    )
+                },
+                actions = {
+                    CancelButton {
+                        if (askOnReject) cancelDialogVisible.value = true
+                        else onCancelCreation(navController, db, node!!, payload)
+                    }
+                    FinishButton {
+                        if (askOnAccept) saveDialogVisible.value = true
+                        else onSaveChanges(navController, db, node!!, payload)
+                    }
+                },
+            )
         }
+    ) { innerPadding ->
+        if (node == null) Text(text = "Node does not exist!")
+        else if (payload == null) Text(text = "Payload does not exist!")
+        else EditForm(db, innerPadding, node!!, payload!!)
     }
 }
 
