@@ -20,11 +20,11 @@ suspend fun addNewUserInstructionNodes(db: AppDatabase) {
     }
 
     db.withTransaction {
-        rootNote("Nodes in the Home directory show up on the home screen.")
-        rootNote("Long press nodes to modify them or add new nodes adjacent to them.")
-        rootNote("Tap directory nodes to expand or collapse them.")
+        homeNote("Swipe up to enter tree view.")
+        homeNote("Long press in empty space to edit preferences.")
 
-        homeNote("Swipe up to enter tree view and see all your apps.")
-        homeNote("Long press in empty space on the home screen to view the preferences page.")
+        rootNote("Tap directory nodes to expand or collapse them.")
+        rootNote("Long press nodes to modify them or add new nodes adjacent to them.")
+        rootNote("Nodes in the Home directory show up on the home screen.")
     }
 }
