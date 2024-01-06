@@ -13,11 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -33,7 +32,6 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
@@ -87,9 +85,7 @@ private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
 @Composable
 private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: Dp, lineHeight: Dp) {
     val context = LocalContext.current
-    var payload by remember { mutableStateOf<Payload?>(null) }
-
-    LaunchedEffect(node) { payload = db.getPayloadByNodeId(node.kind, node.nodeId) }
+    val payload by db.getPayloadFlowByNodeId(node.kind, node.nodeId).collectAsState(initial = null)
 
     if (payload != null) {
         val color = node.kind.color(payload)

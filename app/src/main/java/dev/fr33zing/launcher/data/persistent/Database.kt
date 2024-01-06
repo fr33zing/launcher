@@ -33,6 +33,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Reminder
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink
 import dev.fr33zing.launcher.data.utility.Converters
+import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
 
@@ -132,6 +133,20 @@ abstract class AppDatabase : RoomDatabase() {
             NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
             NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
             NodeKind.Setting -> settingDao().getPayloadByNodeId(nodeId)
+        }
+
+    fun getPayloadFlowByNodeId(nodeKind: NodeKind, nodeId: Int): Flow<Payload?> =
+        when (nodeKind) {
+            NodeKind.Application -> applicationDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Checkbox -> checkboxDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Directory -> directoryDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.File -> fileDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Location -> locationDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Note -> noteDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Reference -> referenceDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Reminder -> reminderDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.WebLink -> webLinkDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Setting -> settingDao().getPayloadFlowByNodeId(nodeId)
         }
 
     suspend fun insert(entity: Any) {
@@ -270,6 +285,9 @@ interface ApplicationDao {
 
     @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Application?
+
+    @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Application?>
 }
 
 @Dao
@@ -290,6 +308,9 @@ interface CheckboxDao {
 
     @Query("SELECT * FROM Checkbox WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Checkbox?
+
+    @Query("SELECT * FROM Checkbox WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Checkbox?>
 }
 
 @Dao
@@ -310,6 +331,9 @@ interface DirectoryDao {
 
     @Query("SELECT * FROM Directory WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Directory?
+
+    @Query("SELECT * FROM Directory WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Directory?>
 }
 
 @Dao
@@ -330,6 +354,9 @@ interface FileDao {
 
     @Query("SELECT * FROM File WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): File?
+
+    @Query("SELECT * FROM File WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<File?>
 }
 
 @Dao
@@ -350,6 +377,9 @@ interface LocationDao {
 
     @Query("SELECT * FROM Location WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Location?
+
+    @Query("SELECT * FROM Location WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Location?>
 }
 
 @Dao
@@ -370,6 +400,9 @@ interface NoteDao {
 
     @Query("SELECT * FROM Note WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Note?
+
+    @Query("SELECT * FROM Note WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Note?>
 }
 
 @Dao
@@ -390,6 +423,9 @@ interface ReferenceDao {
 
     @Query("SELECT * FROM Reference WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Reference?
+
+    @Query("SELECT * FROM Reference WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Reference?>
 }
 
 @Dao
@@ -410,6 +446,9 @@ interface ReminderDao {
 
     @Query("SELECT * FROM Reminder WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Reminder?
+
+    @Query("SELECT * FROM Reminder WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Reminder?>
 }
 
 @Dao
@@ -430,6 +469,9 @@ interface WebLinkDao {
 
     @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): WebLink?
+
+    @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<WebLink?>
 }
 
 @Dao
@@ -450,4 +492,7 @@ interface SettingDao {
 
     @Query("SELECT * FROM Setting WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Setting?
+
+    @Query("SELECT * FROM Setting WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Setting?>
 }

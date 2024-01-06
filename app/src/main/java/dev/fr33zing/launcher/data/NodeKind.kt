@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.data
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.East
@@ -17,7 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.payloads.Application as ApplicationPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Checkbox as CheckboxPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Directory as DirectoryPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.persistent.payloads.WebLink as WebLinkPayload
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -66,6 +72,7 @@ enum class NodeKind {
             WebLink -> true
             Location -> true
             Setting -> true
+            Checkbox -> true
             else -> false
         }
 
@@ -73,7 +80,7 @@ enum class NodeKind {
         when (this) {
             Reference -> Catppuccin.Current.mauve
             Directory -> {
-                if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
+                if (payload is DirectoryPayload) {
                     if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
                     else if (payload.collapsed == true && !ignoreState) collapsedDirectoryColor
                     else directoryColor
@@ -81,32 +88,29 @@ enum class NodeKind {
             }
             Application -> {
                 if (
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.Application &&
-                        payload.status !=
-                            dev.fr33zing.launcher.data.persistent.payloads.Application.Status.Valid
+                    payload is ApplicationPayload &&
+                        payload.status != ApplicationPayload.Status.Valid
                 ) {
                     Foreground.mix(Background, 0.5f)
                 } else Foreground
             }
+            Checkbox -> {
+                if (!ignoreState && payload is CheckboxPayload && payload.checked)
+                    Catppuccin.Current.green.mix(Background, 0.5f)
+                else Catppuccin.Current.green
+            }
             WebLink -> {
-                if (
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.WebLink &&
-                        !payload.validUrl
-                ) {
+                if (payload is WebLinkPayload && !payload.validUrl) {
                     Catppuccin.Current.yellow.mix(Background, 0.5f)
                 } else Catppuccin.Current.yellow
             }
             File -> Catppuccin.Current.peach
             Location -> {
-                if (
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.Location &&
-                        !payload.status.valid
-                ) {
+                if (payload is LocationPayload && !payload.status.valid) {
                     Catppuccin.Current.lavender.mix(Background, 0.5f)
                 } else Catppuccin.Current.lavender
             }
             Note -> Catppuccin.Current.pink
-            Checkbox -> Catppuccin.Current.green
             Reminder -> Catppuccin.Current.red
             Setting -> Catppuccin.Current.subtext0
         }
@@ -115,19 +119,17 @@ enum class NodeKind {
         when (this) {
             Application -> {
                 !ignoreState &&
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.Application &&
-                    payload.status !=
-                        dev.fr33zing.launcher.data.persistent.payloads.Application.Status.Valid
+                    payload is ApplicationPayload &&
+                    payload.status != ApplicationPayload.Status.Valid
+            }
+            Checkbox -> {
+                !ignoreState && payload is CheckboxPayload && payload.checked
             }
             WebLink -> {
-                !ignoreState &&
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.WebLink &&
-                    !payload.validUrl
+                !ignoreState && payload is WebLinkPayload && !payload.validUrl
             }
             Location -> {
-                !ignoreState &&
-                    payload is dev.fr33zing.launcher.data.persistent.payloads.Location &&
-                    !payload.status.valid
+                !ignoreState && payload is LocationPayload && !payload.status.valid
             }
             else -> false
         }
@@ -136,7 +138,7 @@ enum class NodeKind {
         when (this) {
             Reference -> Icons.Filled.East
             Directory -> {
-                if (payload is dev.fr33zing.launcher.data.persistent.payloads.Directory) {
+                if (payload is DirectoryPayload) {
                     if (payload.specialMode != null) {
                         if (payload.collapsed == true && !ignoreState) {
                             payload.specialMode!!.collapsedIcon ?: payload.specialMode!!.icon
@@ -152,7 +154,9 @@ enum class NodeKind {
             File -> Icons.Filled.Description
             Location -> Icons.Filled.LocationOn
             Note -> Icons.Filled.Notes
-            Checkbox -> Icons.Filled.CheckBoxOutlineBlank
+            Checkbox ->
+                if (payload is CheckboxPayload && payload.checked) Icons.Filled.CheckBox
+                else Icons.Filled.CheckBoxOutlineBlank
             Reminder -> Icons.Filled.Notifications
             Setting -> Icons.Filled.Settings
         }

@@ -91,6 +91,7 @@ fun imports(
     import $nodeKindPackage.NodeKind
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     import $convertersPackage.Converters
+    import kotlinx.coroutines.flow.Flow
     import kotlin.reflect.KParameter
     import kotlin.reflect.typeOf
     """
@@ -116,6 +117,9 @@ fun payloadDao(payloadClass: String) =
 
         @Query("SELECT * FROM $payloadClass WHERE nodeId = :nodeId")
         suspend fun getPayloadByNodeId(nodeId: Int): $payloadClass?
+
+        @Query("SELECT * FROM $payloadClass WHERE nodeId = :nodeId")
+        fun getPayloadFlowByNodeId(nodeId: Int): Flow<$payloadClass?>
     }
     """
         .trimIndent()
@@ -169,6 +173,11 @@ ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}
         suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
             when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
+            }
+
+        fun getPayloadFlowByNodeId(nodeKind: NodeKind, nodeId: Int): Flow<Payload?> =
+            when (nodeKind) {
+${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadFlowByNodeId(nodeId)" }.joinToString("\n")}
             }
 
 ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}

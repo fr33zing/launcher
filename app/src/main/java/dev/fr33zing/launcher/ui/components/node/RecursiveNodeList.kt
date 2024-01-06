@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -398,30 +399,34 @@ private fun RecursiveNodeList(
 
     // Render self.
     if (node.nodeId != ROOT_NODE_ID) {
-        RecursiveNodeListRow(
-            db = db,
-            navController = navController,
-            depth = depth,
-            node = node,
-            payload = payload,
-            referenceTarget = referenceTarget,
-            childrenVisible = childrenVisible,
-            parentPermissions = permissions,
-            ownPermissions = ownPermissions,
-            dimensions = dimensions,
-            optionsVisible = optionsVisibleNodeId == node.nodeId,
-            onClick = {
-                if (canHaveChildren) {
-                    childrenVisible = !childrenVisible
-                    onNodeChildrenVisibilityChange(payload, childrenVisible)
-                }
-                onNodeClick(payload)
-            },
-            onLongClick = { onNodeLongClick(node) },
-            onAddNodeDialogOpened = onAddNodeDialogOpened,
-            onAddNodeDialogClosed = onAddNodeDialogClosed,
-            onAddNode = onAddNode,
-        )
+        // HACK: Use a second query to get real-time updates.
+        val payloadState by
+            db.getPayloadFlowByNodeId(node.kind, node.nodeId).collectAsState(initial = null)
+        if (payloadState != null)
+            RecursiveNodeListRow(
+                db = db,
+                navController = navController,
+                depth = depth,
+                node = node,
+                payload = payloadState!!,
+                referenceTarget = referenceTarget,
+                childrenVisible = childrenVisible,
+                parentPermissions = permissions,
+                ownPermissions = ownPermissions,
+                dimensions = dimensions,
+                optionsVisible = optionsVisibleNodeId == node.nodeId,
+                onClick = {
+                    if (canHaveChildren) {
+                        childrenVisible = !childrenVisible
+                        onNodeChildrenVisibilityChange(payload, childrenVisible)
+                    }
+                    onNodeClick(payload)
+                },
+                onLongClick = { onNodeLongClick(node) },
+                onAddNodeDialogOpened = onAddNodeDialogOpened,
+                onAddNodeDialogClosed = onAddNodeDialogClosed,
+                onAddNode = onAddNode,
+            )
     }
 
     if (canHaveChildren) {

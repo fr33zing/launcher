@@ -1,9 +1,14 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import android.content.Context
 import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import dev.fr33zing.launcher.data.persistent.AppDatabase
 import java.util.Date
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Keep
 @Entity
@@ -13,4 +18,14 @@ class Checkbox(
     @ColumnInfo(defaultValue = "false") var checked: Boolean = false,
     var uncheckedOn: Date? = null,
     var checkedOn: Date? = null,
-) : Payload(payloadId, nodeId)
+) : Payload(payloadId, nodeId) {
+    override fun activate(db: AppDatabase, context: Context) {
+        checked = !checked
+        if (checked) checkedOn = Date() else uncheckedOn = Date()
+        this.let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }
+    }
+
+    override fun preUpdate() {
+        if (checked) checkedOn = Date() else uncheckedOn = Date()
+    }
+}
