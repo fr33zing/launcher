@@ -5,7 +5,7 @@ plugins {
 
     id("com.google.devtools.ksp")
 
-    kotlin("plugin.serialization") version "1.4.20"
+    kotlin("plugin.serialization") version "1.9.21"
 }
 
 android {
@@ -50,7 +50,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
-    composeOptions { kotlinCompilerExtensionVersion = "1.4.3" }
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.7" }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
