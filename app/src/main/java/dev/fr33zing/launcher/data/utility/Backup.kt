@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.charleskorn.kaml.Yaml
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.PREFERENCES_DATASTORE_NAME
 import dev.fr33zing.launcher.data.persistent.getCheckpointedDatabaseFile
@@ -17,6 +18,15 @@ import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+
+@Serializable
+data class BackupMetadata(
+    val packageName: String,
+    val packageVersion: String,
+    val generatedEpochSecond: Long
+)
 
 fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
     context.contentResolver.openInputStream(inputFileUri)?.use { fileInputStream ->
@@ -61,6 +71,7 @@ fun exportBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, d
     val inMemoryEntries =
         mapOf(
             "README.html" to createBackupArchiveReadme(context, date),
+            "metadata" to createBackupMetadata(context, date),
         )
 
     context.contentResolver.openOutputStream(outputFileUri)?.use { fileOutputStream ->
@@ -72,8 +83,10 @@ fun exportBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, d
                 }
             }
             for ((name, data) in inMemoryEntries) {
-                zipOutputStream.putNextEntry(ZipEntry(name))
-                zipOutputStream.writer().use { it.write(data) }
+                data.byteInputStream().use { inputStream ->
+                    zipOutputStream.putNextEntry(ZipEntry(name))
+                    inputStream.copyTo(zipOutputStream)
+                }
             }
         }
     } ?: throw Exception("Failed to open output stream")
@@ -90,9 +103,20 @@ private fun restartApplication(context: Context) {
     Runtime.getRuntime().exit(0)
 }
 
+private fun packageVersion(context: Context) =
+    mainPackageManager.getPackageInfo(context.packageName, 0).versionName
+
+private fun createBackupMetadata(context: Context, date: Date) =
+    Yaml.default.encodeToString(
+        BackupMetadata(
+            packageName = context.packageName,
+            packageVersion = packageVersion(context),
+            generatedEpochSecond = date.toInstant().epochSecond
+        )
+    )
+
 private fun createBackupArchiveReadme(context: Context, date: Date): String {
     val title = "Backup"
-    val version = mainPackageManager.getPackageInfo(context.packageName, 0).versionName
     val timestamp = SimpleDateFormat("MMMM d, yyyy @ h:mm:ss a", Locale.US).format(date)
     return """
         <!DOCTYPE html>
@@ -111,8 +135,8 @@ private fun createBackupArchiveReadme(context: Context, date: Date): String {
             <h1>$title</h1>
             <p>
                 Package: <code>${context.packageName}</code><br/>
-                Version: <code>$version</code><br/>
-                Generated on: <code>$timestamp</code>
+                Version: <code>${packageVersion(context)}</code><br/>
+                Generated on: <code>$timestamp (${date.toInstant().epochSecond})</code>
             </p>
             <h2>Archive contents</h2>
             <table>
@@ -123,8 +147,13 @@ private fun createBackupArchiveReadme(context: Context, date: Date): String {
                 </tr>
                 <tr>
                     <td>README.html</td>
-                    <td>Information</td>
+                    <td>Information for humans</td>
                     <td>HTML</td>
+                </tr>
+                <tr>
+                    <td>metadata</td>
+                    <td>Information for machines</td>
+                    <td>YAML</td>
                 </tr>
                 <tr>
                     <td>database</td>

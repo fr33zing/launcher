@@ -71,5 +71,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.fuzzywuzzy)
     implementation(libs.reorderable)
-    implementation("com.charleskorn.kaml:kaml:0.55.0")
+    implementation(libs.kaml)
 }
