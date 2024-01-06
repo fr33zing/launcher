@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,12 +46,25 @@ class Preference<UnderlyingType, MappedType>(
 class Preferences(context: Context) {
     val nodeAppearance = NodeAppearancePreferences(context)
     val confirmationDialogs = ConfirmationDialogPreferences(context)
+    val home = HomePreferences(context)
 }
 
 class NodeAppearancePreferences(context: Context) {
     val fontSize = Preference(context, intPreferencesKey("nodeAppearance.fontSize"), 22, Int::sp)
     val spacing = Preference(context, intPreferencesKey("nodeAppearance.spacing"), 22, Int::dp)
     val indent = Preference(context, intPreferencesKey("nodeAppearance.indent"), 22, Int::dp)
+}
+
+class HomePreferences(context: Context) {
+    class DefaultApplicationPreferences(context: Context) {
+        private fun defaultApplicationPreference(context: Context, key: String) =
+            Preference(context, stringPreferencesKey("home.defaultApps.$key"), "", ::noMap)
+
+        val clock = defaultApplicationPreference(context, "clock")
+        val calendar = defaultApplicationPreference(context, "calendar")
+    }
+
+    val defaultApplications = DefaultApplicationPreferences(context)
 }
 
 class ConfirmationDialogPreferences(context: Context) {

@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,6 +23,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -31,9 +35,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preference
@@ -43,11 +54,13 @@ import dev.fr33zing.launcher.data.utility.generateExportFilename
 import dev.fr33zing.launcher.data.utility.importBackupArchive
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.NoticeKind
+import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.theme.typography
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.wholeScreenVerticalScrollShadows
@@ -55,6 +68,7 @@ import java.util.Date
 import kotlin.reflect.KProperty0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val sectionSpacing = 42.dp
@@ -68,7 +82,9 @@ private val lineSpacing = 8.dp
 fun Preferences(db: AppDatabase) {
     val preferences = Preferences(LocalContext.current)
 
-    Box(Modifier.fillMaxSize().systemBarsPadding().wholeScreenVerticalScrollShadows()) {
+    Box(
+        Modifier.fillMaxSize().systemBarsPadding().imePadding().wholeScreenVerticalScrollShadows()
+    ) {
         Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(sectionSpacing),
@@ -79,12 +95,17 @@ fun Preferences(db: AppDatabase) {
                         .fillMaxSize()
             ) {
                 ItemAppearanceSection(preferences)
+                HomeSection(preferences)
                 ConfirmationDialogsSection(preferences)
                 BackupSection(db)
             }
         }
     }
 }
+
+//
+// Common components
+//
 
 @Composable
 private fun Section(
@@ -216,24 +237,72 @@ private fun PreferenceSlider(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun <T> ResetButton(
-    preference: Preference<T, *>,
-    default: T,
-    state: T,
+private fun PreferenceTextField(
+    property: KProperty0<Preference<String, String>>,
+    placeholder: String? = null,
+) {
+    val preference = remember { property.get() }
+    val default = remember { preference.default }
+    val state by preference.flow.collectAsState(default)
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var enabled by remember { mutableStateOf(true) }
+
+    fun clearFocus() {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+
+        // HACK: Quickly disable and enable to clear selection
+        enabled = false
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(25)
+            enabled = true
+        }
+    }
+
+    OutlinedTextField(
+        value = state,
+        onValueChange = { CoroutineScope(Dispatchers.IO).launch { preference.set(it) } },
+        enabled = enabled,
+        colors = outlinedTextFieldColors(),
+        keyboardOptions =
+            KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                autoCorrect = false,
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Text,
+            ),
+        keyboardActions = KeyboardActions(onDone = { clearFocus() }),
+        placeholder =
+            placeholder?.let { { Text(placeholder, color = Foreground.mix(Background, 0.5f)) } },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun TinyButton(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    color: Color? = null,
 ) {
     Button(
-        onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } },
+        onClick = { onClick() },
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
         modifier = Modifier.height(24.dp),
-        enabled = state != default,
+        enabled = enabled,
         colors =
-            ButtonDefaults.buttonColors(
-                containerColor = Catppuccin.Current.red,
-            ),
+            if (color == null) ButtonDefaults.buttonColors()
+            else
+                ButtonDefaults.buttonColors(
+                    containerColor = Catppuccin.Current.red,
+                )
     ) {
         Text(
-            text = "Reset",
+            text,
             style =
                 typography.bodyMedium.copy(
                     platformStyle = PlatformTextStyle(includeFontPadding = false)
@@ -241,6 +310,24 @@ private fun <T> ResetButton(
         )
     }
 }
+
+@Composable
+private fun <T> ResetButton(
+    preference: Preference<T, *>,
+    default: T,
+    state: T,
+) {
+    TinyButton(
+        text = "Reset",
+        enabled = state != default,
+        color = Catppuccin.Current.red,
+        onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } }
+    )
+}
+
+//
+// Section: Item appearance
+//
 
 @Composable
 private fun ItemAppearanceSection(preferences: Preferences) {
@@ -254,6 +341,56 @@ private fun ItemAppearanceSection(preferences: Preferences) {
     }
 }
 
+//
+// Section: Home
+//
+
+@Composable
+private fun HomeSection(preferences: Preferences) {
+    Section("Home", "Adjust the appearance(TODO) and functionality of the home screen.") {
+        ApplicationPreference(preferences.home.defaultApplications::clock, "Clock application")
+        ApplicationPreference(
+            preferences.home.defaultApplications::calendar,
+            "Calendar application"
+        )
+    }
+}
+
+@Composable
+private fun ApplicationPreference(property: KProperty0<Preference<String, String>>, label: String) {
+    val preference = remember { property.get() }
+    val default = remember { preference.default }
+    val state by preference.flow.collectAsState(default)
+
+    val appPickerVisible = remember { mutableStateOf(false) }
+    ApplicationPickerDialog(
+        visible = appPickerVisible,
+        onAppPicked = {
+            CoroutineScope(Dispatchers.IO).launch { preference.set(it.componentName.packageName) }
+        }
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
+        Text(text = label, style = typography.bodyLarge)
+        PreferenceTextField(property, "Use system default")
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Default: ${default.ifEmpty { "<empty>" }}",
+                style = typography.bodyMedium,
+                color = Foreground.mix(Background, 0.5f)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(inlineSpacing)) {
+                TinyButton(text = "Pick app", onClick = { appPickerVisible.value = true })
+                ResetButton(preference, default, state)
+            }
+        }
+    }
+}
+
+//
+// Section: Confirmation dialogs
+//
+
 @Composable
 private fun ConfirmationDialogsSection(preferences: Preferences) {
     @Composable
@@ -266,7 +403,7 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
 
     Section(
         "Confirmation dialogs",
-        "Control which actions ask for additional confirmation, and under what circumstances."
+        "Adjust which actions ask for additional confirmation, and under what circumstances."
     ) {
         with(preferences.confirmationDialogs) {
             Subsection(label = "Creating item") {
@@ -289,6 +426,10 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
     }
 }
 
+//
+// Section: Backup & restore
+//
+
 @Composable
 private fun BackupSection(db: AppDatabase) {
     Section(
@@ -299,14 +440,14 @@ private fun BackupSection(db: AppDatabase) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            ExportButton(db, Modifier.weight(1f))
-            ImportButton(db, Modifier.weight(1f))
+            BackupExportButton(db, Modifier.weight(1f))
+            BackupImportButton(db, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun ImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
+private fun BackupImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val openDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { importUri ->
@@ -335,7 +476,7 @@ private fun ImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ExportButton(db: AppDatabase, modifier: Modifier = Modifier) {
+private fun BackupExportButton(db: AppDatabase, modifier: Modifier = Modifier) {
     var exportDate by remember { mutableStateOf<Date?>(null) }
     val context = LocalContext.current
     val createDocumentLauncher =

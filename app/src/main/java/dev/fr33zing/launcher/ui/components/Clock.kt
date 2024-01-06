@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.provider.AlarmClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import dev.fr33zing.launcher.R
+import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.utility.launchCalendarApplication
 import dev.fr33zing.launcher.data.utility.launchClockApplication
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
@@ -99,6 +99,10 @@ fun Clock(horizontalPadding: Dp) {
     }
 
     val context = LocalContext.current
+    val preferences = Preferences(context)
+    val clockPackage by preferences.home.defaultApplications.clock.state
+    val calendarPackage by preferences.home.defaultApplications.calendar.state
+
     LaunchedEffect(Unit) { updateTime() }
     DisposableEffect(Unit) {
         val receiver =
@@ -114,10 +118,10 @@ fun Clock(horizontalPadding: Dp) {
     Column {
         // TODO add setting to choose default clock and calendar app
         Element(currentTime, horizontalPadding, verticalPadding = 0.dp) {
-           launchClockApplication(context)
+            launchClockApplication(context, clockPackage)
         }
         Element(currentDate, horizontalPadding, verticalPadding = 8.dp) {
-            launchCalendarApplication(context)
+            launchCalendarApplication(context, calendarPackage)
         }
     }
 }
