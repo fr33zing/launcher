@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -23,12 +24,13 @@ import androidx.room.withTransaction
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
+import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.CancelButton
-import dev.fr33zing.launcher.ui.components.editform.EditForm
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.editform.EditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +43,10 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     var payload by remember { mutableStateOf<Payload?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
+
+    val preferences = Preferences(LocalContext.current)
+    val askOnAccept by preferences.askOnEditNodeAccept.state
+    val askOnReject by preferences.askOnEditNodeReject.state
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -77,7 +83,9 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
             onYes = { onSaveChanges(navController, db, node!!, payload) },
         )
 
-        BackHandler { cancelDialogVisible.value = true }
+        BackHandler {
+            if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
+        }
 
         Scaffold(
             topBar = {
@@ -93,8 +101,14 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
                         )
                     },
                     actions = {
-                        CancelButton { cancelDialogVisible.value = true }
-                        FinishButton { saveDialogVisible.value = true }
+                        CancelButton {
+                            if (askOnReject) cancelDialogVisible.value = true
+                            else onCancelChanges(navController)
+                        }
+                        FinishButton {
+                            if (askOnAccept) saveDialogVisible.value = true
+                            else onSaveChanges(navController, db, node!!, payload)
+                        }
                     },
                 )
             }

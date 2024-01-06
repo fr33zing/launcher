@@ -16,11 +16,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +59,8 @@ import kotlinx.coroutines.launch
 private val sectionSpacing = 42.dp
 private val sectionHeaderSpacing = 18.dp
 private val preferenceSpacing = 32.dp
+private val inlineSpacing = 6.dp
+private val lineSpacing = 8.dp
 
 @Composable
 fun Preferences(db: AppDatabase) {
@@ -69,6 +75,7 @@ fun Preferences(db: AppDatabase) {
                     .padding(bottom = preferenceSpacing)
                     .fillMaxSize()
         ) {
+            ConfirmationDialogsSection(preferences)
             TextAndSpacingSection(preferences)
             BackupSection(db)
         }
@@ -97,6 +104,48 @@ private fun Section(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PreferenceCheckbox(
+    property: KProperty0<Preference<Boolean, *>>,
+    label: String,
+) {
+    val preference = remember { property.get() }
+    val default = remember { preference.default }
+    val state by preference.flow.collectAsState(default)
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(inlineSpacing),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CompositionLocalProvider(
+                // Remove default padding
+                LocalMinimumInteractiveComponentEnforcement provides false
+            ) {
+                Checkbox(
+                    checked = state,
+                    onCheckedChange = {
+                        CoroutineScope(Dispatchers.IO).launch { preference.set(it) }
+                    }
+                )
+            }
+            Text(text = label, style = typography.bodyLarge)
+        }
+        Text(
+            text = "Default: $default",
+            style = typography.bodyMedium,
+            color = Foreground.mix(Background, 0.5f)
+        )
+        ResetButton(preference, default, state)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PreferenceSlider(
     property: KProperty0<Preference<Int, *>>,
@@ -108,10 +157,10 @@ private fun PreferenceSlider(
     val default = remember { preference.default }
     val state by preference.flow.collectAsState(default)
 
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
         Text(text = label, style = typography.bodyLarge)
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(inlineSpacing),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -122,19 +171,24 @@ private fun PreferenceSlider(
                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                     )
             )
-            Slider(
-                value = state.toFloat(),
-                onValueChange = {
-                    CoroutineScope(Dispatchers.IO).launch { preference.set(it.toInt()) }
-                },
-                colors =
-                    SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = Catppuccin.Current.crust
-                    ),
-                valueRange = range
-            )
+            CompositionLocalProvider(
+                // Remove default padding
+                LocalMinimumInteractiveComponentEnforcement provides false
+            ) {
+                Slider(
+                    value = state.toFloat(),
+                    onValueChange = {
+                        CoroutineScope(Dispatchers.IO).launch { preference.set(it.toInt()) }
+                    },
+                    colors =
+                        SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = Catppuccin.Current.crust
+                        ),
+                    valueRange = range
+                )
+            }
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -146,33 +200,70 @@ private fun PreferenceSlider(
                 style = typography.bodyMedium,
                 color = Foreground.mix(Background, 0.5f)
             )
-            Button(
-                onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                modifier = Modifier.height(24.dp),
-                enabled = state != default,
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = Catppuccin.Current.red,
-                    ),
-            ) {
-                Text(
-                    text = "Reset",
-                    style =
-                        typography.bodyMedium.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false)
-                        )
-                )
-            }
+            ResetButton(preference, default, state)
         }
     }
 }
 
 @Composable
-fun TextAndSpacingSection(preferences: Preferences) {
-    Section(
-        "Node text and spacing",
+private fun <T> ResetButton(
+    preference: Preference<T, *>,
+    default: T,
+    state: T,
+) {
+    Button(
+        onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } },
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+        modifier = Modifier.height(24.dp),
+        enabled = state != default,
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = Catppuccin.Current.red,
+            ),
     ) {
+        Text(
+            text = "Reset",
+            style =
+                typography.bodyMedium.copy(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false)
+                )
+        )
+    }
+}
+
+@Composable
+private fun ConfirmationDialogsSection(preferences: Preferences) {
+    @Composable
+    fun Subsection(label: String, children: @Composable () -> Unit) {
+        Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
+            Text(text = label, style = typography.bodyLarge)
+            children()
+        }
+    }
+
+    Section("Confirmation dialogs") {
+        Subsection(label = "Creating node") {
+            PreferenceCheckbox(preferences::askOnCreateNodeAccept, "Accept")
+            PreferenceCheckbox(preferences::askOnCreateNodeReject, "Reject")
+        }
+        Subsection(label = "Editing node") {
+            PreferenceCheckbox(preferences::askOnEditNodeAccept, "Accept")
+            PreferenceCheckbox(preferences::askOnEditNodeReject, "Reject")
+        }
+        Subsection(label = "Moving nodes") {
+            PreferenceCheckbox(preferences::askOnMoveNodeAccept, "Accept")
+            PreferenceCheckbox(preferences::askOnMoveNodeReject, "Reject")
+        }
+        Subsection(label = "Reordering nodes") {
+            PreferenceCheckbox(preferences::askOnReorderNodesAccept, "Accept")
+            PreferenceCheckbox(preferences::askOnReorderNodesReject, "Reject")
+        }
+    }
+}
+
+@Composable
+private fun TextAndSpacingSection(preferences: Preferences) {
+    Section("Node text and spacing") {
         PreferenceSlider(preferences::fontSize, "Font size", 12f..32f, "sp")
         PreferenceSlider(preferences::indent, "Indentation width", 12f..32f, "dp")
         PreferenceSlider(preferences::spacing, "Vertical spacing", 12f..32f, "dp")
@@ -180,7 +271,7 @@ fun TextAndSpacingSection(preferences: Preferences) {
 }
 
 @Composable
-fun BackupSection(db: AppDatabase) {
+private fun BackupSection(db: AppDatabase) {
     Section(
         "Backup & restore",
         buildString {

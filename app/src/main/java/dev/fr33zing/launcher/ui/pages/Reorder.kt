@@ -68,11 +68,14 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
-    val preferences = Preferences(LocalContext.current)
     var parentNode by remember { mutableStateOf<Node?>(null) }
     val nodes = remember { mutableStateOf<List<Node>?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
+
+    val preferences = Preferences(LocalContext.current)
+    val askOnAccept by preferences.askOnReorderNodesAccept.state
+    val askOnReject by preferences.askOnReorderNodesReject.state
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -110,7 +113,9 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         onYes = { onSaveChanges(navController, db, nodes.value!!) },
     )
 
-    BackHandler { cancelDialogVisible.value = true }
+    BackHandler {
+        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
+    }
 
     Scaffold(
         topBar = {
@@ -126,8 +131,14 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                     )
                 },
                 actions = {
-                    CancelButton { cancelDialogVisible.value = true }
-                    FinishButton { saveDialogVisible.value = true }
+                    CancelButton {
+                        if (askOnReject) cancelDialogVisible.value = true
+                        else onCancelChanges(navController)
+                    }
+                    FinishButton {
+                        if (askOnAccept) saveDialogVisible.value = true
+                        else onSaveChanges(navController, db, nodes.value!!)
+                    }
                 },
             )
         }

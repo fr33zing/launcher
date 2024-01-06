@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -42,7 +43,28 @@ class Preference<UnderlyingType, MappedType>(
 }
 
 class Preferences(context: Context) {
+    // Node text & spacing
     val fontSize = Preference(context, intPreferencesKey("fontSize"), 22, Int::sp)
     val spacing = Preference(context, intPreferencesKey("spacing"), 22, Int::dp)
     val indent = Preference(context, intPreferencesKey("indent"), 22, Int::dp)
+
+    // Confirmation dialogs
+    val askOnCreateNodeAccept =
+        Preference(context, booleanPreferencesKey("askOnCreateNodeAccept"), false, ::noMap)
+    val askOnCreateNodeReject =
+        Preference(context, booleanPreferencesKey("askOnCreateNodeReject"), true, ::noMap)
+    val askOnEditNodeAccept =
+        Preference(context, booleanPreferencesKey("askOnEditNodeAccept"), false, ::noMap)
+    val askOnEditNodeReject =
+        Preference(context, booleanPreferencesKey("askOnEditNodeReject"), true, ::noMap)
+    val askOnMoveNodeAccept =
+        Preference(context, booleanPreferencesKey("askOnMoveNodeAccept"), false, ::noMap)
+    val askOnMoveNodeReject =
+        Preference(context, booleanPreferencesKey("askOnMoveNodeReject"), true, ::noMap)
+    val askOnReorderNodesAccept =
+        Preference(context, booleanPreferencesKey("askOnReorderNodesAccept"), false, ::noMap)
+    val askOnReorderNodesReject =
+        Preference(context, booleanPreferencesKey("askOnReorderNodesReject"), true, ::noMap)
 }
+
+private fun <T> noMap(value: T): T = value

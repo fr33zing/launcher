@@ -55,7 +55,6 @@ private val extraPadding = 6.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
-    val preferences = Preferences(LocalContext.current)
     var initialRootNodeId by remember { mutableStateOf<Int?>(null) }
     val selectedNode = remember { mutableStateOf<Node?>(null) }
     var movingNode by remember { mutableStateOf<Node?>(null) }
@@ -63,6 +62,10 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
 
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
+
+    val preferences = Preferences(LocalContext.current)
+    val askOnAccept by preferences.askOnMoveNodeAccept.state
+    val askOnReject by preferences.askOnMoveNodeReject.state
 
     LaunchedEffect(nodeId) {
         movingNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("node is null")
@@ -97,7 +100,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
     )
 
     BackHandler(enabled = selectedNode.value?.nodeId == ROOT_NODE_ID) {
-        cancelDialogVisible.value = true
+        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
     }
 
     Scaffold(
@@ -117,8 +120,20 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                     )
                 },
                 actions = {
-                    CancelButton { cancelDialogVisible.value = true }
-                    FinishButton { saveDialogVisible.value = true }
+                    CancelButton {
+                        if (askOnReject) cancelDialogVisible.value = true
+                        else onCancelChanges(navController)
+                    }
+                    FinishButton {
+                        if (askOnAccept) saveDialogVisible.value = true
+                        else
+                            onSaveChanges(
+                                navController,
+                                db,
+                                movingNode!!,
+                                selectedNode.value?.nodeId!!
+                            )
+                    }
                 },
             )
         },
