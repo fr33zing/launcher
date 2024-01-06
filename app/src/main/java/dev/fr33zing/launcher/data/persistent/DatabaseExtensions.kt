@@ -230,6 +230,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             payloadId = 0,
                             nodeId = lastNodeId,
                             specialMode = specialMode,
+                            collapsed = specialMode.initiallyCollapsed
                         )
                     )
 

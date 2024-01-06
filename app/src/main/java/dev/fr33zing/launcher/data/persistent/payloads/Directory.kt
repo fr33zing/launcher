@@ -40,6 +40,7 @@ class Directory(
         val defaultDirectoryName: String,
         val icon: ImageVector,
         val collapsedIcon: ImageVector? = null,
+        val initiallyCollapsed: Boolean = false,
         val permissions: PermissionMap = mapOf()
     ) {
         Root(
@@ -53,6 +54,7 @@ class Directory(
             defaultDirectoryName = "Home",
             icon = Icons.Rounded.Home,
             collapsedIcon = Icons.Outlined.Home,
+            initiallyCollapsed = true,
             permissions =
                 run {
                     val permissions = AllPermissions.clone().toMutableMap()
@@ -103,7 +105,7 @@ class Directory(
 
         fun text(): String =
             when (this) {
-                Preference -> "Default from preferences (Expanded)"
+                Preference -> "Default from preferences (Remember)"
                 Remember -> "Remember when toggled"
                 Collapsed -> "Always collapsed"
                 Expanded -> "Always expanded"
@@ -113,7 +115,7 @@ class Directory(
     val initiallyCollapsed: Boolean
         get() =
             when (initialVisibility) {
-                InitialVisibility.Preference -> false // TODO replace with preference
+                InitialVisibility.Preference -> collapsed ?: false // TODO replace with preference
                 InitialVisibility.Collapsed -> true
                 InitialVisibility.Expanded -> false
                 InitialVisibility.Remember -> collapsed ?: false
