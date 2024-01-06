@@ -253,7 +253,7 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
             PreferenceCheckbox(preferences::askOnEditNodeAccept, "Accept")
             PreferenceCheckbox(preferences::askOnEditNodeReject, "Reject")
         }
-        Subsection(label = "Moving nodes") {
+        Subsection(label = "Moving node") {
             PreferenceCheckbox(preferences::askOnMoveNodeAccept, "Accept")
             PreferenceCheckbox(preferences::askOnMoveNodeReject, "Reject")
         }
