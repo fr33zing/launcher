@@ -23,8 +23,10 @@ suspend fun addNewUserInstructionNodes(db: AppDatabase) {
         homeNote("Swipe up to enter tree view.")
         homeNote("Long press in empty space to edit preferences.")
 
-        rootNote("Tap directory nodes to expand or collapse them.")
-        rootNote("Long press nodes to modify them or add new nodes adjacent to them.")
-        rootNote("Nodes in the Home directory show up on the home screen.")
+        rootNote("Pull down to search.")
+        rootNote("Pinch to zoom out.")
+        rootNote("Tap directories to expand or collapse them.")
+        rootNote("Long press items to modify them or add new items adjacent to them.")
+        rootNote("Items in the Home directory show up on the home screen.")
     }
 }
