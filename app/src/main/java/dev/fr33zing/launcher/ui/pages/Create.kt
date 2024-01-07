@@ -73,7 +73,7 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
     YesNoDialog(
         visible = saveDialogVisible,
         icon = Icons.Filled.Check,
-        yesText = "Create ${node!!.kind.label}",
+        yesText = "Create ${node?.kind?.label}",
         yesColor = Catppuccin.Current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue editing",
