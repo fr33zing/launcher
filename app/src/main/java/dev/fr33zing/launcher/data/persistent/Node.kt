@@ -59,7 +59,7 @@ interface NodeDao {
 
     @Query("SELECT nodeId FROM Node ORDER BY nodeId DESC LIMIT 1") fun getLastNodeId(): Int
 
-    @Query("SELECT * FROM Node WHERE parentId == :nodeId")
+    @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
 
     @Query(
