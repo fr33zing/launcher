@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -164,7 +165,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun Main(db: AppDatabase) {
-        // TODO investigate bug that causes tree to slide horizontally instead of vertically
+        // TODO fix bug that causes tree to slide horizontally when pressing home button
         val navController = rememberNavController()
 
         DisposableEffect(Unit) {
@@ -176,67 +177,46 @@ class MainActivity : ComponentActivity() {
             onDispose { subscription.dispose() }
         }
 
+        fun NavBackStackEntry.hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
+        fun NavBackStackEntry.nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
+        fun NavBackStackEntry.nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
+
         NavHost(
             navController,
             startDestination = "home",
             enterTransition = {
-                if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    slideInVertically { it } + fadeIn()
-                } else {
-                    slideInHorizontally { it } + fadeIn()
-                }
+                if (targetState.hasTreeRoute()) slideInVertically { it } + fadeIn()
+                else slideInHorizontally { it } + fadeIn()
             },
             exitTransition = {
-                if (targetState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    fadeOut()
-                } else {
-                    slideOutHorizontally { -it } + fadeOut()
-                }
+                if (targetState.hasTreeRoute()) fadeOut()
+                else slideOutHorizontally { -it } + fadeOut()
             },
             popEnterTransition = {
-                if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    fadeIn()
-                } else {
-                    slideInHorizontally { -it } + fadeIn()
-                }
+                if (initialState.hasTreeRoute()) fadeIn()
+                else slideInHorizontally { -it } + fadeIn()
             },
             popExitTransition = {
-                if (initialState.destination.hasRoute("home/tree/{nodeId}", null)) {
-                    slideOutVertically { it } + fadeOut()
-                } else {
-                    slideOutHorizontally { it } + fadeOut()
-                }
+                if (initialState.hasTreeRoute()) slideOutVertically { it } + fadeOut()
+                else slideOutHorizontally { it } + fadeOut()
             },
         ) {
             composable("settings") { Preferences(db) }
             composable("home") { Home(db, navController) }
             composable("home/tree/{nodeId}") { backStackEntry ->
-                val nodeId = backStackEntry.arguments?.getString("nodeId")
-                Tree(db, navController, nodeId?.toInt())
+                Tree(db, navController, backStackEntry.nodeIdOrNull())
             }
             composable("edit/{nodeId}") { backStackEntry ->
-                val nodeId =
-                    backStackEntry.arguments?.getString("nodeId")
-                        ?: throw Exception("nodeId is null")
-                Edit(db, navController, nodeId.toInt())
+                Edit(db, navController, backStackEntry.nodeId())
             }
             composable("create/{nodeId}") { backStackEntry ->
-                val nodeId =
-                    backStackEntry.arguments?.getString("nodeId")
-                        ?: throw Exception("nodeId is null")
-                Create(db, navController, nodeId.toInt())
+                Create(db, navController, backStackEntry.nodeId())
             }
             composable("reorder/{nodeId}") { backStackEntry ->
-                val nodeId =
-                    backStackEntry.arguments?.getString("nodeId")
-                        ?: throw Exception("nodeId is null")
-                Reorder(db, navController, nodeId.toInt())
+                Reorder(db, navController, backStackEntry.nodeId())
             }
             composable("move/{nodeId}") { backStackEntry ->
-                val nodeId =
-                    backStackEntry.arguments?.getString("nodeId")
-                        ?: throw Exception("nodeId is null")
-                Move(db, navController, nodeId.toInt())
+                Move(db, navController, backStackEntry.nodeId())
             }
         }
     }
