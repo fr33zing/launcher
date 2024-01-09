@@ -24,8 +24,4 @@ class Checkbox(
         if (checked) checkedOn = Date() else uncheckedOn = Date()
         this.let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }
     }
-
-    override fun preUpdate() {
-        if (checked) checkedOn = Date() else uncheckedOn = Date()
-    }
 }

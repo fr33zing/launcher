@@ -28,6 +28,7 @@ val EditFormSpacing = 16.dp
 fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: Payload) {
     when (node.kind) {
         NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
+        NodeKind.Checkbox -> CheckboxEditForm(innerPadding, payload, node)
         NodeKind.Directory -> DirectoryEditForm(db, innerPadding, payload, node)
         NodeKind.Reference -> ReferenceEditForm(db, innerPadding, payload, node)
         NodeKind.WebLink -> WebLinkEditForm(innerPadding, payload, node)
