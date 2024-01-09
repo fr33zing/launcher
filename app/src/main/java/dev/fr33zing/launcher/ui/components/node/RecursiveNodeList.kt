@@ -46,7 +46,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -72,6 +71,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.AllPermissions
@@ -116,6 +116,7 @@ import java.lang.Float.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 val RecursiveNodeListHorizontalPadding = 16.dp
@@ -403,39 +404,39 @@ private fun RecursiveNodeList(
     if (node.nodeId != ROOT_NODE_ID) {
         // HACK: Use a second query to get real-time updates.
         val payloadState by
-            db.getPayloadFlowByNodeId(node.kind, node.nodeId).collectAsState(initial = null)
-        if (payloadState != null) {
-            val noteDialogVisible = remember { mutableStateOf(false) }
-            if (payload is Note) NoteBodyDialog(noteDialogVisible, node, payload)
+            db.getPayloadFlowByNodeId(node.kind, node.nodeId)
+                .map { it ?: payload }
+                .collectAsStateWithLifecycle(payload)
+        val noteDialogVisible = remember { mutableStateOf(false) }
+        if (payload is Note) NoteBodyDialog(noteDialogVisible, node, payload)
 
-            RecursiveNodeListRow(
-                db = db,
-                navController = navController,
-                depth = depth,
-                node = node,
-                payload = payloadState!!,
-                referenceTarget = referenceTarget,
-                childrenVisible = childrenVisible,
-                parentPermissions = permissions,
-                ownPermissions = ownPermissions,
-                dimensions = dimensions,
-                optionsVisible = optionsVisibleNodeId == node.nodeId,
-                onClick = {
-                    if (canHaveChildren) {
-                        childrenVisible = !childrenVisible
-                        onNodeChildrenVisibilityChange(payloadState!!, childrenVisible)
-                    }
-                    if (payload is Note) {
-                        noteDialogVisible.value = true
-                    }
-                    onNodeClick(payloadState!!)
-                },
-                onLongClick = { onNodeLongClick(node) },
-                onAddNodeDialogOpened = onAddNodeDialogOpened,
-                onAddNodeDialogClosed = onAddNodeDialogClosed,
-                onAddNode = onAddNode,
-            )
-        }
+        RecursiveNodeListRow(
+            db = db,
+            navController = navController,
+            depth = depth,
+            node = node,
+            payload = payloadState,
+            referenceTarget = referenceTarget,
+            childrenVisible = childrenVisible,
+            parentPermissions = permissions,
+            ownPermissions = ownPermissions,
+            dimensions = dimensions,
+            optionsVisible = optionsVisibleNodeId == node.nodeId,
+            onClick = {
+                if (canHaveChildren) {
+                    childrenVisible = !childrenVisible
+                    onNodeChildrenVisibilityChange(payloadState, childrenVisible)
+                }
+                if (payload is Note) {
+                    noteDialogVisible.value = true
+                }
+                onNodeClick(payloadState)
+            },
+            onLongClick = { onNodeLongClick(node) },
+            onAddNodeDialogOpened = onAddNodeDialogOpened,
+            onAddNodeDialogClosed = onAddNodeDialogClosed,
+            onAddNode = onAddNode,
+        )
     }
 
     if (canHaveChildren) {
