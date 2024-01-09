@@ -489,10 +489,10 @@ private fun RecursiveNodeList(
                             CoroutineScope(Dispatchers.IO).launch {
                                 val createdNode =
                                     db.nodeDao().getNodeById(createdNodeId)
-                                        ?: throw Exception("Node is null")
+                                        ?: throw Exception("NodeCreatedSubject: Node is null")
                                 val createdPayload =
                                     db.getPayloadByNodeId(createdNode.kind, createdNodeId)
-                                        ?: throw Exception("Payload is null")
+                                        ?: throw Exception("NodeCreatedSubject: Payload is null")
                                 children.add(createdNode.order, Pair(createdNode, createdPayload))
                                 log("Created node: $createdNode", "Parent node: $node")
                             }
@@ -503,10 +503,10 @@ private fun RecursiveNodeList(
                             CoroutineScope(Dispatchers.IO).launch {
                                 val updatedNode =
                                     db.nodeDao().getNodeById(updatedNodeId)
-                                        ?: throw Exception("Node is null")
+                                        ?: throw Exception("NodeUpdatedSubject: Node is null")
                                 val updatedPayload =
                                     db.getPayloadByNodeId(updatedNode.kind, updatedNodeId)
-                                        ?: throw Exception("Payload is null")
+                                        ?: throw Exception("NodeUpdatedSubject: Payload is null")
                                 children
                                     .indexOfFirst { childPair ->
                                         childPair.first.nodeId == updatedNodeId
@@ -547,10 +547,10 @@ private fun RecursiveNodeList(
                             CoroutineScope(Dispatchers.IO).launch {
                                 val movedNode =
                                     db.nodeDao().getNodeById(movedNodeId)
-                                        ?: throw Exception("Node is null")
+                                        ?: throw Exception("NodeMovedSubject: Node is null")
                                 val movedPayload =
                                     db.getPayloadByNodeId(movedNode.kind, movedNodeId)
-                                        ?: throw Exception("Payload is null")
+                                        ?: throw Exception("NodeMovedSubject: Payload is null")
                                 children.add(movedNode.order, Pair(movedNode, movedPayload))
                                 log("(2/2) Moved node: $movedNode", "To node: $node")
                             }
