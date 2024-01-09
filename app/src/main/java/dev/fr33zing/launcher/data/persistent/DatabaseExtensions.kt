@@ -2,7 +2,9 @@ package dev.fr33zing.launcher.data.persistent
 
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
+import android.util.Log
 import androidx.room.withTransaction
+import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
@@ -240,7 +242,10 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                     if (parentId != null) event = Pair(lastNodeId, parentId)
                     lastNodeId
                 }
-                event?.let { NodeCreatedSubject.onNext(it) }
+                event?.let {
+                    Log.d(TAG, "Calling NodeCreatedSubject for $specialMode")
+                    NodeCreatedSubject.onNext(it)
+                }
                 createdNodeId
             }
             else -> throw Exception("Multiple directories exist with special mode: $specialMode")
