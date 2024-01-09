@@ -79,7 +79,7 @@ fun Clock(horizontalPadding: Dp) {
     val timeFormat12Hour = remember(locale) { SimpleDateFormat("hh:mm", locale) }
     val timeFormat24Hour = remember(locale) { SimpleDateFormat("HH:mm", locale) }
     val amPmFormat = remember(locale) { SimpleDateFormat("a", locale) }
-    val dateFormat = remember(locale) { SimpleDateFormat("EEEE, MMM d", locale) }
+    val dateFormat = remember(locale) { SimpleDateFormat("EEEE, LLL d", locale) }
     val weekFormat = remember(locale) { SimpleDateFormat("w", locale) }
     var currentTime by remember { mutableStateOf(buildAnnotatedString {}) }
     var currentDate by remember { mutableStateOf(buildAnnotatedString {}) }
@@ -112,10 +112,7 @@ fun Clock(horizontalPadding: Dp) {
     val clockPackage by preferences.home.defaultApplications.clock.state
     val calendarPackage by preferences.home.defaultApplications.calendar.state
 
-    LaunchedEffect(Unit) {
-        updateTime()
-        preferences.home.use24HourTime.flow.collect { updateTime() }
-    }
+    LaunchedEffect(use24HourTime) { updateTime() }
     DisposableEffect(Unit) {
         val receiver =
             object : BroadcastReceiver() {
