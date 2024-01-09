@@ -26,12 +26,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import dev.fr33zing.launcher.ui.components.Notice
-import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.longPressable
 import dev.fr33zing.launcher.ui.theme.DisabledTextFieldColor
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.getUserEditableAnnotation
+import dev.fr33zing.launcher.ui.utility.longPressable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlin.reflect.KMutableProperty0
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +53,7 @@ fun NodePropertyTextField(
     defaultValue: String? = null,
     userCanRevert: Boolean = false,
     imeAction: ImeAction = ImeAction.Done,
+    minLines: Int = 1
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -105,6 +106,7 @@ fun NodePropertyTextField(
             ),
         keyboardActions = KeyboardActions(onDone = { clearFocus() }),
         label = { Text(annotation.label) },
+        minLines = minLines,
         supportingText =
             if (annotation.supportingText.isNotEmpty()) {
                 { Text(annotation.supportingText) }

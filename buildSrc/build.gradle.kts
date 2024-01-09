@@ -18,7 +18,7 @@ tasks {
         val targetFileName = "Database.kt"
 
         // Update these variables to add support for new NodeKind variants and payload classes.
-        val databaseVersion = "2"
+        val databaseVersion = "3"
         val payloadClasses =
             listOf(
                 "Application",
@@ -32,8 +32,10 @@ tasks {
                 "WebLink",
                 "Setting",
             )
-        val autoMigrations = """
+        val autoMigrations =
+            """
                 AutoMigration(from = 1, to = 2),
+                AutoMigration(from = 2, to = 3),
             """
         val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap = payloadClasses.associateWith { it }

@@ -33,6 +33,7 @@ fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: 
         NodeKind.WebLink -> WebLinkEditForm(innerPadding, payload, node)
         NodeKind.Location -> LocationEditForm(innerPadding, payload, node)
         NodeKind.Setting -> SettingEditForm(innerPadding, payload, node)
+        NodeKind.Note -> NoteEditForm(innerPadding, payload, node)
         else -> DefaultEditForm(innerPadding, node)
     }
 }
@@ -45,9 +46,10 @@ fun EditFormColumn(
 ) {
     val scrollState = rememberScrollState()
 
-    Box(Modifier.imePadding().fillMaxHeight()) {
+    Box(Modifier.fillMaxHeight()) {
         Box(
             Modifier.fillMaxSize()
+                .imePadding()
                 .verticalScroll(scrollState, enabled = scrollable)
                 .height(IntrinsicSize.Max)
         ) {

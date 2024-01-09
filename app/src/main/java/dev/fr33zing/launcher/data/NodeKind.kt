@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.ui.graphics.Color
@@ -22,6 +23,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Application as Application
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox as CheckboxPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Directory as DirectoryPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Note as NotePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink as WebLinkPayload
 import dev.fr33zing.launcher.ui.theme.Background
@@ -73,6 +75,7 @@ enum class NodeKind {
             Location -> true
             Setting -> true
             Checkbox -> true
+            Note -> true
             else -> false
         }
 
@@ -153,9 +156,13 @@ enum class NodeKind {
             WebLink -> Icons.Filled.Link
             File -> Icons.Filled.Description
             Location -> Icons.Filled.LocationOn
-            Note -> Icons.Filled.Notes
+            Note ->
+                if (payload is NotePayload && payload.body.isNotEmpty() && !ignoreState)
+                    Icons.Filled.PlaylistAdd
+                else Icons.Filled.Notes
             Checkbox ->
-                if (payload is CheckboxPayload && payload.checked) Icons.Filled.CheckBox
+                if (payload is CheckboxPayload && payload.checked && !ignoreState)
+                    Icons.Filled.CheckBox
                 else Icons.Filled.CheckBoxOutlineBlank
             Reminder -> Icons.Filled.Notifications
             Setting -> Icons.Filled.Settings

@@ -97,9 +97,11 @@ import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.persistent.payloads.Note
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
+import dev.fr33zing.launcher.ui.components.dialog.NoteBodyDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
@@ -402,7 +404,10 @@ private fun RecursiveNodeList(
         // HACK: Use a second query to get real-time updates.
         val payloadState by
             db.getPayloadFlowByNodeId(node.kind, node.nodeId).collectAsState(initial = null)
-        if (payloadState != null)
+        if (payloadState != null) {
+            val noteDialogVisible = remember { mutableStateOf(false) }
+            if (payload is Note) NoteBodyDialog(noteDialogVisible, node, payload)
+
             RecursiveNodeListRow(
                 db = db,
                 navController = navController,
@@ -418,15 +423,19 @@ private fun RecursiveNodeList(
                 onClick = {
                     if (canHaveChildren) {
                         childrenVisible = !childrenVisible
-                        onNodeChildrenVisibilityChange(payload, childrenVisible)
+                        onNodeChildrenVisibilityChange(payloadState!!, childrenVisible)
                     }
-                    onNodeClick(payload)
+                    if (payload is Note) {
+                        noteDialogVisible.value = true
+                    }
+                    onNodeClick(payloadState!!)
                 },
                 onLongClick = { onNodeLongClick(node) },
                 onAddNodeDialogOpened = onAddNodeDialogOpened,
                 onAddNodeDialogClosed = onAddNodeDialogClosed,
                 onAddNode = onAddNode,
             )
+        }
     }
 
     if (canHaveChildren) {
