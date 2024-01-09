@@ -11,22 +11,22 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -69,6 +69,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -80,13 +81,13 @@ import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
-import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.lang.Float.max
 import kotlin.math.pow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
@@ -96,7 +97,7 @@ private val searchPanelExtraPaddingTop = 16.dp
 private const val ALLOWED_OVERSCROLL_FACTOR = 1.5f
 private const val OVERSCROLL_RESISTANCE_EXPONENT = 3
 
-private const val SHOW_SCORE_INDICATOR = false
+private const val SHOW_SCORE_INDICATOR = true
 
 private val activateBestMatchSubject = PublishSubject.create<Unit>()
 
@@ -251,24 +252,26 @@ private fun SearchResults(
     query: String
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
     val scale = remember { mutableFloatStateOf(1f) }
     val dimensions = rememberNodeListDimensions(scale)
 
-    val matches by
+    val matches =
         remember(nodePayloads, nodeKindFilter, query) {
-            derivedStateOf {
-                FuzzySearch.extractSorted(
-                    query,
-                    nodePayloads.filter {
-                        it.first.nodeId != ROOT_NODE_ID &&
-                            (nodeKindFilter.isEmpty() || it.first.kind in nodeKindFilter)
-                    }
-                ) {
-                    it.first.label
+            FuzzySearch.extractSorted(
+                query,
+                nodePayloads.filter {
+                    it.first.nodeId != ROOT_NODE_ID &&
+                        (nodeKindFilter.isEmpty() || it.first.kind in nodeKindFilter)
                 }
+            ) {
+                it.first.label
             }
         }
+
+    val lazyListState = rememberLazyListState()
+    val items = remember(matches) { matches.filter { it.score > 0 } }
+
+    LaunchedEffect(query) { lazyListState.scrollToItem(0, -1000) }
 
     DisposableEffect(matches) {
         val subscription =
@@ -278,67 +281,48 @@ private fun SearchResults(
         onDispose { subscription.dispose() }
     }
 
-    Box(
-        Modifier.absolutePadding(
-                bottom =
-                    androidx.compose.ui.unit.max(
-                        WindowInsets.ime.asPaddingValues().calculateBottomPadding() -
-                            shadowHeight * 2,
-                        shadowHeight
-                    )
-            )
-            .verticalScrollShadows(shadowHeight)
+    LazyColumn(
+        state = lazyListState,
+        contentPadding = PaddingValues(vertical = shadowHeight),
+        modifier = Modifier.fillMaxSize().verticalScrollShadows(shadowHeight)
     ) {
-        Column(
-            Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
-        ) {
-            Column {
-                matches
-                    .filter { result -> result.score > 0 }
-                    .forEach { result ->
-                        val (node, payload) = result.referent
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val indication = rememberCustomIndication(color = node.kind.color)
+        items(items, { it.referent.first.nodeId }) { result ->
+            val (node, payload) = result.referent
+            // HACK: Use a second query to get real-time updates.
+            val payloadState by
+                db.getPayloadFlowByNodeId(node.kind, node.nodeId)
+                    .map { it ?: payload }
+                    .collectAsStateWithLifecycle(initialValue = payload)
+            val interactionSource = remember { MutableInteractionSource() }
+            val indication = rememberCustomIndication(color = node.kind.color)
 
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .conditional(SHOW_SCORE_INDICATOR) {
-                                    drawBehind {
-                                        val width = size.width * (result.score / 100f)
-                                        drawRect(
-                                            node.kind.color.copy(alpha = 0.075f),
-                                            size = size.copy(width = width),
-                                            topLeft = Offset(x = size.width - width, y = 0f)
-                                        )
-                                    }
-                                }
-                                .clickable(interactionSource, indication) {
-                                    payload.activate(db, context)
-                                }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier.padding(
-                                        vertical = dimensions.spacing / 2,
-                                        horizontal = RecursiveNodeListHorizontalPadding
-                                    )
-                            ) {
-                                val ignoreState = payload is Directory
-                                NodeIconAndText(
-                                    fontSize = dimensions.fontSize,
-                                    lineHeight = dimensions.lineHeight,
-                                    label = node.label,
-                                    color = node.kind.color(payload, ignoreState),
-                                    icon = node.kind.icon(payload, ignoreState),
-                                    lineThrough = node.kind.lineThrough(payload, ignoreState)
-                                )
-                            }
-                        }
-                    }
+            Box(
+                Modifier.fillMaxWidth().clickable(interactionSource, indication) {
+                    payloadState.activate(db, context)
+                }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.padding(
+                            vertical = dimensions.spacing / 2,
+                            horizontal = RecursiveNodeListHorizontalPadding
+                        )
+                ) {
+                    val ignoreState = payloadState is Directory
+                    NodeIconAndText(
+                        fontSize = dimensions.fontSize,
+                        lineHeight = dimensions.lineHeight,
+                        label = node.label,
+                        color = node.kind.color(payloadState, ignoreState),
+                        icon = node.kind.icon(payloadState, ignoreState),
+                        lineThrough = node.kind.lineThrough(payloadState, ignoreState)
+                    )
+                }
             }
         }
     }
+    //    }
 }
 
 @Composable
