@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,8 +26,11 @@ import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.ui.utility.conditional
+import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
+import dev.fr33zing.launcher.ui.utility.conditional
+import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
 fun OutlinedValue(
@@ -64,7 +68,11 @@ fun OutlinedValue(
                         .offset(x = (-7).dp)
                         .conditional(contentWidth != null) { requiredWidth(contentWidth!! + 16.dp) }
                 ) {
-                    content(contentPadding)
+                    CompositionLocalProvider(
+                        LocalContentColor provides Foreground.mix(Background, 0.25f)
+                    ) {
+                        content(contentPadding)
+                    }
                 }
             },
         )
