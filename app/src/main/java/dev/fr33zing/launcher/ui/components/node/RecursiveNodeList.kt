@@ -377,8 +377,8 @@ private fun RecursiveNodeList(
         remember(payload, permissions) {
             val p = permissions.clone()
             if (payload is Directory)
-                PermissionKind.values().forEach { kind ->
-                    PermissionScope.values().forEach { scope ->
+                PermissionKind.entries.forEach { kind ->
+                    PermissionScope.entries.forEach { scope ->
                         if (!payload.hasPermission(kind, scope)) p[kind]!!.remove(scope)
                     }
                 }
@@ -388,7 +388,7 @@ private fun RecursiveNodeList(
         remember(payload, permissions) {
             val p = permissions.clone()
             if (payload is Directory)
-                PermissionKind.values().forEach { kind ->
+                PermissionKind.entries.forEach { kind ->
                     if (!payload.hasPermission(kind, PermissionScope.Recursive)) {
                         p[kind]!!.remove(PermissionScope.Self)
                         p[kind]!!.remove(PermissionScope.Recursive)
