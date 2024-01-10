@@ -267,7 +267,8 @@ private fun SearchResults(
     DisposableEffect(matches) {
         val subscription =
             activateBestMatchSubject.subscribe {
-                matches.firstOrNull()?.element?.second?.activate(db, context)
+                val payload = matches.firstOrNull()?.element?.second
+                if (payload !is Directory) payload?.activate(db, context)
             }
         onDispose { subscription.dispose() }
     }
@@ -290,15 +291,18 @@ private fun SearchResults(
                 db.getPayloadFlowByNodeId(node.kind, node.nodeId)
                     .map { it ?: payload }
                     .collectAsStateWithLifecycle(initialValue = payload)
-            val color = node.kind.color
+            val ignoreState = payload is Directory
+            val color = node.kind.color(payloadState, ignoreState)
             val interactionSource = remember { MutableInteractionSource() }
             val indication = rememberCustomIndication(color = node.kind.color)
             val text = buildAnnotatedString {
                 result.substrings.forEach {
                     withStyle(
                         SpanStyle(
-                            color = if (it.matches) Background else color,
-                            background = if (it.matches) color else Color.Transparent,
+                            color = color,
+                            background =
+                                if (it.matches) node.kind.color.copy(alpha = 0.25f)
+                                else Color.Transparent,
                         )
                     ) {
                         append(it.text)
@@ -308,7 +312,7 @@ private fun SearchResults(
 
             Box(
                 Modifier.fillMaxWidth().clickable(interactionSource, indication) {
-                    payloadState.activate(db, context)
+                    if (payload !is Directory) payloadState.activate(db, context)
                 }
             ) {
                 Row(
@@ -319,7 +323,6 @@ private fun SearchResults(
                             horizontal = RecursiveNodeListHorizontalPadding
                         )
                 ) {
-                    val ignoreState = payloadState is Directory
                     NodeIconAndText(
                         fontSize = dimensions.fontSize,
                         lineHeight = dimensions.lineHeight,
