@@ -76,9 +76,16 @@ fun doNotGoHomeOnNextPause() {
 }
 
 class MainActivity : ComponentActivity() {
+    lateinit var db: AppDatabase
+
     override fun onPause() {
         super.onPause()
         if (goHomeOnNextPause) GoHomeSubject.onNext(Unit) else goHomeOnNextPause = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkForNewApplications()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,8 +98,7 @@ class MainActivity : ComponentActivity() {
         window.setDecorFitsSystemWindows(false)
         window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
-        val db =
-            Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
 
         setContent {
             LauncherTheme {
@@ -160,6 +166,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun checkForNewApplications() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val activityInfos = getActivityInfos(applicationContext)
+            db.createNewApplications(activityInfos)
         }
     }
 
