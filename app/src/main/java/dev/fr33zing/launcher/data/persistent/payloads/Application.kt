@@ -68,7 +68,10 @@ class Application(
         if (userManager.userProfiles.none { it.toString() == userHandle })
             return Status.MissingProfile
 
-        if (packageInfo.activities.none { it.name == activityClassName })
+        if (
+            packageInfo.activities == null ||
+                packageInfo.activities.none { it.name == activityClassName }
+        )
             return Status.MissingActivity
 
         return Status.Valid

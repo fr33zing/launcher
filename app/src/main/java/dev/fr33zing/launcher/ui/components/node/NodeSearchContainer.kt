@@ -100,12 +100,7 @@ private val searchPanelExtraPaddingTop = 16.dp
 private const val ALLOWED_OVERSCROLL_FACTOR = 1.5f
 private const val OVERSCROLL_RESISTANCE_EXPONENT = 3
 
-private const val SHOW_SCORE_INDICATOR = true
-
 private val activateBestMatchSubject = PublishSubject.create<Unit>()
-
-// TODO fix crash when searching disabled apps
-// repro: disable system clock and search 'c'
 
 @Composable
 fun NodeSearchContainer(
