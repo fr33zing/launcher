@@ -1,7 +1,6 @@
 package dev.fr33zing.launcher.ui.components.node
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -28,6 +27,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -137,6 +137,12 @@ fun NodeSearchContainer(
     val nodeKindFilter = remember { mutableStateListOf<NodeKind>() }
     val nodePayloads = remember { mutableStateListOf<Pair<Node, Payload>>() }
 
+    fun closePanel() {
+        currentPanelHeight = 0f
+        coroutineScope.launch { animatedPanelHeight.animateTo(currentPanelHeight) }
+        focusManager.clearFocus()
+    }
+
     LaunchedEffect(panelVisible) {
         if (!panelVisible) {
             nodePayloads.clear()
@@ -154,11 +160,7 @@ fun NodeSearchContainer(
         }
     }
 
-    BackHandler(enabled = panelVisible) {
-        currentPanelHeight = 0f
-        coroutineScope.launch { animatedPanelHeight.animateTo(currentPanelHeight) }
-        focusManager.clearFocus()
-    }
+    BackHandler(enabled = panelVisible) { closePanel() }
 
     Column(
         modifier =
@@ -236,7 +238,7 @@ fun NodeSearchContainer(
                         )
                         .absolutePadding(top = searchPanelExtraPaddingTop),
             ) {
-                SearchBox(query, focusRequester, focusManager, fontSize, lineHeight)
+                SearchBox(query, focusRequester, focusManager, fontSize, lineHeight, ::closePanel)
                 SearchFilters(nodeKindFilter, lineHeight)
             }
         }
@@ -335,7 +337,6 @@ private fun SearchResults(
             }
         }
     }
-    //    }
 }
 
 @Composable
@@ -345,16 +346,8 @@ private fun SearchBox(
     focusManager: FocusManager,
     fontSize: TextUnit,
     lineHeight: Dp,
+    closePanelFn: () -> Unit
 ) {
-    val clearButtonColor by
-        animateColorAsState(
-            targetValue =
-                if (query.value.isNotEmpty()) Catppuccin.Current.red else Color.Transparent,
-            label = "search clear button color"
-        )
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(color = Catppuccin.Current.red, circular = true)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -408,17 +401,24 @@ private fun SearchBox(
             modifier = Modifier.focusRequester(focusRequester).weight(1f)
         )
 
+        val actionButtonClearsQuery = query.value.isNotEmpty()
+        val actionButtonColor = Catppuccin.Current.red
+        val interactionSource = remember { MutableInteractionSource() }
+        val indication = rememberCustomIndication(color = actionButtonColor, circular = true)
         Icon(
-            Icons.Filled.Close,
-            contentDescription = "clear query",
-            tint = clearButtonColor,
+            if (actionButtonClearsQuery) Icons.Filled.Close else Icons.Filled.ArrowUpward,
+            contentDescription = "query action button",
+            tint = actionButtonColor,
             modifier =
                 Modifier.clickable(
                     interactionSource,
                     indication,
-                    enabled = query.value.isNotEmpty()
                 ) {
-                    query.value = ""
+                    if (actionButtonClearsQuery) {
+                        query.value = ""
+                    } else {
+                        closePanelFn()
+                    }
                 }
         )
     }
