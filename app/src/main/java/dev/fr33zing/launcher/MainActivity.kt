@@ -1,6 +1,9 @@
 package dev.fr33zing.launcher
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.UserManager
@@ -30,9 +33,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -101,6 +106,8 @@ class MainActivity : ComponentActivity() {
         db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
 
         setContent {
+            BroadcastReceiver(Intent.ACTION_PACKAGE_ADDED) { checkForNewApplications() }
+
             LauncherTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
@@ -231,6 +238,27 @@ class MainActivity : ComponentActivity() {
             composable("move/{nodeId}") { backStackEntry ->
                 Move(db, navController, backStackEntry.nodeId())
             }
+        }
+    }
+
+    @Composable
+    fun BroadcastReceiver(filter: String, onReceive: (Intent?) -> Unit) {
+        val context = LocalContext.current
+        val onReceiveState by rememberUpdatedState(onReceive)
+
+        DisposableEffect(context, filter) {
+            val intentFilter = IntentFilter(filter)
+
+            val receiver =
+                object : BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        onReceiveState(intent)
+                    }
+                }
+
+            context.registerReceiver(receiver, intentFilter)
+
+            onDispose { context.unregisterReceiver(receiver) }
         }
     }
 }
