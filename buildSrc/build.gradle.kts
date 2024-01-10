@@ -39,6 +39,14 @@ tasks {
             """
         val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap = payloadClasses.associateWith { it }
+        val extraDaoFunctions =
+            mapOf(
+                "Directory" to
+                    """
+                        @Query("SELECT * FROM Directory WHERE specialMode = :specialMode")
+                        suspend fun getBySpecialMode(specialMode: Directory.SpecialMode): Directory?
+                    """
+            )
 
         // Generate the file.
         val textParts =
@@ -46,8 +54,13 @@ tasks {
                 headerComment(thisFile),
                 packageDeclaration(targetPackage),
                 imports(nodeKindPackage, payloadsPackage, payloadClasses, convertersPackage),
-                database(databaseVersion, autoMigrations, entityClasses, nodeKindToPayloadClassMap),
-                allPayloadDaos(payloadClasses),
+                database(
+                    databaseVersion,
+                    autoMigrations,
+                    entityClasses,
+                    nodeKindToPayloadClassMap,
+                ),
+                allPayloadDaos(payloadClasses, extraDaoFunctions),
             )
         val text = textParts.joinToString("\n\n") + "\n"
         val dir = "../$module/src/main/java/${targetPackage.replace(".", "/")}"
@@ -99,7 +112,7 @@ fun imports(
     """
         .trimIndent()
 
-fun payloadDao(payloadClass: String) =
+fun payloadDao(payloadClass: String, extraDaoFunctions: String?) =
     """
     @Dao
     interface ${payloadClass}Dao {
@@ -122,12 +135,12 @@ fun payloadDao(payloadClass: String) =
 
         @Query("SELECT * FROM $payloadClass WHERE nodeId = :nodeId")
         fun getPayloadFlowByNodeId(nodeId: Int): Flow<$payloadClass?>
-    }
+${ extraDaoFunctions?.let { "\n"+ it.trimIndent().split("\n").joinToString("\n") { s ->  indent(2) + s }  + "\n" } ?: "" }    }
     """
         .trimIndent()
 
-fun allPayloadDaos(payloadClasses: List<String>) =
-    payloadClasses.joinToString("\n\n") { payloadDao(it) }
+fun allPayloadDaos(payloadClasses: List<String>, extraDaoFunctions: Map<String, String>) =
+    payloadClasses.joinToString("\n\n") { payloadDao(it, extraDaoFunctions[it]) }
 
 fun database(
     databaseVersion: String,

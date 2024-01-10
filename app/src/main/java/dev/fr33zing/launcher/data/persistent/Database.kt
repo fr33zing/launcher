@@ -335,6 +335,9 @@ interface DirectoryDao {
 
     @Query("SELECT * FROM Directory WHERE nodeId = :nodeId")
     fun getPayloadFlowByNodeId(nodeId: Int): Flow<Directory?>
+
+    @Query("SELECT * FROM Directory WHERE specialMode = :specialMode")
+    suspend fun getBySpecialMode(specialMode: Directory.SpecialMode): Directory?
 }
 
 @Dao

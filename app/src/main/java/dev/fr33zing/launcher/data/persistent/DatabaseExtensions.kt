@@ -39,38 +39,44 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     var newApps = 0
 
     withTransaction {
-        val newApplicationsDirectory =
-            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+        Log.d(
+            TAG,
+            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in createNewApplications(...)"
+        )
 
-        activityInfos
-            .filter { activityInfo ->
+        val filteredActivityInfos =
+            activityInfos.filter { activityInfo ->
                 applicationDao().getAllPayloads().find { app ->
                     app.appName == activityInfo.label.toString()
                 } == null
             }
-            .forEachIndexed { index, activityInfo ->
-                nodeDao()
-                    .insert(
-                        Node(
-                            nodeId = 0,
-                            parentId = newApplicationsDirectory.nodeId,
-                            kind = NodeKind.Application,
-                            order = index,
-                            label = activityInfo.label.toString()
-                        )
-                    )
-                applicationDao()
-                    .insert(
-                        Application(
-                            payloadId = 0,
-                            nodeId = nodeDao().getLastNodeId(),
-                            activityInfo = activityInfo,
-                        )
-                    )
-                newApps++
-            }
 
-        if (newApps == 0) deleteRecursively(newApplicationsDirectory)
+        if (filteredActivityInfos.isEmpty()) return@withTransaction
+
+        val newApplicationsDirectory =
+            getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
+
+        filteredActivityInfos.forEachIndexed { index, activityInfo ->
+            nodeDao()
+                .insert(
+                    Node(
+                        nodeId = 0,
+                        parentId = newApplicationsDirectory.nodeId,
+                        kind = NodeKind.Application,
+                        order = index,
+                        label = activityInfo.label.toString()
+                    )
+                )
+            applicationDao()
+                .insert(
+                    Application(
+                        payloadId = 0,
+                        nodeId = nodeDao().getLastNodeId(),
+                        activityInfo = activityInfo,
+                    )
+                )
+            newApps++
+        }
     }
 
     return newApps
@@ -79,6 +85,10 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 // TODO make this handle interruption gracefully
 suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
     withTransaction {
+        Log.d(
+            TAG,
+            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in autoCategorizeNewApplications(...)"
+        )
         val newApplicationsDirectory =
             getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
         val nodesWithPayloads =
@@ -126,7 +136,6 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
 
         updateMany(categoryDirectories.values.map { it.first })
         updateMany(nodesWithPayloads.map { it.key })
-        deleteRecursively(newApplicationsDirectory)
     }
 }
 
@@ -243,7 +252,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                     lastNodeId
                 }
                 event?.let {
-                    Log.d(TAG, "Calling NodeCreatedSubject for $specialMode")
+                    Log.d(TAG, "Calling NodeCreatedSubject for $specialMode. Event: $event")
                     NodeCreatedSubject.onNext(it)
                 }
                 createdNodeId
@@ -306,6 +315,18 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
     )
 }
 
+suspend fun AppDatabase.deleteNewApplicationsDirectoryIfEmpty() {
+    val newApplicationsDir = directoryDao().getBySpecialMode(Directory.SpecialMode.NewApplications)
+    if (newApplicationsDir != null) {
+        Log.d(TAG, "Deleting empty New Applications directory")
+        val children = nodeDao().getChildNodes(newApplicationsDir.nodeId)
+        val node =
+            nodeDao().getNodeById(newApplicationsDir.nodeId)
+                ?: throw Exception("New Applications directory node is null")
+        if (children.isEmpty()) deleteRecursively(node)
+    }
+}
+
 suspend fun AppDatabase.traverseUpward(
     node: Node,
     includeFirst: Boolean = false,
@@ -363,13 +384,18 @@ suspend fun AppDatabase.checkPermission(
     return parentsAllow
 }
 
+fun AppDatabase.checkpoint() {
+
+    if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
+        throw Exception("Database checkpoint failed")
+}
+
 fun AppDatabase.getDatabaseFile(): File {
     return File(openHelper.writableDatabase.path ?: throw Exception("Database path is null"))
 }
 
 /** Run wal_checkpoint and return the database file. */
 fun AppDatabase.getCheckpointedDatabaseFile(): File {
-    if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
-        throw Exception("Database checkpoint failed")
+    checkpoint()
     return getDatabaseFile()
 }
