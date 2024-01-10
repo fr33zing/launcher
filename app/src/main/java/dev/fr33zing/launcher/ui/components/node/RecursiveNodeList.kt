@@ -65,6 +65,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -184,6 +185,39 @@ fun NodeIconAndText(
     fontSize: TextUnit,
     lineHeight: Dp,
     label: String,
+    color: Color,
+    icon: ImageVector,
+    lineThrough: Boolean = false,
+    softWrap: Boolean = true,
+    overflow: TextOverflow = TextOverflow.Visible,
+    @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
+) {
+    val iconSize = remember { 1f }
+    Icon(
+        icon,
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(lineHeight * iconSize),
+    )
+    Text(
+        text = label,
+        modifier =
+            Modifier.offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
+                .absolutePadding(left = lineHeight * 0.5f)
+                .then(textModifier),
+        color = color,
+        fontSize = fontSize,
+        softWrap = softWrap,
+        overflow = overflow,
+        textDecoration = if (lineThrough) TextDecoration.LineThrough else null
+    )
+}
+
+@Composable
+fun NodeIconAndText(
+    fontSize: TextUnit,
+    lineHeight: Dp,
+    label: AnnotatedString,
     color: Color,
     icon: ImageVector,
     lineThrough: Boolean = false,

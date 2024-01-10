@@ -62,10 +62,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -77,6 +80,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.utility.rememberFuzzyMatcher
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -89,7 +93,6 @@ import java.lang.Float.max
 import kotlin.math.pow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import me.xdrop.fuzzywuzzy.FuzzySearch
 
 private val searchPanelHeight = 128.dp
 private val searchPanelExtraPaddingTop = 16.dp
@@ -252,31 +255,19 @@ private fun SearchResults(
     query: String
 ) {
     val context = LocalContext.current
+    val lazyListState = rememberLazyListState()
     val scale = remember { mutableFloatStateOf(1f) }
     val dimensions = rememberNodeListDimensions(scale)
 
-    val matches =
-        remember(nodePayloads, nodeKindFilter, query) {
-            FuzzySearch.extractSorted(
-                query,
-                nodePayloads.filter {
-                    it.first.nodeId != ROOT_NODE_ID &&
-                        (nodeKindFilter.isEmpty() || it.first.kind in nodeKindFilter)
-                }
-            ) {
-                it.first.label
-            }
-        }
-
-    val lazyListState = rememberLazyListState()
-    val items = remember(matches) { matches.filter { it.score > 0 } }
+    val fuzzyMatcher = rememberFuzzyMatcher(nodePayloads) { it.first.label }
+    val matches = remember(nodePayloads, query) { fuzzyMatcher.match(query) }
 
     LaunchedEffect(query) { lazyListState.scrollToItem(0, -1000) }
 
     DisposableEffect(matches) {
         val subscription =
             activateBestMatchSubject.subscribe {
-                matches.firstOrNull()?.referent?.second?.activate(db, context)
+                matches.firstOrNull()?.element?.second?.activate(db, context)
             }
         onDispose { subscription.dispose() }
     }
@@ -286,15 +277,34 @@ private fun SearchResults(
         contentPadding = PaddingValues(vertical = shadowHeight),
         modifier = Modifier.fillMaxSize().verticalScrollShadows(shadowHeight)
     ) {
-        items(items, { it.referent.first.nodeId }) { result ->
-            val (node, payload) = result.referent
+        items(
+            matches.filter {
+                it.element.first.nodeId != ROOT_NODE_ID &&
+                    (nodeKindFilter.isEmpty() || it.element.first.kind in nodeKindFilter)
+            },
+            { it.element.first.nodeId }
+        ) { result ->
+            val (node, payload) = result.element
             // HACK: Use a second query to get real-time updates.
             val payloadState by
                 db.getPayloadFlowByNodeId(node.kind, node.nodeId)
                     .map { it ?: payload }
                     .collectAsStateWithLifecycle(initialValue = payload)
+            val color = node.kind.color
             val interactionSource = remember { MutableInteractionSource() }
             val indication = rememberCustomIndication(color = node.kind.color)
+            val text = buildAnnotatedString {
+                result.substrings.forEach {
+                    withStyle(
+                        SpanStyle(
+                            color = if (it.matches) Background else color,
+                            background = if (it.matches) color else Color.Transparent,
+                        )
+                    ) {
+                        append(it.text)
+                    }
+                }
+            }
 
             Box(
                 Modifier.fillMaxWidth().clickable(interactionSource, indication) {
@@ -313,7 +323,7 @@ private fun SearchResults(
                     NodeIconAndText(
                         fontSize = dimensions.fontSize,
                         lineHeight = dimensions.lineHeight,
-                        label = node.label,
+                        label = text,
                         color = node.kind.color(payloadState, ignoreState),
                         icon = node.kind.icon(payloadState, ignoreState),
                         lineThrough = node.kind.lineThrough(payloadState, ignoreState)
@@ -418,7 +428,7 @@ fun SearchFilters(nodeKindFilter: SnapshotStateList<NodeKind>, lineHeight: Dp) {
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
     ) {
-        NodeKind.values().forEach { nodeKind ->
+        NodeKind.entries.forEach { nodeKind ->
             key(nodeKind) {
                 val icon = remember(nodeKind) { nodeKind.icon }
                 val color = remember(nodeKind) { nodeKind.color }
