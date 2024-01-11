@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.data.utility
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import kotlin.math.min
 
 @Composable
 fun <T> rememberFuzzyMatcher(elements: List<T>, toStringFn: (T) -> String) = remember {
@@ -23,11 +22,11 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                 .map { (element, elementString) ->
                     data class Match(var start: Int = 0, var length: Int = 0)
 
-                    val longestMatch = Match()
+                    var longestMatch = Match()
                     var currentMatch = Match()
                     var matching = false
 
-                    for (i in 0 ..< min(query.length, elementString.length)) {
+                    for (i in elementString.indices) {
                         val c = elementString[i]
                         val q = query[currentMatch.length]
 
@@ -35,11 +34,9 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                             if (!matching) currentMatch.start = i
                             matching = true
                             currentMatch.length++
-
-                            if (currentMatch.length > longestMatch.length) {
-                                longestMatch.start = currentMatch.start
-                                longestMatch.length = currentMatch.length
-                            }
+                            if (currentMatch.length > longestMatch.length)
+                                longestMatch = currentMatch.copy()
+                            if (currentMatch.length == query.length) break
                         } else {
                             if (matching) currentMatch = Match()
                             matching = false
