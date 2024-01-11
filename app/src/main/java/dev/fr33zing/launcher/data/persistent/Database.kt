@@ -33,9 +33,9 @@ import dev.fr33zing.launcher.data.persistent.payloads.Reminder
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink
 import dev.fr33zing.launcher.data.utility.Converters
-import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("UNCHECKED_CAST")
 @TypeConverters(Converters::class)

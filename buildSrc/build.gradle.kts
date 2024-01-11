@@ -106,9 +106,9 @@ fun imports(
     import $nodeKindPackage.NodeKind
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     import $convertersPackage.Converters
-    import kotlinx.coroutines.flow.Flow
     import kotlin.reflect.KParameter
     import kotlin.reflect.typeOf
+    import kotlinx.coroutines.flow.Flow
     """
         .trimIndent()
 
