@@ -1,11 +1,9 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
-
-    id("com.google.devtools.ksp")
-
-    kotlin("plugin.serialization") version "1.9.21"
+    alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.com.google.devtools.ksp)
+    alias(libs.plugins.com.google.dagger.hilt.android)
 }
 
 android {
@@ -72,17 +70,31 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.material3)
 
+    //
     // My additions
-    implementation(kotlin("reflect"))
+    //
+
+    // Miscellaneous
+    implementation(libs.reflect)
     implementation(libs.rxkotlin)
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
+    implementation(libs.fuzzywuzzy)
+    implementation(libs.reorderable)
+    implementation(libs.kaml)
+
+    // AndroidX
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.fuzzywuzzy)
-    implementation(libs.reorderable)
-    implementation(libs.kaml)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 }
