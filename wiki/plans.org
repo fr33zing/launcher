@@ -1,0 +1,47 @@
+#+TITLE: Plans
+
+* Disclaimer
+
+Nothing in this list is a commitment.
+
+* Tweaks
+
+Small changes to existing features.
+
+** Change root to current instead of parent when moving node
+
+Not sure this is optimal, but try it anyway.
+
+** Move notice popup to bottom of screen
+
+It's annoying how it covers the trash directory when you move something into the
+trash. Maybe add a preference for popup position?
+
+** Add "Set as default home screen" Setting node on first run
+
+* Features
+
+** Label format
+
+Support markdown or a custom markup for label text.
+
+** Launch animation
+
+Show a cool animation when launching something.
+
+** Indent guides
+
+Show vertical lines to help track indentation.
+
+** Cloud view
+
+Visualize the tree as a cloud.
+
+** Auto-trash checkbox preference
+
+Add a preference that, when enabled, makes it so checkboxes are automatically
+sent to the trash when checked.
+
+** Multi-select for moving nodes
+
+Moving multiple nodes one at a time is really annoying.
