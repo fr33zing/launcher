@@ -104,9 +104,6 @@ private const val SHOW_SCORE_INDICATOR = true
 
 private val activateBestMatchSubject = PublishSubject.create<Unit>()
 
-// TODO fix crash when searching disabled apps
-// repro: disable system clock and search 'c'
-
 @Composable
 fun NodeSearchContainer(
     db: AppDatabase,
