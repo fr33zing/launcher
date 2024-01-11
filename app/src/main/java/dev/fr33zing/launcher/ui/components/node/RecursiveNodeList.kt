@@ -526,7 +526,7 @@ private fun RecursiveNodeList(
                             }
                         }
                         .sortedBy { it.first.order }
-                        .let { result ->
+                        .also { result ->
                             result.forEachIndexed { index, child ->
                                 if (children.size > index)
                                     children.removeAt(index) // This prevents duplication.
@@ -543,6 +543,7 @@ private fun RecursiveNodeList(
                                 }
                             }
                         }
+                        .ifEmpty { doneLoadingChildren.value = true }
             }
         }
 
