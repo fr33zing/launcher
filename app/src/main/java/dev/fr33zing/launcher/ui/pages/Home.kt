@@ -12,19 +12,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -32,12 +38,15 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.utility.longPressable
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.launch
 
 @Composable
 fun Home(db: AppDatabase, navController: NavController) {
@@ -78,46 +87,60 @@ private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
     }
 
     Column(verticalArrangement = Arrangement.Center, modifier = modifier) {
-        homeNodes.forEach { HomeNode(db, it, fontSize, spacing, lineHeight) }
+        homeNodes.forEach { key(it.nodeId) { HomeNode(db, it, fontSize, spacing, lineHeight) } }
     }
 }
 
 @Composable
 private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: Dp, lineHeight: Dp) {
     val context = LocalContext.current
-    val payload by db.getPayloadFlowByNodeId(node.kind, node.nodeId).collectAsState(initial = null)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var payload by remember { mutableStateOf<Payload?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
-    if (payload != null) {
-        val color = node.kind.color(payload)
-        val icon = node.kind.icon(payload)
-        val text = node.label
-        val lineThrough = node.kind.lineThrough(payload)
-
-        val interactionSource = remember(node) { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color = color)
-
-        Box(
-            Modifier.clickable(
-                interactionSource,
-                indication,
-                onClick = { payload!!.activate(db, context) }
-            )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
-            ) {
-                NodeIconAndText(
-                    fontSize = fontSize,
-                    lineHeight = lineHeight,
-                    label = text,
-                    color = color,
-                    icon = icon,
-                    lineThrough = lineThrough,
-                )
+    DisposableEffect(node) {
+        val job =
+            coroutineScope.launch {
+                db.getPayloadFlowByNodeId(node.kind, node.nodeId)
+                    .flowWithLifecycle(lifecycle)
+                    .cancellable()
+                    .collect { payload = it }
             }
+
+        onDispose { job.cancel() }
+    }
+
+    if (payload == null) return
+
+    val color = remember(node, payload) { node.kind.color(payload) }
+    val icon = remember(node, payload) { node.kind.icon(payload) }
+    val text = remember(node) { node.label }
+    val lineThrough = remember(node, payload) { node.kind.lineThrough(payload) }
+
+    val interactionSource = remember(node) { MutableInteractionSource() }
+    val indication = rememberCustomIndication(color = color)
+
+    Box(
+        Modifier.clickable(
+            interactionSource,
+            indication,
+            onClick = { payload!!.activate(db, context) }
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
+        ) {
+            NodeIconAndText(
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                label = text,
+                color = color,
+                icon = icon,
+                lineThrough = lineThrough,
+            )
         }
     }
 }

@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -66,6 +67,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -73,7 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.AllPermissions
@@ -119,6 +121,7 @@ import java.lang.Float.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -412,15 +415,17 @@ private fun RecursiveNodeList(
     var referenceTarget by remember { mutableStateOf<Pair<Node, Payload>?>(null) }
     val referencePayload by remember { derivedStateOf { referenceTarget?.second } }
 
-    if (
-        !canHaveChildren ||
-            (payload is Directory && payload.collapsed == true) ||
-            (payload is Reference &&
-                referencePayload != null &&
-                (referencePayload !is Directory ||
-                    (referencePayload as Directory).collapsed == true))
-    ) {
-        doneLoadingChildren.value = true
+    LaunchedEffect(doneLoadingChildren.value) {
+        if (
+            !doneLoadingChildren.value && !canHaveChildren ||
+                (payload is Directory && payload.collapsed == true) ||
+                (payload is Reference &&
+                    referencePayload != null &&
+                    (referencePayload !is Directory ||
+                        (referencePayload as Directory).collapsed == true))
+        ) {
+            doneLoadingChildren.value = true
+        }
     }
 
     LaunchedEffect(payload) {
@@ -437,7 +442,7 @@ private fun RecursiveNodeList(
 
     // Determine permissions.
     val ownPermissions =
-        remember(payload, permissions) {
+        remember(permissions) {
             val p = permissions.clone()
             if (payload is Directory)
                 PermissionKind.entries.forEach { kind ->
@@ -448,7 +453,7 @@ private fun RecursiveNodeList(
             p
         }
     val childPermissions =
-        remember(payload, permissions) {
+        remember(permissions) {
             val p = permissions.clone()
             if (payload is Directory)
                 PermissionKind.entries.forEach { kind ->
@@ -463,40 +468,55 @@ private fun RecursiveNodeList(
     // Render self.
     if (node.nodeId != ROOT_NODE_ID) {
         // HACK: Use a second query to get real-time updates.
-        val payloadState by
-            db.getPayloadFlowByNodeId(node.kind, node.nodeId)
-                .map { it ?: payload }
-                .collectAsStateWithLifecycle(payload)
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        var payloadState by remember { mutableStateOf(payload) }
+        val coroutineScope = rememberCoroutineScope()
+
+        DisposableEffect(node) {
+            val job =
+                coroutineScope.launch {
+                    db.getPayloadFlowByNodeId(node.kind, node.nodeId)
+                        .flowWithLifecycle(lifecycle)
+                        .cancellable()
+                        .map { it ?: payload }
+                        .collect { payloadState = it }
+                }
+
+            onDispose { job.cancel() }
+        }
+
         val noteDialogVisible = remember { mutableStateOf(false) }
         if (payload is Note) NoteBodyDialog(noteDialogVisible, node, payload)
 
-        RecursiveNodeListRow(
-            db = db,
-            navController = navController,
-            depth = depth,
-            node = node,
-            payload = payloadState,
-            referenceTarget = referenceTarget,
-            childrenVisible = childrenVisible,
-            parentPermissions = permissions,
-            ownPermissions = ownPermissions,
-            dimensions = dimensions,
-            optionsVisible = optionsVisibleNodeId == node.nodeId,
-            onClick = {
-                if (canHaveChildren) {
-                    childrenVisible = !childrenVisible
-                    onNodeChildrenVisibilityChange(payloadState, childrenVisible)
-                }
-                if (payload is Note) {
-                    noteDialogVisible.value = true
-                }
-                onNodeClick(payloadState)
-            },
-            onLongClick = { onNodeLongClick(node) },
-            onAddNodeDialogOpened = onAddNodeDialogOpened,
-            onAddNodeDialogClosed = onAddNodeDialogClosed,
-            onAddNode = onAddNode,
-        )
+        Box {
+            RecursiveNodeListRow(
+                db = db,
+                navController = navController,
+                depth = depth,
+                node = node,
+                payload = payloadState,
+                referenceTarget = referenceTarget,
+                childrenVisible = childrenVisible,
+                parentPermissions = permissions,
+                ownPermissions = ownPermissions,
+                dimensions = dimensions,
+                optionsVisible = optionsVisibleNodeId == node.nodeId,
+                onClick = {
+                    if (canHaveChildren) {
+                        childrenVisible = !childrenVisible
+                        onNodeChildrenVisibilityChange(payload, childrenVisible)
+                    }
+                    if (payload is Note) {
+                        noteDialogVisible.value = true
+                    }
+                    onNodeClick(payload)
+                },
+                onLongClick = { onNodeLongClick(node) },
+                onAddNodeDialogOpened = onAddNodeDialogOpened,
+                onAddNodeDialogClosed = onAddNodeDialogClosed,
+                onAddNode = onAddNode,
+            )
+        }
     }
 
     if (canHaveChildren) {
@@ -651,7 +671,7 @@ private fun RecursiveNodeList(
         ) {
             Column {
                 for (childPair in children) {
-                    key(childPair) {
+                    key(childPair.first.nodeId) {
                         childrenDoneLoadingChildren[childPair.first]?.let { childDoneLoadingChildren
                             ->
                             RecursiveNodeList(
