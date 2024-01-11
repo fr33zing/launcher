@@ -31,6 +31,8 @@ data class Node(
     @UserEditable(label = "Label") var label: String,
 )
 
+@Keep data class NodeMinimal(val nodeId: Int, val kind: NodeKind, val label: String)
+
 @Dao
 interface NodeDao {
     @Insert suspend fun insert(node: Node)
@@ -46,6 +48,8 @@ interface NodeDao {
     @Transaction @Delete suspend fun deleteMany(nodes: List<Node>)
 
     @Query("SELECT * FROM Node") suspend fun getAll(): List<Node>
+
+    @Query("SELECT nodeId, kind, label FROM Node") suspend fun getAllMinimal(): List<NodeMinimal>
 
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
 
