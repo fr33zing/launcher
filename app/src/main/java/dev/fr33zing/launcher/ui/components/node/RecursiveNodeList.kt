@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -123,6 +124,8 @@ import kotlinx.coroutines.launch
 
 val RecursiveNodeListHorizontalPadding = 16.dp
 private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
+
+private const val RENDER_DELAY_MS: Long = 10
 
 data class NodeListDimensions(
     val fontSize: TextUnit,
@@ -354,12 +357,15 @@ fun RecursiveNodeListSetup(
             Column(
                 Modifier.fillMaxSize().verticalScroll(scrollState).padding(vertical = shadowHeight)
             ) {
+                val doneLoadingChildren = remember { mutableStateOf(true) }
+
                 RecursiveNodeList(
                     db = db,
                     navController = navController,
                     depth = -1,
                     node = rootNode!!,
                     payload = payload!!,
+                    doneLoadingChildren = doneLoadingChildren,
                     permissions = permissions,
                     dimensions = dimensions,
                     optionsVisibleNodeId = optionsVisibleNodeId,
@@ -383,6 +389,7 @@ private fun RecursiveNodeList(
     depth: Int,
     node: Node,
     payload: Payload,
+    doneLoadingChildren: MutableState<Boolean>,
     permissions: PermissionMap,
     dimensions: NodeListDimensions,
     optionsVisibleNodeId: Int?,
@@ -394,6 +401,8 @@ private fun RecursiveNodeList(
     onAddNode: (NodeKind) -> Unit,
 ) {
     val canHaveChildren = remember { payload is Directory || payload is Reference }
+
+    val childrenDoneLoadingChildren = remember { mutableMapOf<Node, MutableState<Boolean>>() }
     val children = remember { mutableStateListOf<Pair<Node, Payload>>() }
     var childrenVisible by remember {
         mutableStateOf(if (payload is Directory) !payload.initiallyCollapsed else false)
@@ -402,6 +411,17 @@ private fun RecursiveNodeList(
 
     var referenceTarget by remember { mutableStateOf<Pair<Node, Payload>?>(null) }
     val referencePayload by remember { derivedStateOf { referenceTarget?.second } }
+
+    if (
+        !canHaveChildren ||
+            (payload is Directory && payload.collapsed == true) ||
+            (payload is Reference &&
+                referencePayload != null &&
+                (referencePayload !is Directory ||
+                    (referencePayload as Directory).collapsed == true))
+    ) {
+        doneLoadingChildren.value = true
+    }
 
     LaunchedEffect(payload) {
         // Get target node and payload for references.
@@ -511,9 +531,16 @@ private fun RecursiveNodeList(
                                 if (children.size > index)
                                     children.removeAt(index) // This prevents duplication.
                                 children.add(index, child)
+                                childrenDoneLoadingChildren[child.first] = mutableStateOf(false)
                                 if (index == result.size)
                                     childrenVisibleTransition.targetState = true
-                                else delay(1) // This prevents a lag spike.
+                                else {
+                                    delay(RENDER_DELAY_MS)
+                                    do delay(1) while (
+                                        childrenDoneLoadingChildren[child.first]?.value != true
+                                    )
+                                    if (index == result.size - 1) doneLoadingChildren.value = true
+                                }
                             }
                         }
             }
@@ -624,22 +651,26 @@ private fun RecursiveNodeList(
             Column {
                 for (childPair in children) {
                     key(childPair) {
-                        RecursiveNodeList(
-                            db = db,
-                            navController = navController,
-                            depth = depth + 1,
-                            node = childPair.first,
-                            payload = childPair.second,
-                            permissions = childPermissions,
-                            dimensions = dimensions,
-                            optionsVisibleNodeId = optionsVisibleNodeId,
-                            onNodeClick = onNodeClick,
-                            onNodeLongClick = onNodeLongClick,
-                            onNodeChildrenVisibilityChange = onNodeChildrenVisibilityChange,
-                            onAddNodeDialogOpened = onAddNodeDialogOpened,
-                            onAddNodeDialogClosed = onAddNodeDialogClosed,
-                            onAddNode = onAddNode,
-                        )
+                        childrenDoneLoadingChildren[childPair.first]?.let { childDoneLoadingChildren
+                            ->
+                            RecursiveNodeList(
+                                db = db,
+                                navController = navController,
+                                depth = depth + 1,
+                                node = childPair.first,
+                                payload = childPair.second,
+                                doneLoadingChildren = childDoneLoadingChildren,
+                                permissions = childPermissions,
+                                dimensions = dimensions,
+                                optionsVisibleNodeId = optionsVisibleNodeId,
+                                onNodeClick = onNodeClick,
+                                onNodeLongClick = onNodeLongClick,
+                                onNodeChildrenVisibilityChange = onNodeChildrenVisibilityChange,
+                                onAddNodeDialogOpened = onAddNodeDialogOpened,
+                                onAddNodeDialogClosed = onAddNodeDialogClosed,
+                                onAddNode = onAddNode,
+                            )
+                        }
                     }
                 }
             }
