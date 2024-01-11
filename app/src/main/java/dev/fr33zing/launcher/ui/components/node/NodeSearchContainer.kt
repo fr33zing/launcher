@@ -68,6 +68,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -75,7 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Node
+import dev.fr33zing.launcher.data.persistent.NodeMinimal
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
@@ -90,6 +91,8 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.lang.Float.max
+import java.util.Timer
+import kotlin.concurrent.schedule
 import kotlin.math.pow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -100,7 +103,8 @@ private val searchPanelExtraPaddingTop = 16.dp
 private const val ALLOWED_OVERSCROLL_FACTOR = 1.5f
 private const val OVERSCROLL_RESISTANCE_EXPONENT = 3
 
-private const val SHOW_SCORE_INDICATOR = true
+/** Database is considered slow after this delay. */
+private const val SLOW_DATABASE_DELAY_MS: Long = 1000
 
 private val activateBestMatchSubject = PublishSubject.create<Unit>()
 
@@ -132,7 +136,11 @@ fun NodeSearchContainer(
 
     val query = remember { mutableStateOf("") }
     val nodeKindFilter = remember { mutableStateListOf<NodeKind>() }
-    val nodePayloads = remember { mutableStateListOf<Pair<Node, Payload>>() }
+    val nodePayloads = remember { mutableStateListOf<Pair<NodeMinimal, Payload>>() }
+    var databaseSlow by remember { mutableStateOf(false) }
+
+    val scale = remember { mutableFloatStateOf(1f) }
+    val nodeDimensions = rememberNodeListDimensions(scale)
 
     fun closePanel() {
         currentPanelHeight = 0f
@@ -144,16 +152,24 @@ fun NodeSearchContainer(
         if (!panelVisible) {
             nodePayloads.clear()
             query.value = ""
+            databaseSlow = false
         } else {
+            val timer = Timer()
+            timer.schedule(SLOW_DATABASE_DELAY_MS) { databaseSlow = true }
+
             db.nodeDao()
-                .getAll()
+                .getAllMinimal()
                 .map { node ->
                     val payload =
                         db.getPayloadByNodeId(node.kind, node.nodeId)
                             ?: throw Exception("Payload is null")
                     Pair(node, payload)
                 }
-                .let { nodePayloads.addAll(it) }
+                .let {
+                    nodePayloads.addAll(it)
+                    timer.cancel()
+                    databaseSlow = false
+                }
         }
     }
 
@@ -240,8 +256,25 @@ fun NodeSearchContainer(
             }
         }
 
-        if (query.value.isEmpty() || !panelVisible) content(scrollState)
-        else SearchResults(db, shadowHeight, nodePayloads, nodeKindFilter, query.value)
+        if (query.value.isEmpty() || !panelVisible) {
+            content(scrollState)
+        } else if (nodePayloads.isNotEmpty()) {
+            SearchResults(
+                db,
+                shadowHeight,
+                nodePayloads,
+                nodeKindFilter,
+                nodeDimensions,
+                query.value
+            )
+        } else if (databaseSlow) {
+            Text(
+                "Reading database...",
+                textAlign = TextAlign.Center,
+                color = Foreground.mix(Background, 0.5f),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -249,14 +282,13 @@ fun NodeSearchContainer(
 private fun SearchResults(
     db: AppDatabase,
     shadowHeight: Dp,
-    nodePayloads: SnapshotStateList<Pair<Node, Payload>>,
+    nodePayloads: SnapshotStateList<Pair<NodeMinimal, Payload>>,
     nodeKindFilter: SnapshotStateList<NodeKind>,
+    dimensions: NodeListDimensions,
     query: String
 ) {
     val context = LocalContext.current
     val lazyListState = rememberLazyListState()
-    val scale = remember { mutableFloatStateOf(1f) }
-    val dimensions = rememberNodeListDimensions(scale)
 
     val fuzzyMatcher = rememberFuzzyMatcher(nodePayloads) { it.first.label }
     val matches = remember(nodePayloads, query) { fuzzyMatcher.match(query) }
