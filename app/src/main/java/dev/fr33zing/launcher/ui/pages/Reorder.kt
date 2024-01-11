@@ -44,6 +44,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.Preferences
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
@@ -69,7 +70,7 @@ private val extraPadding = 6.dp
 @Composable
 fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     var parentNode by remember { mutableStateOf<Node?>(null) }
-    val nodes = remember { mutableStateOf<List<Node>?>(null) }
+    val nodes = remember { mutableStateOf<List<Pair<Node, Payload>>?>(null) }
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
@@ -80,11 +81,23 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             parentNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Parent node is null")
+            val parentPayload =
+                db.getPayloadByNodeId(parentNode!!.kind, parentNode!!.nodeId)
+                    ?: throw Exception("Parent payload is null")
             // Parent node is added as the first element in the list due to a bug with the
             // reorderable modifier implementation which prevents the first element from being
             // animated properly. See here: https://github.com/aclassen/ComposeReorderable#Notes
             nodes.value =
-                listOf(parentNode!!) + db.nodeDao().getChildNodes(nodeId).sortedBy { it.order }
+                listOf(Pair(parentNode!!, parentPayload)) +
+                    db.nodeDao()
+                        .getChildNodes(nodeId)
+                        .sortedBy { it.order }
+                        .map {
+                            val payload =
+                                db.getPayloadByNodeId(it.kind, it.nodeId)
+                                    ?: throw Exception("Payload is null")
+                            Pair(it, payload)
+                        }
         }
     }
 
@@ -110,7 +123,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue reordering",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, nodes.value!!) },
+        onYes = { onSaveChanges(navController, db, nodes.value!!.map { it.first }) },
     )
 
     BackHandler {
@@ -137,7 +150,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                     }
                     FinishButton {
                         if (askOnAccept) saveDialogVisible.value = true
-                        else onSaveChanges(navController, db, nodes.value!!)
+                        else onSaveChanges(navController, db, nodes.value!!.map { it.first })
                     }
                 },
             )
@@ -172,7 +185,7 @@ private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: 
 }
 
 @Composable
-private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) {
+private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Pair<Node, Payload>>?>) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
     val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
@@ -197,7 +210,7 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
         state = reorderableState.listState,
         modifier = Modifier.reorderable(reorderableState).fillMaxSize()
     ) {
-        items(nodes.value!!, { it.nodeId }) { node ->
+        items(nodes.value!!, { it.first.nodeId }) { (node, payload) ->
             ReorderableItem(
                 reorderableState,
                 key = node.nodeId,
@@ -218,8 +231,10 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Node>?>) 
                         lineHeight = lineHeight,
                         label = node.label,
                         color =
-                            if (!draggable) Foreground.mix(Background, 0.5f) else node.kind.color,
-                        icon = node.kind.icon,
+                            if (!draggable) Foreground.mix(Background, 0.5f)
+                            else node.kind.color(payload),
+                        icon = node.kind.icon(payload),
+                        lineThrough = node.kind.lineThrough(payload),
                         softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                         textModifier = Modifier.weight(1f)
