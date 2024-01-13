@@ -40,7 +40,7 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val nodePayloads by viewModel.nodePayloads.collectAsStateWithLifecycle()
 
     fun onFlingUp() = navController.navigate("home/tree/$ROOT_NODE_ID")
 
@@ -56,12 +56,12 @@ fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel(
                 .longPressable { navController.navigate("settings") },
     ) {
         Clock(ScreenHorizontalPadding)
-        HomeNodeList(uiState.nodePayloads, Modifier.weight(1f))
+        HomeNodeList(nodePayloads, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun HomeNodeList(nodePayloads: List<NodePayloadState>, modifier: Modifier = Modifier) {
+private fun HomeNodeList(nodePayloads: Array<NodePayloadState>, modifier: Modifier = Modifier) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
 
