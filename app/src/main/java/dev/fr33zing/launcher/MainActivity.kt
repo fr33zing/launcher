@@ -46,7 +46,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
+import dagger.hilt.android.AndroidEntryPoint
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.autoCategorizeNewApplications
@@ -70,6 +70,7 @@ import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import dev.fr33zing.launcher.ui.utility.mix
 import io.reactivex.rxjava3.subjects.PublishSubject
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -84,8 +85,11 @@ fun doNotGoHomeOnNextPause() {
     goHomeOnNextPause = false
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var db: AppDatabase
+    // TODO remove this once everything uses dependency injection
+    @Inject lateinit var db: AppDatabase
+
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
     override fun onPause() {
@@ -109,8 +113,8 @@ class MainActivity : ComponentActivity() {
         window.setDecorFitsSystemWindows(false)
         window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
-        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database").build()
-        // Keep track of what packages are installed at launch so we can save on database calls when
+        // Keep track of what packages are installed at launch so we can save on database calls
+        // when
         // checking for new applications on resume or ACTION_PACKAGE_ADDED broadcast received.
         runBlocking {
             packagesInstalledAtLaunch =
@@ -247,7 +251,7 @@ class MainActivity : ComponentActivity() {
             },
         ) {
             composable("settings") { Preferences(db) }
-            composable("home") { Home(db, navController) }
+            composable("home") { Home(navController) }
             composable("home/tree/{nodeId}") { backStackEntry ->
                 Tree(db, navController, backStackEntry.nodeIdOrNull())
             }

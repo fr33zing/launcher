@@ -12,47 +12,37 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.flowWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
-import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
-import dev.fr33zing.launcher.data.persistent.payloads.Directory
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
+import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadState
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.utility.longPressable
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.launch
+import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
-fun Home(db: AppDatabase, navController: NavController) {
-    fun onFlingUp() {
-        navController.navigate("home/tree/$ROOT_NODE_ID")
-    }
+fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    fun onFlingUp() = navController.navigate("home/tree/$ROOT_NODE_ID")
 
     BackHandler { /* Prevent back button loop */}
 
@@ -66,56 +56,43 @@ fun Home(db: AppDatabase, navController: NavController) {
                 .longPressable { navController.navigate("settings") },
     ) {
         Clock(ScreenHorizontalPadding)
-        HomeNodeList(db, modifier = Modifier.weight(1f))
+        HomeNodeList(uiState.nodePayloads, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun HomeNodeList(db: AppDatabase, modifier: Modifier = Modifier) {
-    val homeNodes = remember { mutableStateListOf<Node>() }
-
+private fun HomeNodeList(nodePayloads: List<NodePayloadState>, modifier: Modifier = Modifier) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
 
     val fontSize by preferences.nodeAppearance.fontSize.state
     val spacing by preferences.nodeAppearance.spacing.state
-    val lineHeight = with(localDensity) { fontSize.toDp() }
-
-    LaunchedEffect(Unit) {
-        val homeNode = db.getOrCreateSingletonDirectory(Directory.SpecialMode.Home)
-        homeNodes.addAll(db.nodeDao().getChildNodes(homeNode.nodeId).sortedBy { it.order })
-    }
+    val lineHeight = remember(fontSize, localDensity) { with(localDensity) { fontSize.toDp() } }
 
     Column(verticalArrangement = Arrangement.Center, modifier = modifier) {
-        homeNodes.forEach { key(it.nodeId) { HomeNode(db, it, fontSize, spacing, lineHeight) } }
+        nodePayloads.forEach { nodePayload ->
+            key(nodePayload.node.nodeId) {
+                HomeNode(
+                    nodePayload,
+                    fontSize,
+                    spacing,
+                    lineHeight,
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: Dp, lineHeight: Dp) {
+private fun HomeNode(
+    nodePayload: NodePayloadState,
+    fontSize: TextUnit,
+    spacing: Dp,
+    lineHeight: Dp,
+) {
     val context = LocalContext.current
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var payload by remember { mutableStateOf<Payload?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    DisposableEffect(node) {
-        val job =
-            coroutineScope.launch {
-                db.getPayloadFlowByNodeId(node.kind, node.nodeId)
-                    .flowWithLifecycle(lifecycle)
-                    .cancellable()
-                    .collect { payload = it }
-            }
-
-        onDispose { job.cancel() }
-    }
-
-    if (payload == null) return
-
-    val color = remember(node, payload) { node.kind.color(payload) }
-    val icon = remember(node, payload) { node.kind.icon(payload) }
-    val text = remember(node) { node.label }
-    val lineThrough = remember(node, payload) { node.kind.lineThrough(payload) }
+    val (node) = nodePayload
+    val (color, icon, lineThrough) = rememberNodeAppearance(nodePayload)
 
     val interactionSource = remember(node) { MutableInteractionSource() }
     val indication = rememberCustomIndication(color = color)
@@ -124,7 +101,7 @@ private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: D
         Modifier.clickable(
             interactionSource,
             indication,
-            onClick = { payload!!.activate(db, context) }
+            onClick = { nodePayload.activate(context) }
         )
     ) {
         Row(
@@ -136,7 +113,7 @@ private fun HomeNode(db: AppDatabase, node: Node, fontSize: TextUnit, spacing: D
             NodeIconAndText(
                 fontSize = fontSize,
                 lineHeight = lineHeight,
-                label = text,
+                label = node.label,
                 color = color,
                 icon = icon,
                 lineThrough = lineThrough,

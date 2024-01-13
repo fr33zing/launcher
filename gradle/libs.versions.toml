@@ -1,10 +1,7 @@
 [versions]
 agp = "8.2.1"
-androidx-hilt-compiler = "1.1.0"
 datastore = "1.0.0"
 fuzzywuzzy = "1.4.0"
-hilt-android = "2.44"
-hilt-compiler = "2.48.1"
 kaml = "0.55.0"
 lifecycle-runtime-compose = "2.6.2"
 material-icons-extended = "1.5.4"
@@ -15,7 +12,13 @@ compose-bom = "2023.10.01"
 reorderable = "0.9.6"
 room-runtime = "2.6.1"
 rxkotlin = "3.0.1"
-com-google-dagger-hilt-android = "2.44"
+
+# Hilt
+androidx-hilt-compiler = "1.1.0"
+androidx-hilt-navigation-compose = "1.1.0"
+com-google-dagger-hilt-android = "2.48.1"
+hilt-android = "2.48.1"
+hilt-compiler = "2.48.1"
 
 # Careful updating these
 org-jetbrains-kotlin-android = "1.9.21"
@@ -26,6 +29,7 @@ org-jetbrains-kotlin-reflect = "1.9.21"
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidx-hilt-compiler" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "androidx-hilt-navigation-compose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle-runtime-compose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle-runtime-compose" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "material-icons-extended" }
