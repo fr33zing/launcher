@@ -43,9 +43,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
@@ -89,6 +89,7 @@ fun doNotGoHomeOnNextPause() {
 class MainActivity : ComponentActivity() {
     // TODO remove this once everything uses dependency injection
     @Inject lateinit var db: AppDatabase
+    @Inject lateinit var navController: NavHostController
 
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
@@ -136,7 +137,7 @@ class MainActivity : ComponentActivity() {
 
                     if (remainingAppsToCategorize == 0 || remainingAppsToCategorize == null) {
                         Box {
-                            Main(db)
+                            Main(db, navController)
                             Notices()
                         }
                     } else {
@@ -211,10 +212,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun Main(db: AppDatabase) {
-        // TODO fix bug that causes tree to slide horizontally when pressing home button
-        val navController = rememberNavController()
-
+    private fun Main(db: AppDatabase, navController: NavHostController) {
         DisposableEffect(Unit) {
             val subscription =
                 GoHomeSubject.subscribe {
