@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -62,14 +61,9 @@ fun TreeBrowser(
         targetState = state!!,
         label = "tree browser",
         transitionSpec = {
-            val animationDirection = state!!.direction.depthChange
-            val animationDuration = 600
-            (fadeIn(tween(animationDuration)) +
-                slideInHorizontally(tween(animationDuration)) {
-                    it * animationDirection
-                }) togetherWith
-                (fadeOut(tween(animationDuration)) +
-                    slideOutHorizontally(tween(animationDuration)) { -it * animationDirection })
+            val direction = state!!.direction.depthChange
+            fadeIn() + slideInHorizontally { it * direction } togetherWith
+                fadeOut() + slideOutHorizontally { -it * direction }
         },
         modifier = modifier,
     ) { targetState ->
