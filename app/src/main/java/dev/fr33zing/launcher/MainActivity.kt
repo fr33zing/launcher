@@ -12,12 +12,6 @@ import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,10 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
@@ -58,18 +48,10 @@ import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.data.utility.addNewUserInstructionNodes
 import dev.fr33zing.launcher.data.utility.getActivityInfos
 import dev.fr33zing.launcher.ui.components.Notices
-import dev.fr33zing.launcher.ui.pages.Create
-import dev.fr33zing.launcher.ui.pages.Edit
-import dev.fr33zing.launcher.ui.pages.Home
-import dev.fr33zing.launcher.ui.pages.Move
-import dev.fr33zing.launcher.ui.pages.Preferences
-import dev.fr33zing.launcher.ui.pages.Reorder
-import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
 import dev.fr33zing.launcher.ui.utility.mix
-import io.reactivex.rxjava3.subjects.PublishSubject
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,18 +60,11 @@ import kotlinx.coroutines.runBlocking
 
 const val TAG = "dev.fr33zing.launcher"
 
-val GoHomeSubject = PublishSubject.create<Unit>()
-private var goHomeOnNextPause = true
-
-fun doNotGoHomeOnNextPause() {
-    goHomeOnNextPause = false
-}
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     // TODO remove this once everything uses dependency injection
     @Inject lateinit var db: AppDatabase
-    @Inject lateinit var navController: NavHostController
+    //    @Inject lateinit var navController: NavHostController
 
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
@@ -137,7 +112,7 @@ class MainActivity : ComponentActivity() {
 
                     if (remainingAppsToCategorize == 0 || remainingAppsToCategorize == null) {
                         Box {
-                            Main(db, navController)
+                            SetupNavigation(db)
                             Notices()
                         }
                     } else {
@@ -208,63 +183,6 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "Calling createNewApplications in checkForNewApplications")
             db.createNewApplications(activityInfos)
             db.deleteNewApplicationsDirectoryIfEmpty()
-        }
-    }
-
-    @Composable
-    private fun Main(db: AppDatabase, navController: NavHostController) {
-        DisposableEffect(Unit) {
-            val subscription =
-                GoHomeSubject.subscribe {
-                    if (navController.currentDestination?.route != "home")
-                        navController.navigate("home")
-                }
-            onDispose { subscription.dispose() }
-        }
-
-        fun NavBackStackEntry.hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
-        fun NavBackStackEntry.nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
-        fun NavBackStackEntry.nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
-
-        NavHost(
-            navController,
-            startDestination = "home",
-            enterTransition = {
-                if (initialState.hasTreeRoute()) fadeIn()
-                else if (targetState.hasTreeRoute()) slideInVertically { it } + fadeIn()
-                else slideInHorizontally { it } + fadeIn()
-            },
-            exitTransition = {
-                if (initialState.hasTreeRoute()) slideOutVertically { it } + fadeOut()
-                else if (targetState.hasTreeRoute()) fadeOut()
-                else slideOutHorizontally { -it } + fadeOut()
-            },
-            popEnterTransition = {
-                if (initialState.hasTreeRoute()) fadeIn()
-                else slideInHorizontally { -it } + fadeIn()
-            },
-            popExitTransition = {
-                if (initialState.hasTreeRoute()) slideOutVertically { it } + fadeOut()
-                else slideOutHorizontally { it } + fadeOut()
-            },
-        ) {
-            composable("settings") { Preferences(db) }
-            composable("home") { Home(navController) }
-            composable("home/tree/{nodeId}") { backStackEntry ->
-                Tree(db, navController, backStackEntry.nodeIdOrNull())
-            }
-            composable("edit/{nodeId}") { backStackEntry ->
-                Edit(db, navController, backStackEntry.nodeId())
-            }
-            composable("create/{nodeId}") { backStackEntry ->
-                Create(db, navController, backStackEntry.nodeId())
-            }
-            composable("reorder/{nodeId}") { backStackEntry ->
-                Reorder(db, navController, backStackEntry.nodeId())
-            }
-            composable("move/{nodeId}") { backStackEntry ->
-                Move(db, navController, backStackEntry.nodeId())
-            }
         }
     }
 

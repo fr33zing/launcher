@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.pages
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
 import dev.fr33zing.launcher.ui.components.Clock
@@ -28,6 +30,11 @@ fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel(
 
     val context = LocalContext.current
 
+    viewModel.treeBrowser.onNodeSelected {
+        Log.d(TAG, "ASDDADSDDDDDDDDDDDDDDDd")
+        it.activate(context)
+    }
+
     fun onFlingUp() = navController.navigate("home/tree/$ROOT_NODE_ID")
 
     BackHandler { /* Prevent back button loop */}
@@ -38,13 +45,11 @@ fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel(
             Modifier.systemBarsPadding()
                 .padding(vertical = 32.dp)
                 .fillMaxSize()
+                .longPressable { navController.navigate("settings") }
                 .pointerInput(Unit) { detectFlingUp(::onFlingUp) }
-                .longPressable { navController.navigate("settings") },
     ) {
         Clock(ScreenHorizontalPadding)
-        Column(verticalArrangement = Arrangement.SpaceAround, modifier = Modifier.weight(1f)) {
-            TreeBrowser(viewModel.treeBrowser, onNodeSelected = { it.activate(context) })
-        }
+        TreeBrowser(viewModel.treeBrowser, modifier = Modifier.weight(1f))
     }
 }
 

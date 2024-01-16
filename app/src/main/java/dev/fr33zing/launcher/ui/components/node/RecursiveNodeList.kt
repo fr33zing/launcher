@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -69,9 +71,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -117,13 +124,13 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
-import java.lang.Float.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.lang.Float.*
 
 val RecursiveNodeListHorizontalPadding = 16.dp
 private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
@@ -188,6 +195,33 @@ private fun ZoomDetector(
 }
 
 @Composable
+private fun inlineLabelContent(
+    icon: ImageVector,
+    color: Color,
+    contentDescription: String,
+    fontSize: TextUnit,
+): InlineTextContent {
+    val density = LocalDensity.current
+    val size = remember { fontSize }
+    val sizeDp = remember { with(density) { size.toDp() } }
+
+    return InlineTextContent(
+        Placeholder(
+            width = size,
+            height = size,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
+        )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = color,
+            modifier = Modifier.size(sizeDp)
+        )
+    }
+}
+
+@Composable
 fun NodeIconAndText(
     fontSize: TextUnit,
     lineHeight: Dp,
@@ -197,9 +231,28 @@ fun NodeIconAndText(
     lineThrough: Boolean = false,
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
+    isValidReference: Boolean = false,
     @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
 ) {
+    val inlineContentMap =
+        mapOf(
+            "reference" to
+                inlineLabelContent(
+                    icon = NodeKind.Reference.icon,
+                    color = NodeKind.Reference.color,
+                    contentDescription = "reference indicator",
+                    fontSize = fontSize
+                )
+        )
+    val text = buildAnnotatedString {
+        append(label)
+        if (isValidReference) {
+            withStyle(SpanStyle(textDecoration = TextDecoration.None)) { append("  ") }
+            appendInlineContent("reference", "→")
+        }
+    }
     val iconSize = remember { 1f }
+
     Icon(
         icon,
         contentDescription = null,
@@ -207,7 +260,7 @@ fun NodeIconAndText(
         modifier = Modifier.size(lineHeight * iconSize),
     )
     Text(
-        text = label,
+        text = text,
         modifier =
             Modifier.offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
                 .absolutePadding(left = lineHeight * 0.5f)
@@ -216,7 +269,8 @@ fun NodeIconAndText(
         fontSize = fontSize,
         softWrap = softWrap,
         overflow = overflow,
-        textDecoration = if (lineThrough) TextDecoration.LineThrough else null
+        textDecoration = if (lineThrough) TextDecoration.LineThrough else null,
+        inlineContent = inlineContentMap
     )
 }
 
@@ -417,12 +471,13 @@ private fun RecursiveNodeList(
 
     LaunchedEffect(doneLoadingChildren.value) {
         if (
-            !doneLoadingChildren.value && !canHaveChildren ||
-                (payload is Directory && payload.collapsed == true) ||
-                (payload is Reference &&
-                    referencePayload != null &&
-                    (referencePayload !is Directory ||
-                        (referencePayload as Directory).collapsed == true))
+            !doneLoadingChildren.value &&
+                (!canHaveChildren ||
+                    (payload is Directory && payload.collapsed == true) ||
+                    (payload is Reference &&
+                        (referencePayload == null ||
+                            (referencePayload !is Directory ||
+                                (referencePayload as Directory).collapsed == true))))
         ) {
             doneLoadingChildren.value = true
         }
