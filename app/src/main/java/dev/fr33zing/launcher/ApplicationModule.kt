@@ -17,12 +17,4 @@ object ApplicationModule {
     @Provides
     fun provideAppDatabase(@ApplicationContext context: Context) =
         Room.databaseBuilder(context, AppDatabase::class.java, "database").build()
-
-    //    @Provides
-    //    @Singleton
-    //    fun provideNavHostController(@ApplicationContext context: Context) =
-    //        NavHostController(context).apply {
-    //            navigatorProvider.addNavigator(ComposeNavigator())
-    //            navigatorProvider.addNavigator(DialogNavigator())
-    //        }
 }

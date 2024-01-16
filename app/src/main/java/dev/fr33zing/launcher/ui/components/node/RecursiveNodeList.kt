@@ -124,13 +124,13 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
+import java.lang.Float.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.lang.Float.*
 
 val RecursiveNodeListHorizontalPadding = 16.dp
 private val closeNodeOptionsSubject = PublishSubject.create<Unit>()
@@ -381,7 +381,6 @@ fun RecursiveNodeListSetup(
     }
 
     fun onAddNodeDialogOpened(relativeNodePosition: RelativeNodePosition) {
-        Log.d(TAG, "Opened add node dialog, relative position: $relativeNodePosition")
         newNodePosition = relativeNodePosition
         hideNodeOptions()
     }
@@ -631,7 +630,7 @@ private fun RecursiveNodeList(
         // TODO fix order after changes
         DisposableEffect(node) {
             fun log(vararg lines: String) {
-                Log.i(TAG, "[DB] ${lines.joinToString("\n ->      ")}")
+                Log.v(TAG, "[DB] ${lines.joinToString("\n ->      ")}")
             }
 
             val subscriptions =

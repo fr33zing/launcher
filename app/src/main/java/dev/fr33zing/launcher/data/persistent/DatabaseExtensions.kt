@@ -251,10 +251,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                     if (parentId != null) event = Pair(lastNodeId, parentId)
                     lastNodeId
                 }
-                event?.let {
-                    Log.d(TAG, "Calling NodeCreatedSubject for $specialMode. Event: $event")
-                    NodeCreatedSubject.onNext(it)
-                }
+                event?.let { NodeCreatedSubject.onNext(it) }
                 createdNodeId
             }
             else -> throw Exception("Multiple directories exist with special mode: $specialMode")

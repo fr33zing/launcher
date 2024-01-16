@@ -1,6 +1,5 @@
 package dev.fr33zing.launcher.ui.pages
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
 import dev.fr33zing.launcher.ui.components.Clock
@@ -26,14 +24,9 @@ import dev.fr33zing.launcher.ui.utility.longPressable
 
 @Composable
 fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
-    //    val nodePayloads by viewModel.nodePayloads.collectAsStateWithLifecycle()
-
     val context = LocalContext.current
 
-    viewModel.treeBrowser.onNodeSelected {
-        Log.d(TAG, "ASDDADSDDDDDDDDDDDDDDDd")
-        it.activate(context)
-    }
+    viewModel.treeBrowser.onNodeSelected { it.activate(context) }
 
     fun onFlingUp() = navController.navigate("home/tree/$ROOT_NODE_ID")
 
@@ -52,65 +45,3 @@ fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel(
         TreeBrowser(viewModel.treeBrowser, modifier = Modifier.weight(1f))
     }
 }
-
-// @Composable
-// private fun HomeNodeList(nodePayloads: Array<NodePayloadState>, modifier: Modifier = Modifier) {
-//    val preferences = Preferences(LocalContext.current)
-//    val localDensity = LocalDensity.current
-//
-//    val fontSize by preferences.nodeAppearance.fontSize.state
-//    val spacing by preferences.nodeAppearance.spacing.state
-//    val lineHeight = remember(fontSize, localDensity) { with(localDensity) { fontSize.toDp() } }
-//
-//    Column(verticalArrangement = Arrangement.Center, modifier = modifier) {
-//        nodePayloads.forEach { nodePayload ->
-//            key(nodePayload.node.nodeId) {
-//                HomeNode(
-//                    nodePayload,
-//                    fontSize,
-//                    spacing,
-//                    lineHeight,
-//                )
-//            }
-//        }
-//    }
-// }
-
-// @Composable
-// private fun HomeNode(
-//    nodePayload: NodePayloadState,
-//    fontSize: TextUnit,
-//    spacing: Dp,
-//    lineHeight: Dp,
-// ) {
-//    val context = LocalContext.current
-//    val (node) = nodePayload
-//    val (color, icon, lineThrough) = rememberNodeAppearance(nodePayload)
-//
-//    val interactionSource = remember(node) { MutableInteractionSource() }
-//    val indication = rememberCustomIndication(color = color)
-//
-//    Box(
-//        Modifier.clickable(
-//            interactionSource,
-//            indication,
-//            onClick = { nodePayload.activate(context) }
-//        )
-//    ) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier =
-//                Modifier.fillMaxWidth()
-//                    .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
-//        ) {
-//            NodeIconAndText(
-//                fontSize = fontSize,
-//                lineHeight = lineHeight,
-//                label = node.label,
-//                color = color,
-//                icon = icon,
-//                lineThrough = lineThrough,
-//            )
-//        }
-//    }
-// }

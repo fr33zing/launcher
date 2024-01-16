@@ -8,7 +8,6 @@ import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.UserHandle
 import android.os.UserManager
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,13 +63,11 @@ const val TAG = "dev.fr33zing.launcher"
 class MainActivity : ComponentActivity() {
     // TODO remove this once everything uses dependency injection
     @Inject lateinit var db: AppDatabase
-    //    @Inject lateinit var navController: NavHostController
 
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
     override fun onPause() {
         super.onPause()
-        Log.e(TAG, "PAUSE")
         if (goHomeOnNextPause) GoHomeSubject.onNext(Unit) else goHomeOnNextPause = true
     }
 
@@ -153,7 +150,6 @@ class MainActivity : ComponentActivity() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val isFirstRun = db.nodeDao().getNodeById(ROOT_NODE_ID) == null
                             val activityInfos = getActivityInfos(applicationContext)
-                            Log.d(TAG, "Calling createNewApplications in first run logic")
                             val newApps = db.createNewApplications(activityInfos)
 
                             if (isFirstRun) {
@@ -180,7 +176,6 @@ class MainActivity : ComponentActivity() {
                             activityInfo.user == alreadyInstalled.second
                     }
                 }
-            Log.d(TAG, "Calling createNewApplications in checkForNewApplications")
             db.createNewApplications(activityInfos)
             db.deleteNewApplicationsDirectoryIfEmpty()
         }

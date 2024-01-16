@@ -23,18 +23,13 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 
 // https://stackoverflow.com/a/72554087
-fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
-    return if (condition) {
-        then(modifier(Modifier))
-    } else {
-        this
-    }
-}
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier =
+    if (condition) then(modifier(Modifier)) else this
 
 fun Modifier.longPressable(tapNotice: (() -> Notice)? = null, onLongPressed: () -> Unit) =
     composed {
         val haptics = LocalHapticFeedback.current
-        pointerInput(onLongPressed) {
+        this.pointerInput(onLongPressed) {
             detectTapGestures(
                 onTap = {
                     tapNotice?.let {
