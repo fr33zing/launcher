@@ -41,6 +41,8 @@ import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
+// TODO handle Y overflow. Needs to have two modes, truncate and scroll.
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TreeBrowser(
