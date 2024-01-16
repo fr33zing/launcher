@@ -56,10 +56,7 @@ class NodePayloadWithReferenceTargetState(
     val isValidReference = targetState != null
 }
 
-class NodePayloadStateHolder(
-    db: AppDatabase,
-    val node: Node,
-) {
+class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
     val flow: Flow<NodePayloadState> =
         db.getPayloadFlowByNodeId(node.kind, node.nodeId).map { payload ->
             NodePayloadState(

@@ -2,6 +2,7 @@ package dev.fr33zing.launcher.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -40,6 +41,7 @@ import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TreeBrowser(
     stateHolder: TreeBrowserStateHolder,
@@ -55,7 +57,7 @@ fun TreeBrowser(
 
     if (state == null) return
 
-    BackHandler(enabled = state!!.canTraverseUpward) { stateHolder.traverseUpward(state!!) }
+    BackHandler(enabled = state!!.canTraverseUpward) { stateHolder.traverseUpward() }
 
     AnimatedContent(
         targetState = state!!,
@@ -72,14 +74,20 @@ fun TreeBrowser(
                 emptyArray()
             )
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
-            if (targetState.canTraverseUpward)
-                TraverseUpRow(fontSize, spacing, lineHeight) {
-                    stateHolder.traverseUpward(currentState = targetState)
-                }
+            if (targetState.canTraverseUpward) {
+                TraverseUpRow(
+                    enabled = !transition.isRunning,
+                    fontSize = fontSize,
+                    spacing = spacing,
+                    lineHeight = lineHeight,
+                    onTraverseUp = stateHolder::traverseUpward
+                )
+            }
 
             for (nodePayload in children) {
                 key(nodePayload.node.nodeId) {
                     TreeBrowserRow(
+                        enabled = !transition.isRunning,
                         state = nodePayload,
                         fontSize = fontSize,
                         spacing = spacing,
@@ -96,6 +104,7 @@ fun TreeBrowser(
 
 @Composable
 private fun TraverseUpRow(
+    enabled: Boolean,
     fontSize: TextUnit,
     spacing: Dp,
     lineHeight: Dp,
@@ -110,7 +119,7 @@ private fun TraverseUpRow(
 
     Row(
         modifier =
-            Modifier.clickable(interactionSource, indication, onClick = onTraverseUp)
+            Modifier.clickable(interactionSource, indication, enabled, onClick = onTraverseUp)
                 .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
                 .fillMaxWidth()
     ) {
@@ -129,6 +138,7 @@ private fun TraverseUpRow(
 
 @Composable
 private fun TreeBrowserRow(
+    enabled: Boolean,
     state: NodePayloadWithReferenceTargetState,
     fontSize: TextUnit,
     spacing: Dp,
@@ -143,7 +153,7 @@ private fun TreeBrowserRow(
 
     Row(
         modifier =
-            Modifier.clickable(interactionSource, indication, onClick = onNodeSelected)
+            Modifier.clickable(interactionSource, indication, enabled, onClick = onNodeSelected)
                 .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
                 .fillMaxWidth()
     ) {

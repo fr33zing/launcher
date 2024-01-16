@@ -1,13 +1,15 @@
 package dev.fr33zing.launcher.data.viewmodel.utility
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getRootNode
+import dev.fr33zing.launcher.data.persistent.payloads.Reference
+import dev.fr33zing.launcher.data.utility.NullPayloadException
+import dev.fr33zing.launcher.data.utility.PayloadClassMismatchException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,12 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// data class TreeBrowserPage(
-//    val root: NodePayloadStateHolder,
-//    val children: NodePayloadListStateHolder
-// )
-
 data class TreeBrowserState(
+    val stack: ArrayDeque<Node>,
     val root: NodePayloadStateHolder,
     val children: NodePayloadListStateHolder,
     val canTraverseUpward: Boolean,
@@ -51,28 +49,41 @@ class TreeBrowserStateHolder(
     /** If the predicate returns false, the node will be hidden. */
     private val nodeVisiblePredicate: (NodePayloadState) -> Boolean = { true },
 
-    /** Function to call when a node is tapped, after ... */
+    /**
+     * Function to call when a node is tapped. Not called when tapping directories if
+     * `traverseDirectories` is true.
+     */
     private val onNodeSelected: MutableState<(NodePayloadState) -> Unit> = mutableStateOf({}),
 
     /**
-     * Function used to determine the initial directory. Defaults to global root node if no value is
-     * provided.
+     * Function used to determine the initial directory. Defaults to the global root node if no
+     * value is provided.
      */
     private val initialRootNode: suspend () -> Node = db::getRootNode
 ) {
-    private val rootNodeFlow = MutableSharedFlow<Pair<Node, TreeBrowserState.Direction>>()
+    private data class Update(
+        val stack: ArrayDeque<Node>,
+        val direction: TreeBrowserState.Direction,
+    )
 
+    private val updateFlow = MutableSharedFlow<Update>()
     private var initialRootNodeId: Int? = null
     private var canTraverseUpward: Boolean = !containTraversalWithinInitialRoot
 
     val flow =
-        rootNodeFlow
-            .map { (rootNode, direction) ->
-                canTraverseUpward =
-                    !containTraversalWithinInitialRoot || rootNode.nodeId != initialRootNodeId
-
+        updateFlow
+            .map { (stack, direction) ->
+                val rootNode = stack.last()
+                val loadChildrenFromId =
+                    if (rootNode.kind != NodeKind.Reference) rootNode.nodeId
+                    else {
+                        ((db.getPayloadByNodeId(NodeKind.Reference, rootNode.nodeId)
+                                ?: NullPayloadException(rootNode))
+                                as? Reference ?: throw PayloadClassMismatchException(rootNode))
+                            .targetId ?: throw Exception("targetId is null")
+                    }
                 val childNodes =
-                    db.nodeDao().getChildNodes(rootNode.nodeId).filter {
+                    db.nodeDao().getChildNodes(loadChildrenFromId).filter {
                         val state = NodePayloadState.fromNode(db, it)
                         nodeVisiblePredicate(state)
                     }
@@ -80,7 +91,11 @@ class TreeBrowserStateHolder(
                 val childrenStateHolder =
                     NodePayloadListStateHolder(db, childNodes, nodeVisiblePredicate)
 
+                canTraverseUpward =
+                    !containTraversalWithinInitialRoot || rootNode.nodeId != initialRootNodeId
+
                 TreeBrowserState(
+                    stack = stack,
                     root = rootStateHolder,
                     children = childrenStateHolder,
                     canTraverseUpward = canTraverseUpward,
@@ -97,36 +112,47 @@ class TreeBrowserStateHolder(
         scope.launch {
             val initialRootNode = initialRootNode()
             initialRootNodeId = initialRootNode.nodeId
-            rootNodeFlow.emit(Pair(initialRootNode, TreeBrowserState.Direction.None))
+
+            val stack = ArrayDeque<Node>()
+            stack.add(initialRootNode)
+            do {
+                val parentId = stack.first().parentId ?: break
+                val parentNode =
+                    db.nodeDao().getNodeById(parentId) ?: throw Exception("Node is null")
+                stack.addFirst(parentNode)
+            } while (stack.first().nodeId != ROOT_NODE_ID)
+
+            updateFlow.emit(Update(stack, TreeBrowserState.Direction.None))
         }
     }
 
-    private fun setRootNode(nodePayload: NodePayloadState, direction: TreeBrowserState.Direction) =
-        scope.launch { rootNodeFlow.emit(Pair(nodePayload.node, direction)) }
+    private fun updateStack(
+        direction: TreeBrowserState.Direction,
+        mutateStack: (ArrayDeque<Node>) -> Unit,
+    ) =
+        scope.launch {
+            mutateStack(flow.value!!.stack)
+            updateFlow.emit(Update(flow.value!!.stack, direction))
+        }
 
     /** Move out of the current directory and into its parent. */
-    fun traverseUpward(currentState: TreeBrowserState) {
-        if (!currentState.canTraverseUpward) return
-        currentState.root.node.parentId?.let { parentNodeId ->
-            scope.launch {
-                val parent = NodePayloadState.fromNodeId(db, parentNodeId)
-                setRootNode(parent, TreeBrowserState.Direction.Upward)
-            }
+    fun traverseUpward() {
+        if (!flow.value!!.canTraverseUpward) return
+        scope.launch {
+            updateStack(TreeBrowserState.Direction.Upward) { stack -> stack.removeLast() }
         }
     }
 
-    private fun traverseInward(destination: NodePayloadState) =
-        setRootNode(destination, TreeBrowserState.Direction.Inward)
+    private fun traverseInward(destination: NodePayloadWithReferenceTargetState) =
+        updateStack(TreeBrowserState.Direction.Inward) { stack -> stack.addLast(destination.node) }
 
-    fun selectNode(nodePayload: NodePayloadState) {
+    fun selectNode(nodePayload: NodePayloadWithReferenceTargetState) {
         if (traverseDirectories && nodePayload.node.kind == NodeKind.Directory)
             traverseInward(nodePayload)
-        else {
-            Log.d(TAG, "ASDASD")
-            onNodeSelected.value(nodePayload)
-        }
+        else onNodeSelected.value(nodePayload)
     }
 
+    /** Sets the callback for when a node is selected. */
     fun onNodeSelected(callback: (NodePayloadState) -> Unit) {
         onNodeSelected.value = callback
     }
