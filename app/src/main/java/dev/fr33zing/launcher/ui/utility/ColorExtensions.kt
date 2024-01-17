@@ -1,6 +1,13 @@
 package dev.fr33zing.launcher.ui.utility
 
 import androidx.compose.ui.graphics.Color
+import dev.fr33zing.launcher.ui.theme.Background
+
+const val DIM_RATIO = 0.5f
+
+fun Color.dim() = mix(Background, DIM_RATIO)
+
+fun Color.translucent() = mix(Color.Transparent, DIM_RATIO)
 
 fun Color.mix(with: Color, withRatio: Float): Color {
     if (withRatio < 0f || withRatio > 1f) throw Exception("Value of ratio must be within 0 and 1")
