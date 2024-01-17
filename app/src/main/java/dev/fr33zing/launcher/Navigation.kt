@@ -101,9 +101,7 @@ fun SetupNavigation(db: AppDatabase, navService: NavigationService) {
         composable("reorder/{nodeId}") { backStackEntry ->
             Reorder(db, navController, backStackEntry.nodeId())
         }
-        composable("move/{nodeId}") { backStackEntry ->
-            Move(db, navController, backStackEntry.nodeId())
-        }
+        composable("move/{nodeId}") { Move(cancelMove = { navController.popBackStack() }) }
     }
 }
 
