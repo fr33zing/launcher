@@ -381,8 +381,17 @@ suspend fun AppDatabase.checkPermission(
     return parentsAllow
 }
 
-fun AppDatabase.checkpoint() {
+suspend fun AppDatabase.nodeLineage(node: Node): ArrayDeque<Node> =
+    ArrayDeque<Node>().also { stack ->
+        stack.add(node)
+        while (stack.first().nodeId != ROOT_NODE_ID) {
+            val parentId = stack.first().parentId ?: break
+            val parentNode = nodeDao().getNodeById(parentId) ?: throw Exception("Node is null")
+            stack.addFirst(parentNode)
+        }
+    }
 
+fun AppDatabase.checkpoint() {
     if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
         throw Exception("Database checkpoint failed")
 }
