@@ -32,15 +32,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadState
 import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadWithReferenceTargetState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeBrowserStateHolder
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
-import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
@@ -121,7 +121,7 @@ private fun TraverseUpRow(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val label = remember { ".." }
-    val color = remember { Foreground.mix(Background, 0.5f) }
+    val color = remember { Foreground.dim() }
     val icon =
         remember(layoutDirection) {
             if (layoutDirection == LayoutDirection.Ltr) Icons.Outlined.SubdirectoryArrowLeft
@@ -161,7 +161,12 @@ private fun TreeBrowserRow(
     onNodeSelected: () -> Unit,
     additionalContent: @Composable () -> Unit,
 ) {
-    val nodeAppearance = rememberNodeAppearance(state)
+    val (node) = state
+    val nodeAppearance =
+        rememberNodeAppearance(
+            nodePayload = state,
+            ignoreState = node.kind == NodeKind.Directory,
+        )
 
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(nodeAppearance.color)
@@ -176,7 +181,7 @@ private fun TreeBrowserRow(
             NodeIconAndText(
                 fontSize = fontSize,
                 lineHeight = lineHeight,
-                label = state.node.label,
+                label = node.label,
                 color = nodeAppearance.color,
                 icon = nodeAppearance.icon,
                 lineThrough = nodeAppearance.lineThrough,
