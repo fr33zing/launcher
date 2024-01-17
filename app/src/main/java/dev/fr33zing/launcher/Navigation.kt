@@ -32,7 +32,7 @@ fun doNotGoHomeOnNextPause() {
     goHomeOnNextPause = false
 }
 
-class NavigationService() : NavController.OnDestinationChangedListener {
+class NavigationService : NavController.OnDestinationChangedListener {
     lateinit var destination: NavDestination
     private var arguments: Bundle? = null
 

@@ -2,7 +2,7 @@ package dev.fr33zing.launcher.data.utility
 
 import dev.fr33zing.launcher.data.persistent.Node
 
-class NullNodeException() : Exception("Node is null.")
+class NullNodeException : Exception("Node is null")
 
 fun Node?.notNull(): Node = this ?: throw NullNodeException()
 
