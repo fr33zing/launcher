@@ -68,7 +68,6 @@ class TreeBrowserStateHolder(
 
     private val updateFlow = MutableSharedFlow<Update>()
     private var initialRootNodeId: Int? = null
-    private var canTraverseUpward: Boolean = !containTraversalWithinInitialRoot
 
     val flow =
         updateFlow
@@ -90,9 +89,9 @@ class TreeBrowserStateHolder(
                 val rootStateHolder = NodePayloadStateHolder(db, rootNode)
                 val childrenStateHolder =
                     NodePayloadListStateHolder(db, childNodes, nodeVisiblePredicate)
-
-                canTraverseUpward =
-                    !containTraversalWithinInitialRoot || rootNode.nodeId != initialRootNodeId
+                val canTraverseUpward =
+                    stack.count() > 1 &&
+                        (!containTraversalWithinInitialRoot || rootNode.nodeId != initialRootNodeId)
 
                 TreeBrowserState(
                     stack = stack,
