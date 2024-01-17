@@ -17,7 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DriveFolderUpload
+import androidx.compose.material.icons.outlined.SubdirectoryArrowLeft
+import androidx.compose.material.icons.outlined.SubdirectoryArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -26,7 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Preferences
@@ -48,6 +51,7 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 fun TreeBrowser(
     stateHolder: TreeBrowserStateHolder,
     modifier: Modifier = Modifier,
+    horizontalPadding: Dp = ScreenHorizontalPadding,
     additionalRowContent: @Composable (NodePayloadState) -> Unit = {},
 ) {
     val state by stateHolder.flow.collectAsStateWithLifecycle(null)
@@ -79,6 +83,7 @@ fun TreeBrowser(
             if (targetState.canTraverseUpward) {
                 TraverseUpRow(
                     enabled = !transition.isRunning,
+                    horizontalPadding = horizontalPadding,
                     fontSize = fontSize,
                     spacing = spacing,
                     lineHeight = lineHeight,
@@ -91,6 +96,7 @@ fun TreeBrowser(
                     TreeBrowserRow(
                         enabled = !transition.isRunning,
                         state = nodePayload,
+                        horizontalPadding = horizontalPadding,
                         fontSize = fontSize,
                         spacing = spacing,
                         lineHeight = lineHeight,
@@ -107,22 +113,28 @@ fun TreeBrowser(
 @Composable
 private fun TraverseUpRow(
     enabled: Boolean,
+    horizontalPadding: Dp,
     fontSize: TextUnit,
     spacing: Dp,
     lineHeight: Dp,
     onTraverseUp: () -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
     val label = remember { ".." }
     val color = remember { Foreground.mix(Background, 0.5f) }
-    val icon = remember { Icons.Outlined.DriveFolderUpload }
+    val icon =
+        remember(layoutDirection) {
+            if (layoutDirection == LayoutDirection.Ltr) Icons.Outlined.SubdirectoryArrowLeft
+            else Icons.Outlined.SubdirectoryArrowRight
+        }
 
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color)
 
     Row(
         modifier =
-            Modifier.clickable(interactionSource, indication, enabled, onClick = onTraverseUp)
-                .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
+            Modifier.clickable(interactionSource, indication) { if (enabled) onTraverseUp() }
+                .padding(horizontal = horizontalPadding, vertical = spacing / 2)
                 .fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,6 +154,7 @@ private fun TraverseUpRow(
 private fun TreeBrowserRow(
     enabled: Boolean,
     state: NodePayloadWithReferenceTargetState,
+    horizontalPadding: Dp,
     fontSize: TextUnit,
     spacing: Dp,
     lineHeight: Dp,
@@ -155,8 +168,8 @@ private fun TreeBrowserRow(
 
     Row(
         modifier =
-            Modifier.clickable(interactionSource, indication, enabled, onClick = onNodeSelected)
-                .padding(horizontal = ScreenHorizontalPadding, vertical = spacing / 2)
+            Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
+                .padding(horizontal = horizontalPadding, vertical = spacing / 2)
                 .fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
