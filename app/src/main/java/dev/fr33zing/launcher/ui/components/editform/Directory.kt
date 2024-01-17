@@ -23,9 +23,8 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.node.NodePath
-import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.OutlinedValue
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
@@ -42,12 +41,12 @@ fun DirectoryEditForm(
     EditFormColumn(innerPadding) {
         val labelState = remember { mutableStateOf(node.label) }
         OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) { padding ->
-            NodePath(
-                db,
-                node,
-                lastNodeLabelState = labelState,
-                modifier = Modifier.padding(padding)
-            )
+            //            NodePath(
+            //                db,
+            //                node,
+            //                lastNodeLabelState = labelState,
+            //                modifier = Modifier.padding(padding)
+            //            )
         }
         NodePropertyTextField(node::label, state = labelState)
         InitialState(directory)

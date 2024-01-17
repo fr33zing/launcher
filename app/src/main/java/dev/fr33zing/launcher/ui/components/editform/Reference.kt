@@ -19,10 +19,9 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
-import dev.fr33zing.launcher.ui.components.node.NodePath
+import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.node.NodePicker
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
-import dev.fr33zing.launcher.ui.components.OutlinedValue
 
 @Composable
 fun ReferenceEditForm(
@@ -59,8 +58,9 @@ fun ReferenceEditForm(
     ) {
         NodePropertyTextField(node::label, state = labelState)
         OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) { padding ->
-            if (selectedNode.value != null)
-                NodePath(db, selectedNode.value!!, modifier = Modifier.padding(padding))
+            //            if (selectedNode.value != null)
+            //                NodePath(db, selectedNode.value!!, modifier =
+            // Modifier.padding(padding))
         }
         Box(Modifier.weight(1f)) {
             if (initialRootNodeId != null)
