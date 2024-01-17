@@ -63,6 +63,7 @@ const val TAG = "dev.fr33zing.launcher"
 class MainActivity : ComponentActivity() {
     // TODO remove this once everything uses dependency injection
     @Inject lateinit var db: AppDatabase
+    @Inject lateinit var navService: NavigationService
 
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
@@ -86,8 +87,7 @@ class MainActivity : ComponentActivity() {
         window.setDecorFitsSystemWindows(false)
         window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
-        // Keep track of what packages are installed at launch so we can save on database calls
-        // when
+        // Keep track of what packages are installed at launch so we can save on database calls when
         // checking for new applications on resume or ACTION_PACKAGE_ADDED broadcast received.
         runBlocking {
             packagesInstalledAtLaunch =
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
                     if (remainingAppsToCategorize == 0 || remainingAppsToCategorize == null) {
                         Box {
-                            SetupNavigation(db)
+                            SetupNavigation(db, navService)
                             Notices()
                         }
                     } else {

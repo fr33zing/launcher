@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher
 
+import android.os.Bundle
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -9,6 +10,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -29,9 +32,30 @@ fun doNotGoHomeOnNextPause() {
     goHomeOnNextPause = false
 }
 
+class NavigationService() : NavController.OnDestinationChangedListener {
+    lateinit var destination: NavDestination
+    private var arguments: Bundle? = null
+
+    override fun onDestinationChanged(
+        controller: NavController,
+        destination: NavDestination,
+        arguments: Bundle?,
+    ) {
+        this.destination = destination
+        this.arguments = arguments
+    }
+
+    fun hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
+
+    fun nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
+
+    fun nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
+}
+
 @Composable
-fun SetupNavigation(db: AppDatabase) {
+fun SetupNavigation(db: AppDatabase, navService: NavigationService) {
     val navController = rememberNavController()
+    navController.addOnDestinationChangedListener(navService)
 
     DisposableEffect(Unit) {
         val subscription =
