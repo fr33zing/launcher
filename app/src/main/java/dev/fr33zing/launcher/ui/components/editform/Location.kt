@@ -1,7 +1,6 @@
 package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,10 +22,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Location
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import kotlin.text.Typography.degree
 import kotlinx.coroutines.CoroutineScope
@@ -65,15 +63,13 @@ private fun clipboardLocation(clipboard: ClipboardManager): String? {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun LocationEditForm(
-    innerPadding: PaddingValues,
-    payload: Payload?,
-    node: Node,
-) {
+fun LocationEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
+    val location = payload as Location
+
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
-    val location = payload as Location
     val geoUriState = remember { mutableStateOf(location.geoUri) }
     var inputsEnabled by remember { mutableStateOf(true) }
 
@@ -89,7 +85,7 @@ fun LocationEditForm(
         }
     }
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         NodePropertyTextField(node::label)
         NodePropertyTextField(location::geoUri, state = geoUriState)
 

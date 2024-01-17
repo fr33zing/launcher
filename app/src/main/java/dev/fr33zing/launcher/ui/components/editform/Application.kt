@@ -8,7 +8,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
@@ -31,25 +30,21 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Application
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.node.refreshNodePropertyTextFields
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
-fun ApplicationEditForm(
-    innerPadding: PaddingValues,
-    payload: Payload?,
-    node: Node,
-) {
+fun ApplicationEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
     val application = payload as Application
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.ui.components.editform
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,12 +10,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
-import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
+import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import kotlin.reflect.full.staticProperties
 
 private val problematicSettings =
@@ -237,11 +235,10 @@ private val aliases =
 private fun formatSettingName(setting: String): String = aliases[setting] ?: setting
 
 @Composable
-fun SettingEditForm(
-    innerPadding: PaddingValues,
-    payload: Payload?,
-    node: Node,
-) {
+fun SettingEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
+    val setting = payload as Setting
+
     val allSettings = remember {
         Settings::class
             .staticProperties
@@ -260,12 +257,11 @@ fun SettingEditForm(
             .toList()
     }
 
-    val setting = payload as Setting
     val labelState = remember { mutableStateOf(node.label) }
     val settingState = remember { mutableStateOf(setting.setting) }
     val settingPickerVisible = remember { mutableStateOf(false) }
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         val defaultLabel = remember(settingState.value) { aliases[settingState.value] }
         NodePropertyTextField(
             node::label,

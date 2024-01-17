@@ -1,7 +1,6 @@
 package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,11 +18,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.UrlRegex
 import dev.fr33zing.launcher.data.persistent.payloads.WebLink
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
@@ -31,17 +29,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun WebLinkEditForm(
-    innerPadding: PaddingValues,
-    payload: Payload?,
-    node: Node,
-) {
+fun WebLinkEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
     val webLink = payload as WebLink
+
     val labelState = remember { mutableStateOf(node.label) }
     val urlState = remember { mutableStateOf(webLink.url) }
     var pendingHttpResponse by remember { mutableStateOf(false) }
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         NodePropertyTextField(node::label, state = labelState)
         NodePropertyTextField(webLink::url, state = urlState)
 

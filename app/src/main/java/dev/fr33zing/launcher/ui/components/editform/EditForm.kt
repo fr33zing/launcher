@@ -17,25 +17,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.NodeKind
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 
 val EditFormExtraPadding = 16.dp
 val EditFormSpacing = 16.dp
 
 @Composable
-fun EditForm(db: AppDatabase, innerPadding: PaddingValues, node: Node, payload: Payload) {
-    when (node.kind) {
-        NodeKind.Application -> ApplicationEditForm(innerPadding, payload, node)
-        NodeKind.Checkbox -> CheckboxEditForm(innerPadding, payload, node)
-        NodeKind.Directory -> DirectoryEditForm(db, innerPadding, payload, node)
-        NodeKind.Reference -> ReferenceEditForm(db, innerPadding, payload, node)
-        NodeKind.WebLink -> WebLinkEditForm(innerPadding, payload, node)
-        NodeKind.Location -> LocationEditForm(innerPadding, payload, node)
-        NodeKind.Setting -> SettingEditForm(innerPadding, payload, node)
-        NodeKind.Note -> NoteEditForm(innerPadding, payload, node)
-        else -> DefaultEditForm(innerPadding, node)
+fun EditForm(arguments: EditFormArguments) {
+    when (arguments.node.kind) {
+        NodeKind.Application -> ApplicationEditForm(arguments)
+        NodeKind.Checkbox -> CheckboxEditForm(arguments)
+        NodeKind.Directory -> DirectoryEditForm(arguments)
+        NodeKind.Reference -> ReferenceEditForm(arguments)
+        NodeKind.WebLink -> WebLinkEditForm(arguments)
+        NodeKind.Location -> LocationEditForm(arguments)
+        NodeKind.Setting -> SettingEditForm(arguments)
+        NodeKind.Note -> NoteEditForm(arguments)
+        else -> DefaultEditForm(arguments)
     }
 }
 

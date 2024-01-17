@@ -19,26 +19,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
-fun DirectoryEditForm(
-    db: AppDatabase,
-    innerPadding: PaddingValues,
-    payload: Payload?,
-    node: Node,
-) {
+fun DirectoryEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
     val directory = payload as Directory
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         val labelState = remember { mutableStateOf(node.label) }
         OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) { padding ->
             //            NodePath(

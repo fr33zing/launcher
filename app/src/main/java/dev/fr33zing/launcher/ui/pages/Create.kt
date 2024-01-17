@@ -31,7 +31,6 @@ import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.editform.EditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,7 +114,7 @@ fun Create(db: AppDatabase, navController: NavController, nodeId: Int) {
     ) { innerPadding ->
         if (node == null) Text(text = "Node does not exist!")
         else if (payload == null) Text(text = "Payload does not exist!")
-        else EditForm(db, innerPadding, node!!, payload!!)
+        //        else EditForm(db, innerPadding, node!!, payload!!)
     }
 }
 

@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.ui.components.editform
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,20 +11,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.ConfigurationCompat
-import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.ui.components.OutlinedValue
 import dev.fr33zing.launcher.ui.components.node.NodePropertyTextField
+import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import java.text.SimpleDateFormat
 import java.util.Date
 
 @Composable
-fun CheckboxEditForm(innerPadding: PaddingValues, payload: Payload?, node: Node) {
+fun CheckboxEditForm(arguments: EditFormArguments) {
+    val (padding, node, payload) = arguments
     val checkbox = payload as Checkbox
 
-    EditFormColumn(innerPadding) {
+    EditFormColumn(padding) {
         NodePropertyTextField(node::label)
         LabeledDateText("Last checked", checkbox.checkedOn)
         LabeledDateText("Last unchecked", checkbox.uncheckedOn)

@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.ui.pages
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -10,37 +11,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.navigation.NavController
-import androidx.room.withTransaction
-import dev.fr33zing.launcher.data.persistent.AppDatabase
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
+import dev.fr33zing.launcher.data.viewmodel.EditViewModel
 import dev.fr33zing.launcher.ui.components.CancelButton
 import dev.fr33zing.launcher.ui.components.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.editform.EditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+
+data class EditFormArguments(val padding: PaddingValues, val node: Node, val payload: Payload)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
-    var node by remember { mutableStateOf<Node?>(null) }
-    var payload by remember { mutableStateOf<Payload?>(null) }
+fun Edit(
+    navigateBack: () -> Unit,
+    viewModel: EditViewModel = hiltViewModel(),
+) {
+    val node = viewModel.node
+    val payload = viewModel.payload
+
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
@@ -48,13 +48,9 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     val askOnAccept by preferences.confirmationDialogs.editNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.editNode.askOnReject.state
 
-    LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            node = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node does not exist")
-            payload =
-                db.getPayloadByNodeId(node!!.kind, node!!.nodeId)
-                    ?: throw Exception("Payload does not exist")
-        }
+    fun commitChanges() {
+        viewModel.commitChanges(navigateBack)
+        navigateBack()
     }
 
     YesNoDialog(
@@ -66,7 +62,7 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = { onCancelChanges(navController) },
+        onYes = navigateBack,
     )
 
     YesNoDialog(
@@ -77,12 +73,10 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, node!!, payload) },
+        onYes = ::commitChanges,
     )
 
-    BackHandler {
-        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
-    }
+    BackHandler { if (askOnReject) cancelDialogVisible.value = true else navigateBack() }
 
     Scaffold(
         topBar = {
@@ -92,20 +86,18 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
                         buildAnnotatedString {
                             append("Editing ")
                             if (node == null) return@buildAnnotatedString
-                            withStyle(SpanStyle(color = node!!.kind.color)) {
-                                append(node!!.kind.label)
+                            withStyle(SpanStyle(color = node.kind.color)) {
+                                append(node.kind.label)
                             }
                         }
                     )
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true
-                        else onCancelChanges(navController)
+                        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
                     }
                     FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true
-                        else onSaveChanges(navController, db, node!!, payload)
+                        if (askOnAccept) saveDialogVisible.value = true else commitChanges()
                     }
                 },
             )
@@ -113,27 +105,6 @@ fun Edit(db: AppDatabase, navController: NavController, nodeId: Int) {
     ) { innerPadding ->
         if (node == null) Text(text = "Node does not exist!")
         else if (payload == null) Text(text = "Payload does not exist!")
-        else EditForm(db, innerPadding, node!!, payload!!)
-    }
-}
-
-private fun onCancelChanges(navController: NavController) {
-    navController.popBackStack()
-}
-
-private fun onSaveChanges(
-    navController: NavController,
-    db: AppDatabase,
-    node: Node,
-    payload: Payload?
-) {
-    CoroutineScope(Dispatchers.Main).launch {
-        db.withTransaction {
-            db.update(node)
-            payload?.let { db.update(it) }
-        }
-
-        NodeUpdatedSubject.onNext(Pair(node.nodeId, node.parentId!!))
-        navController.popBackStack()
+        else EditForm(EditFormArguments(innerPadding, node, payload))
     }
 }
