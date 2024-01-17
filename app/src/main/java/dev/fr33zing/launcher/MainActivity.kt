@@ -63,7 +63,6 @@ const val TAG = "dev.fr33zing.launcher"
 class MainActivity : ComponentActivity() {
     // TODO remove this once everything uses dependency injection
     @Inject lateinit var db: AppDatabase
-    @Inject lateinit var navService: NavigationService
 
     private lateinit var packagesInstalledAtLaunch: List<Pair<String, UserHandle>>
 
@@ -109,7 +108,7 @@ class MainActivity : ComponentActivity() {
 
                     if (remainingAppsToCategorize == 0 || remainingAppsToCategorize == null) {
                         Box {
-                            SetupNavigation(db, navService)
+                            SetupNavigation(db)
                             Notices()
                         }
                     } else {

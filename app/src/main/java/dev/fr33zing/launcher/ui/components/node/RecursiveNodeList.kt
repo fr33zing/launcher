@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.NavController
+import dev.fr33zing.launcher.Routes
 import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.AllPermissions
 import dev.fr33zing.launcher.data.NodeKind
@@ -987,7 +988,7 @@ private fun NodeOptionButtons(
 
         if (showEditButton) {
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
-                navController.navigate("edit/${node.nodeId}")
+                navController.navigate(Routes.Main.editForm(node.nodeId))
             }
         }
 

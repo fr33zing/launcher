@@ -1,6 +1,5 @@
 package dev.fr33zing.launcher
 
-import android.os.Bundle
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -9,12 +8,15 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.createGraph
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
@@ -32,30 +34,29 @@ fun doNotGoHomeOnNextPause() {
     goHomeOnNextPause = false
 }
 
-class NavigationService : NavController.OnDestinationChangedListener {
-    lateinit var destination: NavDestination
-    private var arguments: Bundle? = null
+object Routes {
+    object Main {
+        fun default() = home()
 
-    override fun onDestinationChanged(
-        controller: NavController,
-        destination: NavDestination,
-        arguments: Bundle?,
-    ) {
-        this.destination = destination
-        this.arguments = arguments
+        fun home() = "home"
+
+        fun settings() = "settings"
+
+        fun tree(nodeId: Int? = null) = "${home()}/tree/${nodeId ?: "{nodeId}"}"
+
+        fun create(nodeId: Int? = null) = "create/${nodeId ?: "{nodeId}"}"
+
+        fun reorder(nodeId: Int? = null) = "reorder/${nodeId ?: "{nodeId}"}"
+
+        fun move(nodeId: Int? = null) = "move/${nodeId ?: "{nodeId}"}"
+
+        fun editForm(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
     }
-
-    fun hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
-
-    fun nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
-
-    fun nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
 }
 
 @Composable
-fun SetupNavigation(db: AppDatabase, navService: NavigationService) {
+fun SetupNavigation(db: AppDatabase) {
     val navController = rememberNavController()
-    navController.addOnDestinationChangedListener(navService)
 
     DisposableEffect(Unit) {
         val subscription =
@@ -67,46 +68,65 @@ fun SetupNavigation(db: AppDatabase, navService: NavigationService) {
     }
 
     NavHost(
-        navController,
-        startDestination = "home",
-        enterTransition = {
-            if (initialState.hasTreeRoute()) fadeIn()
-            else if (targetState.hasTreeRoute()) slideInVertically { it } + fadeIn()
-            else slideInHorizontally { it } + fadeIn()
-        },
-        exitTransition = {
-            if (initialState.hasTreeRoute()) slideOutVertically { it } + fadeOut()
-            else if (targetState.hasTreeRoute()) fadeOut()
-            else slideOutHorizontally { -it } + fadeOut()
-        },
-        popEnterTransition = {
-            if (initialState.hasTreeRoute()) fadeIn() else slideInHorizontally { -it } + fadeIn()
-        },
-        popExitTransition = {
-            if (initialState.hasTreeRoute()) slideOutVertically { it } + fadeOut()
-            else slideOutHorizontally { it } + fadeOut()
-        },
-    ) {
-        composable("settings") { Preferences(db) }
-        composable("home") { Home(navController) }
-        composable("home/tree/{nodeId}") { backStackEntry ->
-            Tree(db, navController, backStackEntry.nodeIdOrNull())
-        }
-        composable("edit/{nodeId}") { backStackEntry ->
-            Edit(db, navController, backStackEntry.nodeId())
-        }
-        composable("create/{nodeId}") { backStackEntry ->
-            Create(db, navController, backStackEntry.nodeId())
-        }
-        composable("reorder/{nodeId}") { backStackEntry ->
-            Reorder(db, navController, backStackEntry.nodeId())
-        }
-        composable("move/{nodeId}") { Move(cancelMove = { navController.popBackStack() }) }
-    }
+        navController = navController,
+        graph = remember { createNavGraph(navController, db) },
+        contentAlignment = Alignment.TopCenter,
+        enterTransition = { slideInHorizontally { it } + fadeIn() },
+        exitTransition = { fadeOut() },
+        popEnterTransition = { fadeIn() },
+        popExitTransition = { slideOutHorizontally { -it } + fadeOut() },
+    )
 }
 
+private fun createNavGraph(navController: NavController, db: AppDatabase) =
+    navController.createGraph(startDestination = Routes.Main.default()) {
+        val navigateBack: () -> Unit = { navController.popBackStack() }
+
+        composable(Routes.Main.settings()) { Preferences(db) }
+
+        composable(
+            Routes.Main.home(),
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() },
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { fadeOut() },
+        ) {
+            Home(navController)
+        }
+
+        composable(
+            Routes.Main.tree(),
+            enterTransition = { slideInVertically { it } + fadeIn() },
+            exitTransition = { fadeOut() },
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { slideOutVertically { it } + fadeOut() },
+        ) { backStackEntry ->
+            Tree(db, navController, backStackEntry.nodeIdOrNull())
+        }
+
+        composable(Routes.Main.create()) { backStackEntry ->
+            Create(db, navController, backStackEntry.nodeId())
+        }
+
+        composable(Routes.Main.reorder()) { backStackEntry ->
+            Reorder(db, navController, backStackEntry.nodeId())
+        }
+
+        composable(Routes.Main.move()) { Move(navigateBack) }
+
+        composable(Routes.Main.editForm()) { Edit(navigateBack) }
+    }
+
+// TODO move this
+fun SavedStateHandle.nodeId(): Int =
+    get<String>("nodeId")?.toInt() ?: throw Exception("nodeId is null")
+
+// TODO delete these
 private fun NavBackStackEntry.hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
 
 private fun NavBackStackEntry.nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
 
 private fun NavBackStackEntry.nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
+
+private fun NavBackStackEntry.nodeKind() =
+    arguments?.getString("nodeKind") ?: throw Exception("nodeKind is null")

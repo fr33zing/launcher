@@ -4,10 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.fr33zing.launcher.NavigationService
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
@@ -20,6 +20,7 @@ import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.utility.unreachable
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeBrowserStateHolder
+import dev.fr33zing.launcher.nodeId
 import dev.fr33zing.launcher.ui.components.sendNotice
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -27,8 +28,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class MoveViewModel
 @Inject
-constructor(private val db: AppDatabase, navService: NavigationService) : ViewModel() {
-    private val nodeToMoveId = navService.nodeId()
+constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
+    private val nodeToMoveId = savedStateHandle.nodeId()
     var nodeToMove by mutableStateOf<Node?>(null)
     val nodeToMoveLineage = mutableStateListOf<Node>()
 
