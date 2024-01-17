@@ -20,6 +20,10 @@ open class NodePayloadState(
     val payload: Payload,
     val activate: (Context) -> Unit = {}
 ) {
+    operator fun component1() = node
+
+    operator fun component2() = payload
+
     companion object {
         suspend fun fromNode(
             db: AppDatabase,
@@ -74,11 +78,8 @@ class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
                 else {
                     (state.payload as? Reference ?: throw PayloadClassMismatchException(state.node))
                         .targetId
-                        ?.let { targetId ->
-                            val targetNode =
-                                db.nodeDao().getNodeById(targetId)
-                                    ?: throw Exception("Target node does not exist")
-
+                        ?.let { targetId -> db.nodeDao().getNodeById(targetId) }
+                        ?.let { targetNode ->
                             db.getPayloadFlowByNodeId(targetNode.kind, targetNode.nodeId)
                                 .filterNotNull()
                                 .map { targetPayload ->
@@ -92,12 +93,13 @@ class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
                 }
 
             if (targetFlow != null) emitAll(targetFlow)
-            else
+            else {
                 emit(
                     NodePayloadWithReferenceTargetState(state, null) { context ->
                         state.payload.activate(db, context)
                     }
                 )
+            }
         }
 }
 
