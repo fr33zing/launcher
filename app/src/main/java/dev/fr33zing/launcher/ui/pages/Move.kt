@@ -48,7 +48,10 @@ import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Move(viewModel: MoveViewModel = hiltViewModel(), cancelMove: () -> Unit) {
+fun Move(
+    navigateBack: () -> Unit,
+    viewModel: MoveViewModel = hiltViewModel(),
+) {
     val treeBrowserState by viewModel.treeBrowser.flow.collectAsStateWithLifecycle()
     val selectedNode by remember { derivedStateOf { treeBrowserState?.stack?.last() } }
 
@@ -60,6 +63,11 @@ fun Move(viewModel: MoveViewModel = hiltViewModel(), cancelMove: () -> Unit) {
     val askOnAccept by preferences.confirmationDialogs.moveNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
+    fun commitMove() {
+        viewModel.commitMove()
+        navigateBack()
+    }
+
     YesNoDialog(
         visible = cancelDialogVisible,
         icon = Icons.Filled.Close,
@@ -69,7 +77,7 @@ fun Move(viewModel: MoveViewModel = hiltViewModel(), cancelMove: () -> Unit) {
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = cancelMove,
+        onYes = navigateBack,
     )
 
     YesNoDialog(
@@ -80,11 +88,11 @@ fun Move(viewModel: MoveViewModel = hiltViewModel(), cancelMove: () -> Unit) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = viewModel::commitMove,
+        onYes = ::commitMove,
     )
 
     BackHandler(enabled = selectedNode?.nodeId == ROOT_NODE_ID) {
-        if (askOnReject) cancelDialogVisible.value = true else cancelMove()
+        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
     }
 
     Scaffold(
@@ -107,10 +115,10 @@ fun Move(viewModel: MoveViewModel = hiltViewModel(), cancelMove: () -> Unit) {
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true else cancelMove()
+                        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
                     }
                     FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true else viewModel.commitMove()
+                        if (askOnAccept) saveDialogVisible.value = true else commitMove()
                     }
                 },
             )
