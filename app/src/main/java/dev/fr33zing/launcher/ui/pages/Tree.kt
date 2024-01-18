@@ -1,37 +1,41 @@
 package dev.fr33zing.launcher.ui.pages
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalDensity
-import androidx.navigation.NavController
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.components.node.NodeSearchContainer
-import dev.fr33zing.launcher.ui.components.node.RecursiveNodeListSetup
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
+import dev.fr33zing.launcher.ui.components.node.next.NodeTree
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun Tree(db: AppDatabase, navController: NavController, rootNodeId: Int?) {
-    val density = LocalDensity.current
-    val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
-    val navigationBarsBottom =
-        with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
-    val verticalPadding =
-        remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
-            listOf(statusBarsTop, navigationBarsBottom).max()
-        }
-    val hiddenRatio = 0.666f
-    val shadowRatio = 1f - hiddenRatio
-    val hiddenHeight = verticalPadding * hiddenRatio
-    val shadowHeight = verticalPadding * shadowRatio
+fun Tree(
+    navigateBack: () -> Unit,
+    viewModel: TreeViewModel = hiltViewModel(),
+) {
+    val coroutineScope = rememberCoroutineScope()
+    //    val snapshot = remember { mutableStateListOf<AnimatedTreeNodeState>() }
 
-    NodeSearchContainer(
-        db,
-        containerVerticalPadding = hiddenHeight,
-        panelVerticalPadding = shadowHeight,
-        shadowHeight = shadowHeight,
-    ) { scrollState ->
-        RecursiveNodeListSetup(db, navController, rootNodeId, scrollState, shadowHeight)
-    }
+    //    LaunchedEffect(Unit) {
+    //        viewModel.flow.filterNotNull().collectLatest { nextTreeNodeStateList ->
+    //            nextTreeNodeStateList.forEach { nextTreeNodeState ->
+    //                if (
+    //                    snapshot.none { (treeNodeState) ->
+    //                        nextTreeNodeState.nodePayload.node.nodeId ==
+    //                            treeNodeState.nodePayload.node.nodeId
+    //                    }
+    //                ) {
+    //                    val new = AnimatedTreeNodeState(nextTreeNodeState, Animatable(0f))
+    //                    snapshot.add(new)
+    //                    coroutineScope.launch { new.progress.animateTo(1f, tween(1000)) }
+    //                }
+    //            }
+    //        }
+    //    }
+
+    val state by viewModel.flow.collectAsStateWithLifecycle()
+
+    NodeTree(state ?: emptyList())
 }

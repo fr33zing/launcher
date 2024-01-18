@@ -11,6 +11,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.ui.utility.UserEditable
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Ensure that all node order values are unique and sequential. Mutates this List and returns itself
@@ -65,6 +66,9 @@ interface NodeDao {
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
+
+    @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
+    fun getChildNodesFlow(nodeId: Int?): Flow<List<Node>>
 
     @Query(
         "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1"

@@ -3,9 +3,7 @@ package dev.fr33zing.launcher
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -74,7 +72,7 @@ fun SetupNavigation(db: AppDatabase) {
         enterTransition = { slideInHorizontally { it } + fadeIn() },
         exitTransition = { fadeOut() },
         popEnterTransition = { fadeIn() },
-        popExitTransition = { slideOutHorizontally { -it } + fadeOut() },
+        popExitTransition = { slideOutHorizontally { it } + fadeOut() },
     )
 }
 
@@ -96,12 +94,12 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
 
         composable(
             Routes.Main.tree(),
-            enterTransition = { slideInVertically { it } + fadeIn() },
+            enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
             popEnterTransition = { fadeIn() },
-            popExitTransition = { slideOutVertically { it } + fadeOut() },
-        ) { backStackEntry ->
-            Tree(db, navController, backStackEntry.nodeIdOrNull())
+            popExitTransition = { fadeOut() },
+        ) {
+            Tree(navigateBack)
         }
 
         composable(Routes.Main.create()) { backStackEntry ->
