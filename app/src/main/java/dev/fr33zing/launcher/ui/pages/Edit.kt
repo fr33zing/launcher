@@ -19,6 +19,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
@@ -38,8 +39,7 @@ fun Edit(
     navigateBack: () -> Unit,
     viewModel: EditViewModel = hiltViewModel(),
 ) {
-    val node = viewModel.node
-    val payload = viewModel.payload
+    val nodePayload by viewModel.flow.collectAsStateWithLifecycle()
 
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
@@ -84,10 +84,11 @@ fun Edit(
                 title = {
                     Text(
                         buildAnnotatedString {
-                            append("Editing ")
-                            if (node == null) return@buildAnnotatedString
-                            withStyle(SpanStyle(color = node.kind.color)) {
-                                append(node.kind.label)
+                            nodePayload?.node?.let { node ->
+                                append("Editing ")
+                                withStyle(SpanStyle(color = node.kind.color)) {
+                                    append(node.kind.label)
+                                }
                             }
                         }
                     )
@@ -102,9 +103,7 @@ fun Edit(
                 },
             )
         }
-    ) { innerPadding ->
-        if (node == null) Text(text = "Node does not exist!")
-        else if (payload == null) Text(text = "Payload does not exist!")
-        else EditForm(EditFormArguments(innerPadding, node, payload))
+    ) { padding ->
+        nodePayload?.let { (node, payload) -> EditForm(EditFormArguments(padding, node, payload)) }
     }
 }
