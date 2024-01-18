@@ -24,6 +24,8 @@ open class NodePayloadState(
 
     operator fun component2() = payload
 
+    operator fun component3() = activate
+
     companion object {
         suspend fun fromNode(
             db: AppDatabase,
