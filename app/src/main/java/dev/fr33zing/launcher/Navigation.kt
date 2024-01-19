@@ -108,9 +108,7 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             if (useNewTree) Tree(navigateBack) else Tree_old(db, navController, null)
         }
 
-        composable(Routes.Main.create()) { backStackEntry ->
-            Create(db, navController, backStackEntry.nodeId())
-        }
+        composable(Routes.Main.create()) { Create(navigateBack) }
 
         composable(Routes.Main.reorder()) { backStackEntry ->
             Reorder(db, navController, backStackEntry.nodeId())
