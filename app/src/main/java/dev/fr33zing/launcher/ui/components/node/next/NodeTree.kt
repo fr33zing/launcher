@@ -2,7 +2,7 @@ package dev.fr33zing.launcher.ui.components.node.next
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeRowFeatures
@@ -36,12 +36,9 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.launch
 
-private const val APPEAR_ANIMATION_DURATION_MS = 350
-private const val APPEAR_ANIMATION_TRANSLATE_DP = 25
-
 @Composable
 fun NodeTree(
-    items: List<TreeNodeState>,
+    state: List<TreeNodeState>,
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
@@ -53,26 +50,21 @@ fun NodeTree(
                 val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
             }
         }
-    val appearAnimation =
+    val animation =
         object {
-            val progressMap = remember {
+            private val progressMap = remember {
                 mutableStateMapOf<Int, Animatable<Float, AnimationVector1D>>()
             }
 
             fun progress(nodeId: Int): Animatable<Float, AnimationVector1D>? {
                 if (!hasFeature.APPEAR_ANIMATION) return null
-
-                if (nodeId !in progressMap)
-                    progressMap[nodeId] =
-                        Animatable(0f).also {
-                            coroutineScope.launch {
-                                it.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
-                            }
-                        }
-                return progressMap[nodeId]!!
+                if (nodeId !in progressMap) {
+                    progressMap[nodeId] = Animatable(0f)
+                    coroutineScope.launch { progressMap[nodeId]!!.animateTo(1f) }
+                }
+                return progressMap[nodeId]
             }
         }
-
     CompositionLocalProvider(LocalNodeDimensions provides createLocalNodeDimensions()) {
         Box(
             modifier =
@@ -83,41 +75,42 @@ fun NodeTree(
             LazyColumn(
                 state = lazyListState,
                 contentPadding = PaddingValues(vertical = shadowHeight),
+                modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items.map { Pair(it, appearAnimation.progress(it.nodePayload.node.nodeId)) },
+                    state.map {
+                        Pair(it, animation.progress(it.nodePayload.underlyingState.node.nodeId))
+                    },
                     key = { it.first.nodePayload.underlyingState.node.nodeId },
-                    contentType = { it.first.nodePayload.node.kind }
-                ) { (state, appearAnimationProgress) ->
-                    LazyColumnItem(state, appearAnimationProgress)
+                    contentType = { it.first.nodePayload.underlyingState.node.kind }
+                ) { (state, progress) ->
+                    LazyColumnItem(state, progress)
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LazyColumnItem(
+private fun LazyItemScope.LazyColumnItem(
     state: TreeNodeState,
-    appearAnimationProgress: Animatable<Float, AnimationVector1D>?
+    progress: Animatable<Float, AnimationVector1D>?
 ) {
-    CompositionLocalProvider(
-        LocalNodeAppearance provides rememberNodeAppearance(state.nodePayload),
-        LocalNodeRowFeatures provides NodeRowFeatures.All
+    val dimensions = LocalNodeDimensions.current
+    Box(
+        Modifier.animateItemPlacement().conditional(progress != null) {
+            graphicsLayer {
+                translationY = (1 - progress!!.value) * dimensions.lineHeight.toPx()
+                alpha = progress.value
+            }
+        }
     ) {
-        NodeInteractions(state) {
-            NodeRow(
-                state,
-                modifier =
-                    Modifier.conditional(appearAnimationProgress != null) {
-                        graphicsLayer {
-                            translationY =
-                                (1 - appearAnimationProgress!!.value) *
-                                    APPEAR_ANIMATION_TRANSLATE_DP.dp.toPx()
-                            alpha = appearAnimationProgress.value
-                        }
-                    }
-            )
+        CompositionLocalProvider(
+            LocalNodeAppearance provides rememberNodeAppearance(state.nodePayload),
+            LocalNodeRowFeatures provides NodeRowFeatures.All
+        ) {
+            NodeInteractions(state) { NodeRow(state) }
         }
     }
 }
