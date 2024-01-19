@@ -2,6 +2,7 @@
 
 package dev.fr33zing.launcher.data.viewmodel.utility
 
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
@@ -22,6 +23,8 @@ data class TreeNodeState(
     val nodePayload: NodePayloadWithReferenceTargetState,
 )
 
+private fun canHaveChildren(node: Node) = node.kind == NodeKind.Directory
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
     val flow = flow {
@@ -31,25 +34,31 @@ class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
                 parentStateHolder.flowWithReferenceTarget.mapLatest { nodePayload ->
                     TreeNodeState(depth, nodePayload)
                 }
-            val childrenFlow =
-                db.nodeDao()
-                    .getChildNodesFlow(node.nodeId)
-                    .distinctUntilChanged()
-                    .flatMapLatest { childNodes ->
-                        val childNodeFlows =
-                            childNodes.map { childNode -> traverse(childNode, depth + 1) }
-                        combine(childNodeFlows) { arrayOfLists -> arrayOfLists.toList().flatten() }
-                    }
-                    .onStart { emit(emptyList()) }
+            return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
+            else {
+                val childrenFlow =
+                    db.nodeDao()
+                        .getChildNodesFlow(node.nodeId)
+                        .distinctUntilChanged()
+                        .flatMapLatest { childNodes ->
+                            val childNodeFlows =
+                                childNodes.map { childNode -> traverse(childNode, depth + 1) }
+                            combine(childNodeFlows) { arrayOfLists ->
+                                arrayOfLists.toList().flatten()
+                            }
+                        }
+                        .onStart { emit(emptyList()) }
 
-            return parentFlow.combine(childrenFlow) { parent, children ->
-                val showParent = parent.depth >= 0 // Do not show root node
-                val showChildren = (parent.nodePayload.payload as? Directory)?.collapsed == false
+                parentFlow.combine(childrenFlow) { parent, children ->
+                    val showParent = parent.depth >= 0 // Do not show root node
+                    val showChildren =
+                        (parent.nodePayload.payload as? Directory)?.collapsed == false
 
-                val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
-                val childrenOrEmpty = if (showChildren) children else emptyList()
+                    val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
+                    val childrenOrEmpty = if (showChildren) children else emptyList()
 
-                parentOrEmpty + childrenOrEmpty
+                    parentOrEmpty + childrenOrEmpty
+                }
             }
         }
 
