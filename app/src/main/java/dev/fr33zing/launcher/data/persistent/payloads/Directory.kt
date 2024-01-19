@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import android.content.Context
 import androidx.annotation.Keep
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -17,6 +18,10 @@ import dev.fr33zing.launcher.data.PermissionMap
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.hasPermission
+import dev.fr33zing.launcher.data.persistent.AppDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // TODO rename "collapsed" to "childrenVisible", invert conditionals, search entire project for
 // "collapsed" so comments are fixed too
@@ -126,5 +131,10 @@ class Directory(
     override fun preUpdate() {
         collapsed =
             if (initialVisibility == InitialVisibility.Remember) collapsed else initiallyCollapsed
+    }
+
+    override fun activate(db: AppDatabase, context: Context) {
+        collapsed = collapsed != true
+        let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }
     }
 }

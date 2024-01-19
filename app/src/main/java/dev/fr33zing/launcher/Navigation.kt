@@ -6,8 +6,10 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -16,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
@@ -23,6 +26,7 @@ import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Preferences
 import dev.fr33zing.launcher.ui.pages.Reorder
 import dev.fr33zing.launcher.ui.pages.Tree
+import dev.fr33zing.launcher.ui.pages.Tree_old
 import io.reactivex.rxjava3.subjects.PublishSubject
 
 val GoHomeSubject = PublishSubject.create<Unit>()
@@ -99,7 +103,9 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             popEnterTransition = { fadeIn() },
             popExitTransition = { fadeOut() },
         ) {
-            Tree(navigateBack)
+            val preferences = Preferences(LocalContext.current)
+            val useNewTree by preferences.debug.useNewTree.state
+            if (useNewTree) Tree(navigateBack) else Tree_old(db, navController, null)
         }
 
         composable(Routes.Main.create()) { backStackEntry ->

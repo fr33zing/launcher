@@ -47,6 +47,7 @@ class Preferences(context: Context) {
     val nodeAppearance = NodeAppearancePreferences(context)
     val confirmationDialogs = ConfirmationDialogPreferences(context)
     val home = HomePreferences(context)
+    val debug = DebugPreferences(context)
 }
 
 class NodeAppearancePreferences(context: Context) {
@@ -81,6 +82,10 @@ class ConfirmationDialogPreferences(context: Context) {
     val editNode = PreferenceGroup(context, "editNode")
     val moveNode = PreferenceGroup(context, "moveNode")
     val reorderNodes = PreferenceGroup(context, "reorderNodes")
+}
+
+class DebugPreferences(context: Context) {
+    val useNewTree = Preference(context, booleanPreferencesKey("useNewTree"), false, ::noMap)
 }
 
 private fun <T> noMap(value: T): T = value

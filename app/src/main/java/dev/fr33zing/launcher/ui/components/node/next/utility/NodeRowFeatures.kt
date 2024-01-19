@@ -1,8 +1,11 @@
 package dev.fr33zing.launcher.ui.components.node.next.utility
 
+import androidx.compose.runtime.compositionLocalOf
 import java.util.EnumSet
 
 typealias NodeRowFeatureSet = EnumSet<NodeRowFeatures>
+
+val LocalNodeRowFeatures = compositionLocalOf { NodeRowFeatures.All }
 
 enum class NodeRowFeatures {
     APPEAR_ANIMATION,

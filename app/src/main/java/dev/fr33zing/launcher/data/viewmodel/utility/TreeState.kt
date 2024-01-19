@@ -54,7 +54,7 @@ class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow = traverse(rootNode).distinctUntilChanged().stagger()
+        val flow = traverse(rootNode)
 
         emitAll(flow)
     }

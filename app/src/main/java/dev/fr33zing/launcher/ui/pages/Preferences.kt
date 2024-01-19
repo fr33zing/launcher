@@ -97,6 +97,7 @@ fun Preferences(db: AppDatabase) {
                 ItemAppearanceSection(preferences)
                 HomeSection(preferences)
                 ConfirmationDialogsSection(preferences)
+                DebugSection(preferences)
                 BackupSection(db)
             }
         }
@@ -426,6 +427,17 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
                 PreferenceCheckbox(reorderNodes::askOnReject, "Reject")
             }
         }
+    }
+}
+
+//
+// Section: Debug
+//
+
+@Composable
+private fun DebugSection(preferences: Preferences) {
+    Section("Debug", "These settings are only available to aid in development.") {
+        PreferenceCheckbox(property = preferences.debug::useNewTree, label = "Use new tree")
     }
 }
 

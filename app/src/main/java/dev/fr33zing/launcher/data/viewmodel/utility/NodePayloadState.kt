@@ -50,7 +50,7 @@ open class NodePayloadState(
 }
 
 class NodePayloadWithReferenceTargetState(
-    underlyingState: NodePayloadState,
+    val underlyingState: NodePayloadState,
     targetState: NodePayloadState?,
     activate: (Context) -> Unit,
 ) :

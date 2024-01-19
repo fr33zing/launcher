@@ -11,8 +11,8 @@ private const val STAGGER_MS: Long = 25 // TODO: Add a user preference for this
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <T> Flow<List<T>>.stagger() = transformLatest {
     for (i in it.indices) {
-        delay(STAGGER_MS)
         emit(it.slice(0..i))
+        if (i < it.indices.last) delay(STAGGER_MS)
     }
 }
 
