@@ -40,11 +40,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     var newApps = 0
 
     withTransaction {
-        Log.d(
-            TAG,
-            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in createNewApplications(...)"
-        )
-
         val filteredActivityInfos =
             activityInfos.filter { activityInfo ->
                 applicationDao().getAllPayloads().find { app ->
@@ -86,10 +81,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 // TODO make this handle interruption gracefully
 suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
     withTransaction {
-        Log.d(
-            TAG,
-            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in autoCategorizeNewApplications(...)"
-        )
         val newApplicationsDirectory =
             getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
         val nodesWithPayloads =
@@ -219,38 +210,39 @@ suspend fun AppDatabase.getOrCreateDirectoryByPath(
     return current
 }
 
-suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node {
-    val directory = directoryDao().getBySpecialMode(specialMode)
-    val nodeId =
-        directory?.nodeId
-            ?: withTransaction {
-                val isRoot = specialMode == Directory.SpecialMode.Root
-                val nodeId = if (isRoot) ROOT_NODE_ID else 0
-                val parentId = if (isRoot) null else getRootNode().nodeId
-                insert(
-                    Node(
-                        nodeId = nodeId,
-                        parentId = parentId,
-                        kind = NodeKind.Directory,
-                        order = 0,
-                        label = specialMode.defaultDirectoryName,
+suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node =
+    withTransaction {
+        val directory = directoryDao().getBySpecialMode(specialMode)
+        val nodeId =
+            directory?.nodeId
+                ?: run {
+                    val isRoot = specialMode == Directory.SpecialMode.Root
+                    val nodeId = if (isRoot) ROOT_NODE_ID else 0
+                    val parentId = if (isRoot) null else getRootNode().nodeId
+                    insert(
+                        Node(
+                            nodeId = nodeId,
+                            parentId = parentId,
+                            kind = NodeKind.Directory,
+                            order = 0,
+                            label = specialMode.defaultDirectoryName,
+                        )
                     )
-                )
-                val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
-                insert(
-                    Directory(
-                        payloadId = 0,
-                        nodeId = lastNodeId,
-                        specialMode = specialMode,
-                        collapsed = specialMode.initiallyCollapsed
+                    val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
+                    insert(
+                        Directory(
+                            payloadId = 0,
+                            nodeId = lastNodeId,
+                            specialMode = specialMode,
+                            collapsed = specialMode.initiallyCollapsed
+                        )
                     )
-                )
 
-                if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
-                lastNodeId
-            }
-    return nodeDao().getNodeById(nodeId).notNull()
-}
+                    if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
+                    lastNodeId
+                }
+        nodeDao().getNodeById(nodeId).notNull()
+    }
 
 /** Convenience function to get or create the root node. */
 suspend fun AppDatabase.getRootNode(): Node =
