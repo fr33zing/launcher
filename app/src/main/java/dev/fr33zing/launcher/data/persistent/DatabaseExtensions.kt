@@ -14,6 +14,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.DEFAULT_CATEGORY_NAME
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
+import dev.fr33zing.launcher.data.utility.notNull
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.io.File
 import kotlinx.coroutines.runBlocking
@@ -219,44 +220,36 @@ suspend fun AppDatabase.getOrCreateDirectoryByPath(
 }
 
 suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node {
-    val directories = directoryDao().getAllPayloads().filter { it.specialMode == specialMode }
+    val directory = directoryDao().getBySpecialMode(specialMode)
     val nodeId =
-        when (directories.size) {
-            1 -> directories[0].nodeId
-            0 -> {
-                var event: Pair<Int, Int>? = null
-                val createdNodeId = withTransaction {
-                    val isRoot = specialMode == Directory.SpecialMode.Root
-                    val nodeId = if (isRoot) ROOT_NODE_ID else 0
-                    val parentId = if (isRoot) null else getRootNode().nodeId
-                    insert(
-                        Node(
-                            nodeId = nodeId,
-                            parentId = parentId,
-                            kind = NodeKind.Directory,
-                            order = 0,
-                            label = specialMode.defaultDirectoryName,
-                        )
+        directory?.nodeId
+            ?: withTransaction {
+                val isRoot = specialMode == Directory.SpecialMode.Root
+                val nodeId = if (isRoot) ROOT_NODE_ID else 0
+                val parentId = if (isRoot) null else getRootNode().nodeId
+                insert(
+                    Node(
+                        nodeId = nodeId,
+                        parentId = parentId,
+                        kind = NodeKind.Directory,
+                        order = 0,
+                        label = specialMode.defaultDirectoryName,
                     )
-                    val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
-                    insert(
-                        Directory(
-                            payloadId = 0,
-                            nodeId = lastNodeId,
-                            specialMode = specialMode,
-                            collapsed = specialMode.initiallyCollapsed
-                        )
+                )
+                val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
+                insert(
+                    Directory(
+                        payloadId = 0,
+                        nodeId = lastNodeId,
+                        specialMode = specialMode,
+                        collapsed = specialMode.initiallyCollapsed
                     )
+                )
 
-                    if (parentId != null) event = Pair(lastNodeId, parentId)
-                    lastNodeId
-                }
-                event?.let { NodeCreatedSubject.onNext(it) }
-                createdNodeId
+                if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
+                lastNodeId
             }
-            else -> throw Exception("Multiple directories exist with special mode: $specialMode")
-        }
-    return nodeDao().getNodeById(nodeId)!!
+    return nodeDao().getNodeById(nodeId).notNull()
 }
 
 /** Convenience function to get or create the root node. */
