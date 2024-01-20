@@ -21,7 +21,10 @@ import kotlinx.coroutines.flow.onStart
 data class TreeNodeState(
     val depth: Int,
     val nodePayload: NodePayloadWithReferenceTargetState,
-)
+) {
+    val nodeId
+        get() = nodePayload.underlyingState.node.nodeId
+}
 
 private fun canHaveChildren(node: Node) = node.kind == NodeKind.Directory
 
