@@ -19,12 +19,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preferences
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.ui.pages.Create
 import dev.fr33zing.launcher.ui.pages.Edit
 import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Preferences
 import dev.fr33zing.launcher.ui.pages.Reorder
+import dev.fr33zing.launcher.ui.pages.Setup
 import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.pages.Tree_old
 import io.reactivex.rxjava3.subjects.PublishSubject
@@ -41,6 +43,8 @@ object Routes {
         fun default() = home()
 
         fun home() = "home"
+
+        fun setup() = "setup"
 
         fun settings() = "settings"
 
@@ -83,8 +87,11 @@ fun SetupNavigation(db: AppDatabase) {
 private fun createNavGraph(navController: NavController, db: AppDatabase) =
     navController.createGraph(startDestination = Routes.Main.default()) {
         val navigateBack: () -> Unit = { navController.popBackStack() }
+        val navigateTo: (String) -> (() -> Unit) = { { navController.navigate(it) } }
 
         composable(Routes.Main.settings()) { Preferences(db) }
+
+        composable(Routes.Main.setup()) { Setup(navigateToHome = navigateTo(Routes.Main.home())) }
 
         composable(
             Routes.Main.home(),
@@ -93,7 +100,11 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             popEnterTransition = { fadeIn() },
             popExitTransition = { fadeOut() },
         ) {
-            Home(navController)
+            Home(
+                navigateToSetup = navigateTo(Routes.Main.setup()),
+                navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID)),
+                navigateToSettings = navigateTo(Routes.Main.settings()),
+            )
         }
 
         composable(

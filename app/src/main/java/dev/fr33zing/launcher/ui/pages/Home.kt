@@ -13,8 +13,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.TreeBrowser
@@ -23,12 +21,17 @@ import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.utility.longPressable
 
 @Composable
-fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
+fun Home(
+    navigateToSetup: () -> Unit,
+    navigateToTree: () -> Unit,
+    navigateToSettings: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    if (viewModel.isFirstRun) navigateToSetup()
+
     val context = LocalContext.current
 
     viewModel.treeBrowser.onNodeSelected { it.activate(context) }
-
-    fun onFlingUp() = navController.navigate("home/tree/$ROOT_NODE_ID")
 
     BackHandler { /* Prevent back button loop */}
 
@@ -38,8 +41,8 @@ fun Home(navController: NavController, viewModel: HomeViewModel = hiltViewModel(
             Modifier.systemBarsPadding()
                 .padding(vertical = 32.dp)
                 .fillMaxSize()
-                .longPressable { navController.navigate("settings") }
-                .pointerInput(Unit) { detectFlingUp(::onFlingUp) }
+                .longPressable { navigateToSettings() }
+                .pointerInput(Unit) { detectFlingUp(navigateToTree) }
     ) {
         Clock(ScreenHorizontalPadding)
         TreeBrowser(viewModel.treeBrowser, modifier = Modifier.weight(1f))
