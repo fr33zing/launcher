@@ -15,9 +15,12 @@ fun Tree(
 ) {
     val context = LocalContext.current
 
-    fun activateNode(treeNodeState: TreeNodeState) {
-        viewModel.activateNode(context, treeNodeState)
+    fun activatePayload(treeNodeState: TreeNodeState) {
+        viewModel.activatePayload(context, treeNodeState)
     }
 
-    NodeTree(::activateNode, viewModel.flow.filterNotNull())
+    NodeTree(
+        ::activatePayload,
+        viewModel.flow.filterNotNull(),
+    )
 }

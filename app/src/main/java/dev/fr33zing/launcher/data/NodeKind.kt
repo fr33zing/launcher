@@ -79,14 +79,20 @@ enum class NodeKind {
             else -> false
         }
 
-    fun color(payload: Payload? = null, ignoreState: Boolean = false): Color =
+    fun color(
+        payload: Payload? = null,
+        ignoreState: Boolean = false,
+        showChildren: Boolean? = null,
+    ): Color =
         when (this) {
             Reference -> Catppuccin.Current.mauve
             Directory -> {
                 if (payload is DirectoryPayload) {
+                    val collapsed =
+                        showChildren?.let { !it } ?: payload.collapsed ?: payload.initiallyCollapsed
+
                     if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
-                    else if (payload.collapsed == true && !ignoreState) collapsedDirectoryColor
-                    else directoryColor
+                    else if (collapsed && !ignoreState) collapsedDirectoryColor else directoryColor
                 } else directoryColor
             }
             Application -> {
@@ -137,17 +143,24 @@ enum class NodeKind {
             else -> false
         }
 
-    fun icon(payload: Payload? = null, ignoreState: Boolean = false): ImageVector =
+    fun icon(
+        payload: Payload? = null,
+        ignoreState: Boolean = false,
+        showChildren: Boolean? = null
+    ): ImageVector =
         when (this) {
             Reference -> Icons.Filled.East
             Directory -> {
                 if (payload is DirectoryPayload) {
+                    val collapsed =
+                        showChildren?.let { !it } ?: payload.collapsed ?: payload.initiallyCollapsed
+
                     if (payload.specialMode != null) {
-                        if (payload.collapsed == true && !ignoreState) {
+                        if (collapsed && !ignoreState) {
                             payload.specialMode!!.collapsedIcon ?: payload.specialMode!!.icon
                         } else payload.specialMode!!.icon
                     } else {
-                        if (payload.collapsed == true && !ignoreState) Icons.Outlined.Folder
+                        if (collapsed && !ignoreState) Icons.Outlined.Folder
                         else Icons.Filled.Folder
                     }
                 } else Icons.Filled.Folder

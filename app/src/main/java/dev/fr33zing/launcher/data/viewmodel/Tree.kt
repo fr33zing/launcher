@@ -35,8 +35,8 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
-    fun activateNode(context: Context, treeNodeState: TreeNodeState) {
-        treeNodeState.nodePayload.payload.activate(db, context)
+    fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
         stateHolder?.onActivateNode(treeNodeState)
+        treeNodeState.nodePayload.payload.activate(db, context)
     }
 }

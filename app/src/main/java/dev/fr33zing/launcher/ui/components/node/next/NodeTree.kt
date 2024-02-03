@@ -115,6 +115,7 @@ private fun LazyColumnItem(
     activate: () -> Unit
 ) {
     val dimensions = LocalNodeDimensions.current
+
     Box(
         Modifier.conditional(progress != null) {
             graphicsLayer {
@@ -124,7 +125,7 @@ private fun LazyColumnItem(
         }
     ) {
         CompositionLocalProvider(
-            LocalNodeAppearance provides rememberNodeAppearance(state.nodePayload),
+            LocalNodeAppearance provides rememberNodeAppearance(state),
             LocalNodeRowFeatures provides NodeRowFeatures.All
         ) {
             NodeInteractions(state, activate) { NodeRow(state) }

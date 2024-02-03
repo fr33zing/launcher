@@ -1,5 +1,8 @@
 package dev.fr33zing.launcher.data.viewmodel.utility
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.transformLatest
 data class TreeNodeState(
     val depth: Int,
     val nodePayload: NodePayloadWithReferenceTargetState,
+    val showChildren: State<Boolean?>
 ) {
     val underlyingNodeId
         get() = nodePayload.underlyingState.node.nodeId
@@ -31,7 +35,7 @@ data class TreeNodeState(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
-    private val showChildren = mutableMapOf<String, Boolean>()
+    private val showChildren = mutableStateMapOf<String, Boolean>()
 
     fun onActivateNode(state: TreeNodeState) {
         showChildren[state.key] = !showChildren[state.key]!!
@@ -42,7 +46,10 @@ class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
             val parentStateHolder = NodePayloadStateHolder(db, node)
             val parentFlow =
                 parentStateHolder.flowWithReferenceTarget.mapLatest { nodePayload ->
-                    TreeNodeState(depth, nodePayload)
+                    val showChildren = derivedStateOf {
+                        showChildren["$depth > ${nodePayload.underlyingState.node.nodeId}"]
+                    }
+                    TreeNodeState(depth, nodePayload, showChildren)
                 }
 
             return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
@@ -72,7 +79,8 @@ class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
                     val showParent = parent.depth >= 0 // Do not show root node
                     val showChildren =
                         showChildren.computeIfAbsent(parent.key) {
-                            (parent.nodePayload.payload as? Directory)?.collapsed != true
+                            val directory = parent.nodePayload.payload as? Directory
+                            (directory?.collapsed ?: directory?.initiallyCollapsed) == false
                         }
 
                     val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
