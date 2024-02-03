@@ -17,6 +17,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import dev.fr33zing.launcher.data.persistent.Node
+import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import kotlin.text.Typography.nbsp
 
 @Composable
@@ -47,6 +48,9 @@ fun NodePath(
         remember(nodeLineage.toList()) {
             buildAnnotatedString {
                 nodeLineage.forEachIndexed { index, node ->
+                    // Don't show root node
+                    if (node.nodeId == ROOT_NODE_ID) return@forEachIndexed
+
                     withStyle(SpanStyle(color = node.kind.color)) {
                         append(node.label.replace(' ', nbsp))
                     }

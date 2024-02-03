@@ -56,6 +56,12 @@ class TreeBrowserStateHolder(
     onNodeSelected: TreeBrowserStateHolder.(NodePayloadWithReferenceTargetState) -> Unit = {},
 
     /**
+     * Function to call when a node is tapped. Not called when tapping directories if
+     * `traverseDirectories` is true.
+     */
+    private val onTraverse: TreeBrowserStateHolder.(Node) -> Unit = {},
+
+    /**
      * Function used to determine the initial directory. Defaults to the global root node if no
      * value is provided.
      */
@@ -158,7 +164,10 @@ class TreeBrowserStateHolder(
         mutateStack: (ArrayDeque<Node>) -> Unit,
     ) =
         scope.launch {
-            mutateStack(flow.value!!.stack)
-            updateFlow.emit(Update(flow.value!!.stack, direction))
+            val stack = flow.value!!.stack
+
+            mutateStack(stack)
+            updateFlow.emit(Update(stack, direction))
+            onTraverse(stack.last())
         }
 }

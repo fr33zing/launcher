@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadState
 import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadWithReferenceTargetState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeBrowserStateHolder
 import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
@@ -52,7 +51,8 @@ fun TreeBrowser(
     stateHolder: TreeBrowserStateHolder,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = ScreenHorizontalPadding,
-    additionalRowContent: @Composable (NodePayloadState) -> Unit = {},
+    center: Boolean = false,
+    additionalRowContent: @Composable (NodePayloadWithReferenceTargetState) -> Unit = {},
 ) {
     val state by stateHolder.flow.collectAsStateWithLifecycle(null)
 
@@ -76,7 +76,10 @@ fun TreeBrowser(
         modifier = modifier,
     ) { targetState ->
         val children by targetState.children.flow.collectAsStateWithLifecycle(emptyArray())
-        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
+        Column(
+            verticalArrangement = if (center) Arrangement.Center else Arrangement.Top,
+            modifier = if (center) Modifier.fillMaxSize() else Modifier.fillMaxWidth()
+        ) {
             if (targetState.canTraverseUpward) {
                 TraverseUpRow(
                     enabled = !transition.isRunning,
@@ -169,23 +172,22 @@ private fun TreeBrowserRow(
     val indication = rememberCustomIndication(nodeAppearance.color)
 
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier =
             Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
                 .padding(horizontal = horizontalPadding, vertical = spacing / 2)
                 .fillMaxWidth()
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            NodeIconAndText(
-                fontSize = fontSize,
-                lineHeight = lineHeight,
-                label = node.label,
-                color = nodeAppearance.color,
-                icon = nodeAppearance.icon,
-                lineThrough = nodeAppearance.lineThrough,
-                isValidReference = state.isValidReference,
-                textModifier = Modifier.weight(1f),
-            )
-        }
+        NodeIconAndText(
+            fontSize = fontSize,
+            lineHeight = lineHeight,
+            label = node.label,
+            color = nodeAppearance.color,
+            icon = nodeAppearance.icon,
+            lineThrough = nodeAppearance.lineThrough,
+            isValidReference = state.isValidReference,
+            textModifier = Modifier.weight(1f),
+        )
 
         additionalContent()
     }

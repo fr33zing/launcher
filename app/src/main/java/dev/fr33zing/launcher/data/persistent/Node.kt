@@ -10,6 +10,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.ui.utility.UserEditable
 import kotlinx.coroutines.flow.Flow
 
@@ -56,6 +57,11 @@ interface NodeDao {
 
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
+
+    suspend fun getParentByChildId(childNodeId: Int): Node? =
+        getNodeById(childNodeId).notNull().let { childNode ->
+            childNode.parentId?.let { parentId -> getNodeById(parentId) }
+        }
 
     @Query("SELECT * FROM Node WHERE parentId == :parentId AND label == :label")
     suspend fun getChildNodeByLabel(parentId: Int?, label: String): Node?
