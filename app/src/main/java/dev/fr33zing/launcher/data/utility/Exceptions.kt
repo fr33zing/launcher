@@ -8,9 +8,12 @@ class NullNodeException : Exception("Node is null")
 fun Node?.notNull(): Node = this ?: throw NullNodeException()
 
 class NullPayloadException(val node: Node? = null) :
-    Exception(node?.let { "Payload of node ${it.nodeId} is null" } ?: "Payload is null")
+    Exception(
+        node?.let { "Payload is null (nodeId: ${it.nodeId}, label: \"${it.label}\")" }
+            ?: "Payload is null"
+    )
 
-fun Payload?.notNull(node: Node? = null): Payload = this ?: throw NullPayloadException()
+fun Payload?.notNull(node: Node? = null): Payload = this ?: throw NullPayloadException(node)
 
 class PayloadClassMismatchException(val node: Node) :
     Exception("Node ${node.nodeId} kind is ${node.kind} but its payload class does not match")
