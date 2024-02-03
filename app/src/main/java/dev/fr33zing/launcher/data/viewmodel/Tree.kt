@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.transformLatest
 class TreeViewModel
 @Inject
 constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
+    private var stateHolder: TreeStateHolder? = null
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow: StateFlow<List<TreeNodeState>?> =
         savedStateHandle
@@ -27,8 +30,13 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
             .filterNotNull()
             .transformLatest { nodeIdArgument ->
                 val nodeId = nodeIdArgument.toInt()
-                val stateHolder = TreeStateHolder(db, nodeId)
-                emitAll(stateHolder.flow)
+                stateHolder = TreeStateHolder(db, nodeId)
+                emitAll(stateHolder!!.flow)
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+
+    fun activateNode(context: Context, treeNodeState: TreeNodeState) {
+        treeNodeState.nodePayload.payload.activate(db, context)
+        stateHolder?.onActivateNode(treeNodeState)
+    }
 }

@@ -1,6 +1,5 @@
 package dev.fr33zing.launcher.data.viewmodel.utility
 
-import android.content.Context
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -19,33 +18,28 @@ import kotlinx.coroutines.flow.transform
 open class NodePayloadState(
     val node: Node,
     val payload: Payload,
-    val activate: (Context) -> Unit = {}
 ) {
     operator fun component1() = node
 
     operator fun component2() = payload
 
-    operator fun component3() = activate
-
     companion object {
         suspend fun fromNode(
             db: AppDatabase,
             node: Node,
-            activate: (Context) -> Unit = {}
         ): NodePayloadState {
             val payload =
                 db.getPayloadByNodeId(node.kind, node.nodeId) ?: throw NullPayloadException(node)
 
-            return NodePayloadState(node, payload, activate)
+            return NodePayloadState(node, payload)
         }
 
         suspend fun fromNodeId(
             db: AppDatabase,
             nodeId: Int,
-            activate: (Context) -> Unit = {}
         ): NodePayloadState {
             val node = db.nodeDao().getNodeById(nodeId) ?: throw NullNodeException()
-            return fromNode(db, node, activate)
+            return fromNode(db, node)
         }
     }
 }
@@ -53,12 +47,10 @@ open class NodePayloadState(
 class NodePayloadWithReferenceTargetState(
     val underlyingState: NodePayloadState,
     targetState: NodePayloadState?,
-    activate: (Context) -> Unit = {},
 ) :
     NodePayloadState(
         node = (targetState ?: underlyingState).node,
         payload = (targetState ?: underlyingState).payload,
-        activate = activate
     ) {
 
     val isValidReference = targetState != null
@@ -67,9 +59,8 @@ class NodePayloadWithReferenceTargetState(
         suspend fun fromNode(
             db: AppDatabase,
             underlyingNode: Node,
-            activate: (Context) -> Unit = {}
         ): NodePayloadWithReferenceTargetState {
-            val underlyingState = NodePayloadState.fromNode(db, underlyingNode, activate)
+            val underlyingState = NodePayloadState.fromNode(db, underlyingNode)
             val targetState =
                 (underlyingState.payload as? Reference)?.targetId?.let { targetId ->
                     fromNodeId(db, targetId)
@@ -80,15 +71,13 @@ class NodePayloadWithReferenceTargetState(
     }
 }
 
-class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
+class NodePayloadStateHolder(
+    db: AppDatabase,
+    val node: Node,
+) {
     val flow: Flow<NodePayloadState> =
         db.getPayloadFlowByNodeId(node.kind, node.nodeId).map { payload ->
-            NodePayloadState(
-                node,
-                payload ?: throw NullPayloadException(node),
-            ) { context ->
-                payload.activate(db, context)
-            }
+            NodePayloadState(node, payload ?: throw NullPayloadException(node))
         }
 
     val flowWithReferenceTarget: Flow<NodePayloadWithReferenceTargetState> =
@@ -103,23 +92,16 @@ class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
                             db.getPayloadFlowByNodeId(targetNode.kind, targetNode.nodeId)
                                 .filterNotNull()
                                 .map { targetPayload ->
-                                    val targetState = NodePayloadState(targetNode, targetPayload)
-                                    NodePayloadWithReferenceTargetState(state, targetState) {
-                                        context ->
-                                        targetPayload.activate(db, context)
-                                    }
+                                    NodePayloadWithReferenceTargetState(
+                                        underlyingState = state,
+                                        targetState = NodePayloadState(targetNode, targetPayload)
+                                    )
                                 }
                         }
                 }
 
             if (targetFlow != null) emitAll(targetFlow)
-            else {
-                emit(
-                    NodePayloadWithReferenceTargetState(state, null) { context ->
-                        state.payload.activate(db, context)
-                    }
-                )
-            }
+            else emit(NodePayloadWithReferenceTargetState(state, null))
         }
 }
 

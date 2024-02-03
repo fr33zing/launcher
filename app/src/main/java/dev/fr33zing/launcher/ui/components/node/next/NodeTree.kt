@@ -3,7 +3,6 @@ package dev.fr33zing.launcher.ui.components.node.next
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,6 +43,7 @@ private const val APPEAR_ANIMATION_DURATION_MS = 400
 
 @Composable
 fun NodeTree(
+    activate: (TreeNodeState) -> Unit,
     flow: Flow<List<TreeNodeState>>,
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     lazyListState: LazyListState = rememberLazyListState()
@@ -78,7 +77,7 @@ fun NodeTree(
     val state by
         flow
             .onEach { treeNodeStates ->
-                val nextSnapshotNodeIds = treeNodeStates.map { it.nodeId }
+                val nextSnapshotNodeIds = treeNodeStates.map { it.underlyingNodeId }
                 animation.progressMap
                     .filterKeys { it !in nextSnapshotNodeIds }
                     .forEach { (nodeId, _) -> animation.progressMap.remove(nodeId) }
@@ -98,26 +97,26 @@ fun NodeTree(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    state.map { Pair(it, animation.progress(it.nodeId)) },
+                    state.map { Pair(it, animation.progress(it.underlyingNodeId)) },
                     key = { it.first.nodePayload.underlyingState.node.nodeId },
                     contentType = { it.first.nodePayload.underlyingState.node.kind }
                 ) { (state, progress) ->
-                    LazyColumnItem(state, progress)
+                    LazyColumnItem(state, progress) { activate(state) }
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LazyItemScope.LazyColumnItem(
+private fun LazyColumnItem(
     state: TreeNodeState,
-    progress: Animatable<Float, AnimationVector1D>?
+    progress: Animatable<Float, AnimationVector1D>?,
+    activate: () -> Unit
 ) {
     val dimensions = LocalNodeDimensions.current
     Box(
-        Modifier.animateItemPlacement().conditional(progress != null) {
+        Modifier.conditional(progress != null) {
             graphicsLayer {
                 translationY = (1 - progress!!.value) * dimensions.lineHeight.toPx()
                 alpha = progress.value
@@ -128,7 +127,7 @@ private fun LazyItemScope.LazyColumnItem(
             LocalNodeAppearance provides rememberNodeAppearance(state.nodePayload),
             LocalNodeRowFeatures provides NodeRowFeatures.All
         ) {
-            NodeInteractions(state) { NodeRow(state) }
+            NodeInteractions(state, activate) { NodeRow(state) }
         }
     }
 }

@@ -31,7 +31,7 @@ fun Home(
 
     val context = LocalContext.current
 
-    viewModel.treeBrowser.onNodeSelected { it.activate(context) }
+    viewModel.treeBrowser.onNodeSelected { viewModel.activatePayload(context, it.payload) }
 
     BackHandler { /* Prevent back button loop */}
 
