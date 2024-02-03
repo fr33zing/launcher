@@ -20,7 +20,8 @@ fun Tree(
     }
 
     NodeTree(
-        ::activatePayload,
-        viewModel.flow.filterNotNull(),
+        flow = viewModel.flow.filterNotNull(),
+        disableFlowStagger = viewModel::disableFlowStagger,
+        activate = ::activatePayload,
     )
 }

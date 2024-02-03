@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.ui.components.node.next
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,13 +41,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-private const val APPEAR_ANIMATION_DURATION_MS = 400
+private const val APPEAR_ANIMATION_DURATION_MS = 350
 
 @Composable
 fun NodeTree(
-    activate: (TreeNodeState) -> Unit,
     flow: Flow<List<TreeNodeState>>,
     features: NodeRowFeatureSet = NodeRowFeatures.All,
+    disableFlowStagger: () -> Unit = {},
+    activate: (TreeNodeState) -> Unit = {},
     lazyListState: LazyListState = rememberLazyListState()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -73,7 +76,6 @@ fun NodeTree(
                 return progressMap[nodeId]
             }
         }
-
     val state by
         flow
             .onEach { treeNodeStates ->
@@ -89,7 +91,13 @@ fun NodeTree(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(vertical = paddingHeight)
-                    .verticalScrollShadows(shadowHeight),
+                    .verticalScrollShadows(shadowHeight)
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            awaitFirstDown(false)
+                            disableFlowStagger()
+                        }
+                    },
         ) {
             LazyColumn(
                 state = lazyListState,
@@ -119,7 +127,7 @@ private fun LazyColumnItem(
     Box(
         Modifier.conditional(progress != null) {
             graphicsLayer {
-                translationY = (1 - progress!!.value) * dimensions.lineHeight.toPx()
+                translationY = (1 - progress!!.value) * (dimensions.lineHeight.toPx() * 0.75f)
                 alpha = progress.value
             }
         }

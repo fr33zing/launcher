@@ -12,6 +12,7 @@ import dev.fr33zing.launcher.data.utility.notNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
@@ -74,27 +75,30 @@ class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
                                     .onStart { emit(emptyList()) }
                             )
                         }
+                        .conflate()
 
-                parentFlow.combine(childrenFlow) { parent, children ->
-                    val showParent = parent.depth >= 0 // Do not show root node
-                    val showChildren =
-                        showChildren.computeIfAbsent(parent.key) {
-                            val directory = parent.nodePayload.payload as? Directory
-                            (directory?.collapsed ?: directory?.initiallyCollapsed) == false
-                        }
+                parentFlow
+                    .combine(childrenFlow) { parent, children ->
+                        val showParent = parent.depth >= 0 // Do not show root node
+                        val showChildren =
+                            showChildren.computeIfAbsent(parent.key) {
+                                val directory = parent.nodePayload.payload as? Directory
+                                (directory?.collapsed ?: directory?.initiallyCollapsed) == false
+                            }
 
-                    val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
-                    val childrenOrEmpty = if (showChildren) children else emptyList()
+                        val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
+                        val childrenOrEmpty = if (showChildren) children else emptyList()
 
-                    parentOrEmpty + childrenOrEmpty
-                }
+                        parentOrEmpty + childrenOrEmpty
+                    }
+                    .conflate()
             }
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
         val flow = traverse(rootNode)
 
-        emitAll(flow)
+        emitAll(flow.conflate())
     }
 }
 
