@@ -75,10 +75,7 @@ fun TreeBrowser(
         },
         modifier = modifier,
     ) { targetState ->
-        val children by
-            targetState.children.flowWithReferenceTargetState.collectAsStateWithLifecycle(
-                emptyArray()
-            )
+        val children by targetState.children.flow.collectAsStateWithLifecycle(emptyArray())
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
             if (targetState.canTraverseUpward) {
                 TraverseUpRow(

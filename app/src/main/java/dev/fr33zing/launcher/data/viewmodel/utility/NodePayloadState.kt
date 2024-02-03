@@ -6,6 +6,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
+import dev.fr33zing.launcher.data.utility.NullNodeException
 import dev.fr33zing.launcher.data.utility.NullPayloadException
 import dev.fr33zing.launcher.data.utility.PayloadClassMismatchException
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +34,7 @@ open class NodePayloadState(
             activate: (Context) -> Unit = {}
         ): NodePayloadState {
             val payload =
-                db.getPayloadByNodeId(node.kind, node.nodeId) ?: throw Exception("Payload is null")
+                db.getPayloadByNodeId(node.kind, node.nodeId) ?: throw NullPayloadException(node)
 
             return NodePayloadState(node, payload, activate)
         }
@@ -43,7 +44,7 @@ open class NodePayloadState(
             nodeId: Int,
             activate: (Context) -> Unit = {}
         ): NodePayloadState {
-            val node = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Node is null")
+            val node = db.nodeDao().getNodeById(nodeId) ?: throw NullNodeException()
             return fromNode(db, node, activate)
         }
     }
@@ -52,14 +53,31 @@ open class NodePayloadState(
 class NodePayloadWithReferenceTargetState(
     val underlyingState: NodePayloadState,
     targetState: NodePayloadState?,
-    activate: (Context) -> Unit,
+    activate: (Context) -> Unit = {},
 ) :
     NodePayloadState(
         node = (targetState ?: underlyingState).node,
         payload = (targetState ?: underlyingState).payload,
         activate = activate
     ) {
+
     val isValidReference = targetState != null
+
+    companion object {
+        suspend fun fromNode(
+            db: AppDatabase,
+            underlyingNode: Node,
+            activate: (Context) -> Unit = {}
+        ): NodePayloadWithReferenceTargetState {
+            val underlyingState = NodePayloadState.fromNode(db, underlyingNode, activate)
+            val targetState =
+                (underlyingState.payload as? Reference)?.targetId?.let { targetId ->
+                    fromNodeId(db, targetId)
+                }
+
+            return NodePayloadWithReferenceTargetState(underlyingState, targetState)
+        }
+    }
 }
 
 class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
@@ -108,16 +126,9 @@ class NodePayloadStateHolder(db: AppDatabase, val node: Node) {
 class NodePayloadListStateHolder(
     db: AppDatabase,
     nodes: List<Node>,
-    filterPredicate: ((NodePayloadState) -> Boolean)? = null,
+    filterPredicate: ((NodePayloadWithReferenceTargetState) -> Boolean)? = null,
 ) {
     val flow =
-        combine(
-            nodes.map { node -> NodePayloadStateHolder(db, node).flow.maybeFilter(filterPredicate) }
-        ) {
-            it
-        }
-
-    val flowWithReferenceTargetState =
         combine(
             nodes.map { node ->
                 NodePayloadStateHolder(db, node)

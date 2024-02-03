@@ -47,7 +47,7 @@ class TreeBrowserStateHolder(
     private val containTraversalWithinInitialRoot: Boolean = true,
 
     /** If the predicate returns false, the node will be hidden. */
-    private val nodeVisiblePredicate: (NodePayloadState) -> Boolean = { true },
+    private val nodeVisiblePredicate: ((NodePayloadWithReferenceTargetState) -> Boolean)? = null,
 
     /**
      * Function to call when a node is tapped. Not called when tapping directories if
@@ -70,7 +70,7 @@ class TreeBrowserStateHolder(
     private val updateFlow = MutableSharedFlow<Update>()
     private var initialRootNodeId: Int? = null
 
-    val currentRootNode
+    private val currentRootNode
         get() = flow.value?.stack?.last()
 
     val currentRootNodeId
@@ -89,11 +89,14 @@ class TreeBrowserStateHolder(
                             .targetId ?: throw Exception("targetId is null")
                     }
                 val childNodes =
-                    db.nodeDao().getChildNodes(loadChildrenFromId).filter {
-                        // TODO test this? should there be
-                        // NodePayloadWithReferenceTargetState.fromNode?
-                        val state = NodePayloadState.fromNode(db, it)
-                        nodeVisiblePredicate(state)
+                    db.nodeDao().getChildNodes(loadChildrenFromId).let { childNodes ->
+                        nodeVisiblePredicate?.let { predicate ->
+                            childNodes.filter { childNode ->
+                                predicate(
+                                    NodePayloadWithReferenceTargetState.fromNode(db, childNode)
+                                )
+                            }
+                        } ?: childNodes
                     }
                 val rootStateHolder = NodePayloadStateHolder(db, rootNode)
                 val childrenStateHolder =
