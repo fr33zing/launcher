@@ -28,7 +28,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
     private var shouldStaggerFlow = mutableStateOf(true)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val flow: StateFlow<List<TreeNodeState>?> =
+    val flow: StateFlow<List<TreeNodeState>> =
         savedStateHandle
             .getStateFlow<String?>("nodeId", null)
             .filterNotNull()
@@ -39,11 +39,11 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
                 emitAll(stateHolder!!.flow)
             }
             .stagger(shouldStaggerFlow)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
         stateHolder?.onActivateNode(treeNodeState)
-        treeNodeState.nodePayload.payload.activate(db, context)
+        treeNodeState.value.payload.activate(db, context)
     }
 
     fun disableFlowStagger() {

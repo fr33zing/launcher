@@ -12,93 +12,101 @@ import dev.fr33zing.launcher.data.utility.notNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
 
 data class TreeNodeState(
     val depth: Int,
-    val nodePayload: NodePayloadWithReferenceTargetState,
-    val showChildren: State<Boolean?>
+    val showChildren: State<Boolean?>,
+    val value: NodePayloadWithReferenceTargetState,
+    val flow: Lazy<Flow<TreeNodeState>>
 ) {
-    val underlyingNodeId
-        get() = nodePayload.underlyingState.node.nodeId
-
     val key
-        get() = "$depth > $underlyingNodeId"
+        get() = makeKey(underlyingNodeId, depth)
+
+    val underlyingNodeId
+        get() = value.underlyingState.node.nodeId
+
+    val underlyingNodeKind
+        get() = value.underlyingState.node.kind
 }
 
+private fun makeKey(nodeId: Int, depth: Int) = "$depth > $nodeId"
+
 @OptIn(ExperimentalCoroutinesApi::class)
-class TreeStateHolder(db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
+class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
+    private val treeNodeStateFlows = mutableStateMapOf<String, Flow<TreeNodeState>>()
     private val showChildren = mutableStateMapOf<String, Boolean>()
 
     fun onActivateNode(state: TreeNodeState) {
-        showChildren[state.key] = !showChildren[state.key]!!
+        if (state.key in showChildren) showChildren[state.key] = !showChildren[state.key]!!
     }
 
-    val flow: Flow<List<TreeNodeState>> = flow {
-        fun traverse(node: Node, depth: Int = -1): Flow<List<TreeNodeState>> {
+    private fun getTreeNodeStateFlow(depth: Int, node: Node): Flow<TreeNodeState> =
+        treeNodeStateFlows.computeIfAbsent(makeKey(node.nodeId, depth)) {
             val parentStateHolder = NodePayloadStateHolder(db, node)
-            val parentFlow =
-                parentStateHolder.flowWithReferenceTarget.mapLatest { nodePayload ->
-                    val showChildren = derivedStateOf {
-                        showChildren["$depth > ${nodePayload.underlyingState.node.nodeId}"]
-                    }
-                    TreeNodeState(depth, nodePayload, showChildren)
+
+            parentStateHolder.flowWithReferenceTarget.mapLatest { value ->
+                val showChildren = derivedStateOf {
+                    showChildren[makeKey(value.underlyingState.node.nodeId, depth)]
                 }
+                val flow = lazy { getTreeNodeStateFlow(depth, node) }
+
+                TreeNodeState(depth, showChildren, value, flow)
+            }
+        }
+
+    val flow: Flow<List<TreeNodeState>> = flow {
+        fun traverse(depth: Int = -1, node: Node): Flow<List<TreeNodeState>> {
+            val parentFlow = getTreeNodeStateFlow(depth, node)
 
             return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
             else {
                 val childrenFlow =
                     parentFlow
-                        .distinctUntilChangedBy { it.nodePayload.node.nodeId }
-                        .transformLatest {
+                        .distinctUntilChangedBy { it.value.node.nodeId }
+                        .transformLatest { treeNode: TreeNodeState ->
                             emitAll(
                                 db.nodeDao()
-                                    .getChildNodesFlow(it.nodePayload.node.nodeId)
-                                    .distinctUntilChanged()
+                                    .getChildNodesFlow(treeNode.value.node.nodeId)
+                                    .distinctUntilChangedBy { it.map { node -> node.nodeId } }
                                     .flatMapLatest { childNodes ->
                                         val childNodeFlows =
                                             childNodes.map { childNode ->
-                                                traverse(childNode, depth + 1)
+                                                traverse(depth + 1, childNode)
                                             }
                                         combine(childNodeFlows) { arrayOfLists ->
                                             arrayOfLists.toList().flatten()
                                         }
                                     }
-                                    .onStart { emit(emptyList()) }
                             )
                         }
-                        .conflate()
+                        .distinctUntilChangedBy { it.map { state -> state.underlyingNodeId } }
 
-                parentFlow
-                    .combine(childrenFlow) { parent, children ->
-                        val showParent = parent.depth >= 0 // Do not show root node
-                        val showChildren =
-                            showChildren.computeIfAbsent(parent.key) {
-                                val directory = parent.nodePayload.payload as? Directory
-                                (directory?.collapsed ?: directory?.initiallyCollapsed) == false
-                            }
+                parentFlow.combine(childrenFlow) { treeNode, children ->
+                    val showParent = treeNode.depth >= 0 // Do not show root node
+                    val showChildren =
+                        showChildren.computeIfAbsent(treeNode.key) {
+                            val directory = treeNode.value.payload as? Directory
+                            (directory?.collapsed ?: directory?.initiallyCollapsed) == false
+                        }
 
-                        val parentOrEmpty = if (showParent) listOf(parent) else emptyList()
-                        val childrenOrEmpty = if (showChildren) children else emptyList()
+                    val parentOrEmpty = if (showParent) listOf(treeNode) else emptyList()
+                    val childrenOrEmpty = if (showChildren) children else emptyList()
 
-                        parentOrEmpty + childrenOrEmpty
-                    }
-                    .conflate()
+                    parentOrEmpty + childrenOrEmpty
+                }
             }
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow = traverse(rootNode)
+        val flow = traverse(node = rootNode)
 
-        emitAll(flow.conflate())
+        emitAll(flow)
     }
 }
 

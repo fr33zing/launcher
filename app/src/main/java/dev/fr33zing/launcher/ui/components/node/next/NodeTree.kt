@@ -37,11 +37,15 @@ import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
+private const val APPEAR_ANIMATION_STAGGER_MS: Long = 15
 
 @Composable
 fun NodeTree(
@@ -61,30 +65,32 @@ fun NodeTree(
         }
     val animation =
         object {
+            val staggerMutex = Mutex()
             val progressMap = remember {
                 mutableStateMapOf<Int, Animatable<Float, AnimationVector1D>>()
             }
 
-            fun progress(nodeId: Int): Animatable<Float, AnimationVector1D>? {
-                if (!hasFeature.APPEAR_ANIMATION) return null
-                if (nodeId !in progressMap) {
-                    progressMap[nodeId] = Animatable(0f)
-                    coroutineScope.launch {
-                        progressMap[nodeId]!!.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
+            fun progress(nodeId: Int): Animatable<Float, AnimationVector1D>? =
+                if (!hasFeature.APPEAR_ANIMATION) null
+                else {
+                    progressMap.computeIfAbsent(nodeId) {
+                        Animatable(0f).also {
+                            coroutineScope.launch {
+                                staggerMutex.withLock { delay(APPEAR_ANIMATION_STAGGER_MS) }
+                                it.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
+                            }
+                        }
                     }
                 }
-                return progressMap[nodeId]
+
+            fun resetRemovedNodes(treeNodeStates: List<TreeNodeState>) {
+                val nextSnapshotNodeIds = treeNodeStates.map { it.underlyingNodeId }
+                progressMap
+                    .filterKeys { it !in nextSnapshotNodeIds }
+                    .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
-    val state by
-        flow
-            .onEach { treeNodeStates ->
-                val nextSnapshotNodeIds = treeNodeStates.map { it.underlyingNodeId }
-                animation.progressMap
-                    .filterKeys { it !in nextSnapshotNodeIds }
-                    .forEach { (nodeId, _) -> animation.progressMap.remove(nodeId) }
-            }
-            .collectAsStateWithLifecycle(emptyList())
+    val state by flow.onEach(animation::resetRemovedNodes).collectAsStateWithLifecycle(emptyList())
 
     CompositionLocalProvider(LocalNodeDimensions provides createLocalNodeDimensions()) {
         Box(
@@ -105,11 +111,13 @@ fun NodeTree(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    state.map { Pair(it, animation.progress(it.underlyingNodeId)) },
-                    key = { it.first.nodePayload.underlyingState.node.nodeId },
-                    contentType = { it.first.nodePayload.underlyingState.node.kind }
+                    items = state.map { Pair(it, animation.progress(it.underlyingNodeId)) },
+                    key = { it.first.key },
+                    contentType = { it.first.underlyingNodeKind }
                 ) { (state, progress) ->
-                    LazyColumnItem(state, progress) { activate(state) }
+                    val liveState by state.flow.value.collectAsStateWithLifecycle(null)
+
+                    LazyColumnItem(liveState ?: state, progress) { activate(state) }
                 }
             }
         }

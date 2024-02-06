@@ -58,7 +58,7 @@ fun rememberNodeAppearance(
 @Composable
 fun rememberNodeAppearance(treeNodeState: TreeNodeState): NodeAppearance =
     rememberNodeAppearance(
-        node = treeNodeState.nodePayload.node,
-        payload = treeNodeState.nodePayload.payload,
+        node = treeNodeState.value.node,
+        payload = treeNodeState.value.payload,
         showChildren = treeNodeState.showChildren.value,
     )

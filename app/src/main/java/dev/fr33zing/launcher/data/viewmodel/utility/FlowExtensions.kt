@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.transformLatest
 
-private const val STAGGER_MS: Long = 40
+private const val STAGGER_MS: Long = 25
 
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <T> Flow<List<T>>.stagger(shouldStagger: State<Boolean>) = transformLatest {

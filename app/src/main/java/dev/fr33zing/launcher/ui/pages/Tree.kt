@@ -6,7 +6,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.ui.components.node.next.NodeTree
-import kotlinx.coroutines.flow.filterNotNull
 
 @Composable
 fun Tree(
@@ -20,7 +19,7 @@ fun Tree(
     }
 
     NodeTree(
-        flow = viewModel.flow.filterNotNull(),
+        flow = viewModel.flow,
         disableFlowStagger = viewModel::disableFlowStagger,
         activate = ::activatePayload,
     )

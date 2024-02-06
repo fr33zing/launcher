@@ -30,7 +30,7 @@ fun NodeRow(
             }
         }
 
-    val (node) = state.nodePayload
+    val (node) = state.value
     val dimensions = LocalNodeDimensions.current
     val indent by remember { derivedStateOf { dimensions.indent * state.depth } }
 
