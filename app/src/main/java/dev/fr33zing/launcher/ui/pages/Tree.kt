@@ -19,6 +19,7 @@ fun Tree(
     }
 
     NodeTree(
+        treeState = viewModel.treeState,
         flow = viewModel.flow,
         disableFlowStagger = viewModel::disableFlowStagger,
         activate = ::activatePayload,

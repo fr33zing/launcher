@@ -27,6 +27,9 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
     private var stateHolder: TreeStateHolder? = null
     private var shouldStaggerFlow = mutableStateOf(true)
 
+    val treeState
+        get() = stateHolder?.state
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow: StateFlow<List<TreeNodeState>> =
         savedStateHandle

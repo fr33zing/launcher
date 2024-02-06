@@ -22,33 +22,26 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
+import dev.fr33zing.launcher.data.viewmodel.utility.TreeState
 import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeDimensions
-import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeRowFeatures
 import dev.fr33zing.launcher.ui.components.node.next.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.node.next.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.components.node.next.utility.createLocalNodeDimensions
-import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
-import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
-private const val APPEAR_ANIMATION_STAGGER_MS: Long = 15
 
 @Composable
 fun NodeTree(
+    treeState: TreeState?,
     flow: Flow<List<TreeNodeState>>,
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     disableFlowStagger: () -> Unit = {},
@@ -65,7 +58,6 @@ fun NodeTree(
         }
     val animation =
         object {
-            val staggerMutex = Mutex()
             val progressMap = remember {
                 mutableStateMapOf<Int, Animatable<Float, AnimationVector1D>>()
             }
@@ -76,7 +68,6 @@ fun NodeTree(
                     progressMap.computeIfAbsent(nodeId) {
                         Animatable(0f).also {
                             coroutineScope.launch {
-                                staggerMutex.withLock { delay(APPEAR_ANIMATION_STAGGER_MS) }
                                 it.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
                             }
                         }
@@ -90,7 +81,8 @@ fun NodeTree(
                     .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
-    val state by flow.onEach(animation::resetRemovedNodes).collectAsStateWithLifecycle(emptyList())
+    val treeNodeStates by
+        flow.onEach(animation::resetRemovedNodes).collectAsStateWithLifecycle(emptyList())
 
     CompositionLocalProvider(LocalNodeDimensions provides createLocalNodeDimensions()) {
         Box(
@@ -111,43 +103,54 @@ fun NodeTree(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items = state.map { Pair(it, animation.progress(it.underlyingNodeId)) },
+                    items =
+                        treeNodeStates.map { Pair(it, animation.progress(it.underlyingNodeId)) },
                     key = { it.first.key },
                     contentType = { it.first.underlyingNodeKind }
-                ) { (state, progress) ->
-                    val liveState by state.flow.value.collectAsStateWithLifecycle(null)
+                ) { (initialTreeNodeState, appearAnimationProgress) ->
+                    val treeNodeState by
+                        initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
+                            initialTreeNodeState
+                        )
 
-                    LazyColumnItem(liveState ?: state, progress) { activate(state) }
+                    NodeRow(
+                        treeState = treeState,
+                        treeNodeState = treeNodeState,
+                        onLongClick = {},
+                        activate = { activate(treeNodeState) },
+                        appearAnimationProgress = appearAnimationProgress
+                    )
                 }
             }
         }
     }
 }
 
-@Composable
-private fun LazyColumnItem(
-    state: TreeNodeState,
-    progress: Animatable<Float, AnimationVector1D>?,
-    activate: () -> Unit
-) {
-    val dimensions = LocalNodeDimensions.current
-
-    Box(
-        Modifier.conditional(progress != null) {
-            graphicsLayer {
-                translationY = (1 - progress!!.value) * (dimensions.lineHeight.toPx() * 0.75f)
-                alpha = progress.value
-            }
-        }
-    ) {
-        CompositionLocalProvider(
-            LocalNodeAppearance provides rememberNodeAppearance(state),
-            LocalNodeRowFeatures provides NodeRowFeatures.All
-        ) {
-            NodeInteractions(state, activate) { NodeRow(state) }
-        }
-    }
-}
+// @Composable
+// private fun LazyColumnItem(
+//    treeState: TreeState,
+//    treeNodeState: TreeNodeState,
+//    progress: Animatable<Float, AnimationVector1D>?,
+//    activate: () -> Unit
+// ) {
+//    val dimensions = LocalNodeDimensions.current
+//
+//    Box(
+//        Modifier.conditional(progress != null) {
+//            graphicsLayer {
+//                translationY = (1 - progress!!.value) * (dimensions.lineHeight.toPx() * 0.75f)
+//                alpha = progress.value
+//            }
+//        }
+//    ) {
+//        CompositionLocalProvider(
+//            LocalNodeAppearance provides rememberNodeAppearance(treeNodeState),
+//            LocalNodeRowFeatures provides NodeRowFeatures.All
+//        ) {
+//            NodeRow(treeState, treeNodeState, activate)
+//        }
+//    }
+// }
 
 @Composable
 private fun paddingAndShadowHeight(): Pair<Dp, Dp> {

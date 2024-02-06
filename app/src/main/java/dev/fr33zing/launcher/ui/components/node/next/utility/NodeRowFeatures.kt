@@ -32,3 +32,6 @@ enum class NodeRowFeatures {
         val Minimal: NodeRowFeatureSet = EnumSet.of(ACTIVATE, RENDER_STATE, FOLLOW_REFERENCES)
     }
 }
+
+fun NodeRowFeatureSet.interactive() =
+    contains(NodeRowFeatures.CREATE_ADJACENT) || contains(NodeRowFeatures.ACTION_BUTTONS)

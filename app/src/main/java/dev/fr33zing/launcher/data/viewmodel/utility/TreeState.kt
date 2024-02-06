@@ -2,7 +2,9 @@ package dev.fr33zing.launcher.data.viewmodel.utility
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -18,6 +20,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.transformLatest
+
+data class TreeState(val selectedNodeKey: String?)
 
 data class TreeNodeState(
     val depth: Int,
@@ -39,8 +43,11 @@ private fun makeKey(nodeId: Int, depth: Int) = "$depth > $nodeId"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
+    private val selectedNodeKey by mutableStateOf<String?>("")
     private val treeNodeStateFlows = mutableStateMapOf<String, Flow<TreeNodeState>>()
     private val showChildren = mutableStateMapOf<String, Boolean>()
+
+    val state by derivedStateOf { TreeState(selectedNodeKey) }
 
     fun onActivateNode(state: TreeNodeState) {
         if (state.key in showChildren) showChildren[state.key] = !showChildren[state.key]!!
