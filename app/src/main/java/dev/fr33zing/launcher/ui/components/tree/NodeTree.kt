@@ -119,7 +119,10 @@ fun NodeTree(
                     },
         ) {
             @Composable
-            fun listContent(initialTreeNodeState: TreeNodeState) {
+            fun listItem(
+                initialTreeNodeState: TreeNodeState,
+                appearAnimationProgress: Animatable<Float, AnimationVector1D>?
+            ) {
                 val treeNodeState by
                     initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
                         initialTreeNodeState
@@ -132,7 +135,7 @@ fun NodeTree(
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,
                     onActivatePayload = { onActivatePayload(treeNodeState) },
-                    appearAnimationProgress = animation.progress(treeNodeState.key),
+                    appearAnimationProgress = appearAnimationProgress,
                 )
             }
 
@@ -146,6 +149,9 @@ fun NodeTree(
                     }
                 }
 
+            val listItems =
+                remember(treeNodeList) { treeNodeList.map { Pair(it, animation.progress(it.key)) } }
+
             if (USE_LAZY_COLUMN) {
                 LazyColumn(
                     state = lazyListState,
@@ -153,19 +159,21 @@ fun NodeTree(
                     modifier = Modifier.fillMaxSize().disableFlowStaggerOnOverflow()
                 ) {
                     items(
-                        items = treeNodeList,
-                        key = { it.key },
-                        contentType = { it.underlyingNodeKind }
-                    ) { initialTreeNodeState ->
-                        listContent(initialTreeNodeState)
+                        items = listItems,
+                        key = { it.first.key },
+                        contentType = { it.first.underlyingNodeKind }
+                    ) { (initialTreeNodeState, appearAnimationProgress) ->
+                        listItem(initialTreeNodeState, appearAnimationProgress)
                     }
                 }
             } else {
                 Column(
                     Modifier.verticalScroll(rememberScrollState()).disableFlowStaggerOnOverflow()
                 ) {
-                    treeNodeList.forEach { initialTreeNodeState ->
-                        key(initialTreeNodeState.key) { listContent(initialTreeNodeState) }
+                    listItems.forEach { (initialTreeNodeState, appearAnimationProgress) ->
+                        key(initialTreeNodeState.key) {
+                            listItem(initialTreeNodeState, appearAnimationProgress)
+                        }
                     }
                 }
             }
