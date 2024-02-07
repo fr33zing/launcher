@@ -25,7 +25,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Directory as DirectoryPayl
 import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Note as NotePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.persistent.payloads.WebLink as WebLinkPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Website as WebsitePayload
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -46,7 +46,7 @@ enum class NodeKind {
     Application,
 
     /** Opens the browser */
-    WebLink,
+    Website,
 
     /** Opens a specific file */
     File,
@@ -71,7 +71,7 @@ enum class NodeKind {
             Reference -> true
             Directory -> true
             Application -> true
-            WebLink -> true
+            Website -> true
             Location -> true
             Setting -> true
             Checkbox -> true
@@ -108,8 +108,8 @@ enum class NodeKind {
                     Catppuccin.Current.green.mix(Background, 0.5f)
                 else Catppuccin.Current.green
             }
-            WebLink -> {
-                if (payload is WebLinkPayload && !payload.validUrl) {
+            Website -> {
+                if (payload is WebsitePayload && !payload.validUrl) {
                     Catppuccin.Current.yellow.mix(Background, 0.5f)
                 } else Catppuccin.Current.yellow
             }
@@ -134,8 +134,8 @@ enum class NodeKind {
             Checkbox -> {
                 !ignoreState && payload is CheckboxPayload && payload.checked
             }
-            WebLink -> {
-                !ignoreState && payload is WebLinkPayload && !payload.validUrl
+            Website -> {
+                !ignoreState && payload is WebsitePayload && !payload.validUrl
             }
             Location -> {
                 !ignoreState && payload is LocationPayload && !payload.status.valid
@@ -166,7 +166,7 @@ enum class NodeKind {
                 } else Icons.Filled.Folder
             }
             Application -> Icons.Filled.Launch
-            WebLink -> Icons.Filled.Link
+            Website -> Icons.Filled.Link
             File -> Icons.Filled.Description
             Location -> Icons.Filled.LocationOn
             Note ->
@@ -186,10 +186,10 @@ enum class NodeKind {
             Reference -> "Reference"
             Directory -> "Directory"
             Application -> "Application"
-            WebLink -> "Web link"
-            File -> "File opener"
+            Website -> "Website"
+            File -> "File"
             Location -> "Location"
-            Note -> "Text note"
+            Note -> "Note"
             Checkbox -> "Checkbox"
             Reminder -> "Reminder"
             Setting -> "Setting"

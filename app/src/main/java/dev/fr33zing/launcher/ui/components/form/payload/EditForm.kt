@@ -29,7 +29,7 @@ fun EditForm(arguments: EditFormArguments) {
         NodeKind.Checkbox -> CheckboxEditForm(arguments)
         NodeKind.Directory -> DirectoryEditForm(arguments)
         NodeKind.Reference -> ReferenceEditForm(arguments)
-        NodeKind.WebLink -> WebLinkEditForm(arguments)
+        NodeKind.Website -> WebsiteEditForm(arguments)
         NodeKind.Location -> LocationEditForm(arguments)
         NodeKind.Setting -> SettingEditForm(arguments)
         NodeKind.Note -> NoteEditForm(arguments)

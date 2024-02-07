@@ -19,7 +19,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.payloads.UrlRegex
-import dev.fr33zing.launcher.data.persistent.payloads.WebLink
+import dev.fr33zing.launcher.data.persistent.payloads.Website
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
@@ -29,17 +29,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun WebLinkEditForm(arguments: EditFormArguments) {
+fun WebsiteEditForm(arguments: EditFormArguments) {
     val (padding, node, payload) = arguments
-    val webLink = payload as WebLink
+    val website = payload as Website
 
     val labelState = remember { mutableStateOf(node.label) }
-    val urlState = remember { mutableStateOf(webLink.url) }
+    val urlState = remember { mutableStateOf(website.url) }
     var pendingHttpResponse by remember { mutableStateOf(false) }
 
     EditFormColumn(padding) {
         NodePropertyTextField(node::label, state = labelState)
-        NodePropertyTextField(webLink::url, state = urlState)
+        NodePropertyTextField(website::url, state = urlState)
 
         val isValidUrl = remember(urlState.value) { UrlRegex.matches(urlState.value) }
         val isHttpsUrl by

@@ -23,7 +23,7 @@ val UrlRegex =
 
 @Keep
 @Entity
-class WebLink(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String = "") :
+class Website(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String = "") :
     Payload(payloadId, nodeId) {
 
     val validUrl: Boolean
@@ -38,14 +38,14 @@ class WebLink(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String 
                 startActivity(context, browserIntent, null)
             } catch (e: Exception) {
                 sendNotice(
-                    "weblink-launch-failed:${nodeId}",
+                    "website-launch-failed:${nodeId}",
                     "Failed to launch web browser. Error: ${e.message}.",
                     NoticeKind.Error
                 )
             }
         } else {
             sendNotice(
-                "weblink-launch-invalid:${nodeId}",
+                "website-launch-invalid:${nodeId}",
                 "Cannot launch web browser because the URL is invalid."
             )
         }
