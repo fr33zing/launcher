@@ -119,8 +119,7 @@ class NodePayloadListStateHolder(
                 NodePayloadStateHolder(db, node)
                     .flowWithReferenceTarget
                     .maybeFilter(filterPredicate)
-            }
-        ) {
-            it
-        }
+            },
+            transform = { it }
+        )
 }
