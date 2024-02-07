@@ -23,10 +23,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,6 +40,7 @@ import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
@@ -96,10 +100,15 @@ fun NodeTree(
             .onEach(animation::resetRemovedNodes)
             .collectAsStateWithLifecycle(emptyList())
 
+    /** Used to check for scrollable content overflow */
+    var containerHeight by remember { mutableStateOf<Int?>(null) }
+    var scrollableContentOverflow by remember { mutableStateOf(false) }
+
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         Box(
             modifier =
                 Modifier.fillMaxSize()
+                    .onSizeChanged { containerHeight = it.height }
                     .padding(vertical = paddingHeight)
                     .verticalScrollShadows(shadowHeight)
                     .pointerInput(Unit) {
@@ -127,11 +136,21 @@ fun NodeTree(
                 )
             }
 
+            fun Modifier.disableFlowStaggerOnOverflow() =
+                conditional(containerHeight != null && !scrollableContentOverflow) {
+                    onSizeChanged {
+                        if (it.height >= containerHeight!!) {
+                            scrollableContentOverflow = true
+                            onDisableFlowStagger()
+                        }
+                    }
+                }
+
             if (USE_LAZY_COLUMN) {
                 LazyColumn(
                     state = lazyListState,
                     contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().disableFlowStaggerOnOverflow()
                 ) {
                     items(
                         items = treeNodeList,
@@ -142,7 +161,9 @@ fun NodeTree(
                     }
                 }
             } else {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()).disableFlowStaggerOnOverflow()
+                ) {
                     treeNodeList.forEach { initialTreeNodeState ->
                         key(initialTreeNodeState.key) { listContent(initialTreeNodeState) }
                     }
