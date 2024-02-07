@@ -45,8 +45,8 @@ fun NodeRow(
                 val interactive = features.interactive()
             }
         }
-    val layers =
-        remember(treeNodeState, treeState, features) {
+    val layers by remember {
+        derivedStateOf {
             object {
                 @Composable
                 fun Providers(content: @Composable () -> Unit) =
@@ -105,6 +105,7 @@ fun NodeRow(
                     }
             }
         }
+    }
 
     layers.Providers {
         layers.features.Animation {

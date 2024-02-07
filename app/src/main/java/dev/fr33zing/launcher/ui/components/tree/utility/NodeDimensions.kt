@@ -31,7 +31,7 @@ data class NodeDimensions(
 }
 
 @Composable
-fun createLocalNodeDimensions(): NodeDimensions {
+fun rememberNodeDimensions(): NodeDimensions {
     val preferences = Preferences(LocalContext.current)
     val density = LocalDensity.current
 
@@ -40,5 +40,5 @@ fun createLocalNodeDimensions(): NodeDimensions {
     val spacing = preferences.nodeAppearance.spacing.state
     val lineHeight = remember { derivedStateOf { with(density) { fontSize.value.toDp() } } }
 
-    return NodeDimensions(fontSize, indent, spacing, lineHeight)
+    return remember { NodeDimensions(fontSize, indent, spacing, lineHeight) }
 }

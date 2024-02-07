@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -32,7 +33,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
-import dev.fr33zing.launcher.ui.components.tree.utility.createLocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
@@ -53,7 +54,7 @@ fun NodeTree(
     lazyListState: LazyListState = rememberLazyListState()
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val (paddingHeight, shadowHeight) = paddingAndShadowHeight()
+    val (paddingHeight, shadowHeight) = rememberPaddingAndShadowHeight()
     val hasFeature =
         remember(features) {
             object {
@@ -85,13 +86,13 @@ fun NodeTree(
                     .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
+    val treeState by treeStateFlow.collectAsStateWithLifecycle(TreeState())
     val treeNodeList by
         treeNodeListFlow
             .onEach(animation::resetRemovedNodes)
             .collectAsStateWithLifecycle(emptyList())
-    val treeState by treeStateFlow.collectAsStateWithLifecycle(TreeState())
 
-    CompositionLocalProvider(LocalNodeDimensions provides createLocalNodeDimensions()) {
+    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         Box(
             modifier =
                 Modifier.fillMaxSize()
@@ -106,18 +107,21 @@ fun NodeTree(
         ) {
             LazyColumn(
                 state = lazyListState,
-                contentPadding = PaddingValues(vertical = shadowHeight),
+                contentPadding = remember { PaddingValues(vertical = shadowHeight) },
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items = treeNodeList.map { Pair(it, animation.progress(it.key)) },
-                    key = { it.first.key },
-                    contentType = { it.first.underlyingNodeKind }
-                ) { (initialTreeNodeState, appearAnimationProgress) ->
+                    items = treeNodeList,
+                    key = { it.key },
+                    contentType = { it.underlyingNodeKind }
+                ) { initialTreeNodeState ->
                     val treeNodeState by
                         initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
                             initialTreeNodeState
                         )
+                    val appearAnimationProgress by remember {
+                        derivedStateOf { animation.progress(treeNodeState.key) }
+                    }
 
                     NodeRow(
                         treeState = treeState,
@@ -135,7 +139,7 @@ fun NodeTree(
 }
 
 @Composable
-private fun paddingAndShadowHeight(): Pair<Dp, Dp> {
+private fun rememberPaddingAndShadowHeight(): Pair<Dp, Dp> {
     val density = LocalDensity.current
     val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
     val navigationBarsBottom =
