@@ -65,13 +65,13 @@ fun NodeTree(
     val animation =
         object {
             val progressMap = remember {
-                mutableStateMapOf<Int, Animatable<Float, AnimationVector1D>>()
+                mutableStateMapOf<TreeNodeKey, Animatable<Float, AnimationVector1D>>()
             }
 
-            fun progress(nodeId: Int): Animatable<Float, AnimationVector1D>? =
+            fun progress(key: TreeNodeKey): Animatable<Float, AnimationVector1D>? =
                 if (!hasFeature.APPEAR_ANIMATION) null
                 else {
-                    progressMap.computeIfAbsent(nodeId) {
+                    progressMap.computeIfAbsent(key) {
                         Animatable(0f).also {
                             coroutineScope.launch {
                                 it.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
@@ -81,9 +81,9 @@ fun NodeTree(
                 }
 
             fun resetRemovedNodes(treeNodeStates: List<TreeNodeState>) {
-                val nextSnapshotNodeIds = treeNodeStates.map { it.underlyingNodeId }
+                val nextSnapshotKeys = treeNodeStates.map { it.key }
                 progressMap
-                    .filterKeys { it !in nextSnapshotNodeIds }
+                    .filterKeys { key -> key !in nextSnapshotKeys }
                     .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
@@ -112,7 +112,7 @@ fun NodeTree(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items = treeNodeList.map { Pair(it, animation.progress(it.underlyingNodeId)) },
+                    items = treeNodeList.map { Pair(it, animation.progress(it.key)) },
                     key = { it.first.key },
                     contentType = { it.first.underlyingNodeKind }
                 ) { (initialTreeNodeState, appearAnimationProgress) ->
