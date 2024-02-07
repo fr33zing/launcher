@@ -168,7 +168,9 @@ fun NodeTree(
                 }
             } else {
                 Column(
-                    Modifier.verticalScroll(rememberScrollState()).disableFlowStaggerOnOverflow()
+                    Modifier.padding(vertical = shadowHeight)
+                        .verticalScroll(rememberScrollState())
+                        .disableFlowStaggerOnOverflow()
                 ) {
                     listItems.forEach { (initialTreeNodeState, appearAnimationProgress) ->
                         key(initialTreeNodeState.key) {
