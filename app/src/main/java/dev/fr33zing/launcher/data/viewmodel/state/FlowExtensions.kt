@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.transformLatest
 
 private const val STAGGER_MS: Long = 25
 
+/** Makes a list of items appear to load one at a time. */
 @OptIn(ExperimentalCoroutinesApi::class)
 fun <T> Flow<List<T>>.stagger(shouldStagger: State<Boolean>) = transformLatest {
     if (!shouldStagger.value) {
