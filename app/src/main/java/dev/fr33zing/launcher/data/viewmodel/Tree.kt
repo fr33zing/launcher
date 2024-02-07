@@ -7,14 +7,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.deleteRecursively
+import dev.fr33zing.launcher.data.persistent.moveToTrash
+import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeStateHolder
 import dev.fr33zing.launcher.data.viewmodel.utility.stagger
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class TreeViewModel
@@ -41,6 +47,22 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
 
     fun selectNode(key: TreeNodeKey) {
         stateHolder.onSelectNode(key)
+    }
+
+    fun clearSelectedNode() {
+        stateHolder.onClearSelectedNode()
+    }
+
+    fun moveNodeToTrash(nodeId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            db.nodeDao().getNodeById(nodeId).notNull().let { db.moveToTrash(it) }
+        }
+    }
+
+    fun deleteNode(nodeId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            db.nodeDao().getNodeById(nodeId).notNull().let { db.deleteRecursively(it) }
+        }
     }
 
     fun disableFlowStagger() {

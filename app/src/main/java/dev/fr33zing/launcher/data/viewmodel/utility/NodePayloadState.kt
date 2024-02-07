@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.viewmodel.utility
 
+import androidx.compose.runtime.Immutable
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 
+@Immutable
 open class NodePayloadState(
     val node: Node,
     val payload: Payload,
@@ -44,6 +46,7 @@ open class NodePayloadState(
     }
 }
 
+@Immutable
 class NodePayloadWithReferenceTargetState(
     val underlyingState: NodePayloadState,
     targetState: NodePayloadState?,

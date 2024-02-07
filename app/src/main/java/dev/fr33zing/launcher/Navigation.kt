@@ -56,8 +56,15 @@ object Routes {
 
         fun move(nodeId: Int? = null) = "move/${nodeId ?: "{nodeId}"}"
 
-        fun editForm(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
+        fun edit(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
     }
+}
+
+class TreeNavigator(navController: NavController) {
+    val create = { nodeId: Int -> navController.navigate(Routes.Main.create(nodeId)) }
+    val reorder = { nodeId: Int -> navController.navigate(Routes.Main.reorder(nodeId)) }
+    val move = { nodeId: Int -> navController.navigate(Routes.Main.move(nodeId)) }
+    val edit = { nodeId: Int -> navController.navigate(Routes.Main.edit(nodeId)) }
 }
 
 @Composable
@@ -116,7 +123,8 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
         ) {
             val preferences = Preferences(LocalContext.current)
             val useNewTree by preferences.debug.useNewTree.state
-            if (useNewTree) Tree(navigateBack) else Tree_old(db, navController, null)
+            if (useNewTree) Tree(navigateBack, remember { TreeNavigator(navController) })
+            else Tree_old(db, navController, null)
         }
 
         composable(Routes.Main.create()) { Create(navigateBack) }
@@ -127,7 +135,7 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
 
         composable(Routes.Main.move()) { Move(navigateBack) }
 
-        composable(Routes.Main.editForm()) { Edit(navigateBack) }
+        composable(Routes.Main.edit()) { Edit(navigateBack) }
     }
 
 // TODO move this

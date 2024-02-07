@@ -1,6 +1,5 @@
 package dev.fr33zing.launcher.ui.components.node.next
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,15 +32,17 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.utility.cast
+import dev.fr33zing.launcher.data.utility.castOrNull
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeDimensions
@@ -48,160 +50,186 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.utility.blockPointerEvents
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
-private enum class ActionButton(val label: String, val icon: ImageVector) {
-    MoveNodeToTrash("Trash", Icons.Outlined.Delete),
-    EmptyTrash("Empty", Icons.Outlined.DeleteForever),
-    MoveNode("Move", Icons.Outlined.DriveFileMove),
-    ReorderNodes("Reorder", Icons.Outlined.SwapVert),
-    EditNode("Edit", Icons.Outlined.Edit),
-    ViewApplicationInfo("Info", Icons.Outlined.Info)
-}
+@Immutable
+class NodeActions(
+    val trash: (Int) -> Unit,
+    val delete: (Int) -> Unit,
+    val move: (Int) -> Unit,
+    val reorder: (Int) -> Unit,
+    val edit: (Int) -> Unit,
+)
 
-@Composable
-fun NodeActionButtonRow(
-    treeNodeState: TreeNodeState,
-    fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
-    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
+@Immutable
+class NodeActionButtonKind(
+    val label: String,
+    val icon: ImageVector,
+    val color: Color = Foreground,
+    val visible: (TreeNodeState) -> Boolean,
+    val component: @Composable NodeActionButtonKind.(ComponentArguments) -> Unit
 ) {
-    val (node, payload) = treeNodeState.value
-    val permissions = treeNodeState.permissions
+    data class ComponentArguments(val state: TreeNodeState, val actions: NodeActions)
 
-    val showTrashButton =
-        remember(permissions) {
-            permissions.hasPermission(PermissionKind.Delete, PermissionScope.Self)
-        }
-    val showEmptyTrashButton =
-        remember(permissions) {
-            payload is Directory && payload.specialMode == Directory.SpecialMode.Trash
-        }
-    val showMoveButton =
-        remember(permissions) {
-            permissions.hasPermission(PermissionKind.Move, PermissionScope.Self) ||
-                permissions.hasPermission(PermissionKind.MoveIn, PermissionScope.Self) ||
-                permissions.hasPermission(PermissionKind.MoveOut, PermissionScope.Self)
-        }
-    val showReorderButton = remember(permissions) { true }
-    val showEditButton =
-        remember(permissions) {
-            permissions.hasPermission(PermissionKind.Edit, PermissionScope.Self)
-        }
-    val showInfoButton = remember(permissions) { node.kind == NodeKind.Application }
-
-    NodeActionButtonsLayout(
-        Modifier.fillMaxHeight()
-            .background(Background.copy(alpha = 0.75f))
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = { /* Prevent tapping node underneath */}
-            )
-    ) {
-        if (showTrashButton)
-            NodeActionButton(fontSize, lineHeight, Icons.Outlined.Delete, "Trash") {
-                sendNotice(
-                    "moved-to-trash:${node.nodeId}",
-                    "Moved ${node.kind.label.lowercase()} '${node.label}' to the trash."
-                )
-                // CoroutineScope(Dispatchers.IO).launch { db.moveToTrash(node) }
-            }
-
-        if (showEmptyTrashButton) {
-            val emptyTrashDialogVisible = remember { mutableStateOf(false) }
-            YesNoDialog(
-                visible = emptyTrashDialogVisible,
-                icon = Icons.Outlined.DeleteForever,
-                yesText = "Delete trash forever",
-                yesColor = Catppuccin.Current.red,
-                yesIcon = Icons.Filled.Dangerous,
-                noText = "Don't empty trash",
-                noIcon = Icons.Filled.ArrowBack,
-                onYes = {
-                    Log.d(TAG, "User requested recursive deletion for node: $node")
-                    // CoroutineScope(Dispatchers.IO).launch { db.deleteRecursively(node) }
+    companion object {
+        val kinds =
+            listOf(
+                // Move node to trash
+                NodeActionButtonKind(
+                    label = "Trash",
+                    icon = Icons.Outlined.Delete,
+                    visible = {
+                        it.permissions.hasPermission(PermissionKind.Delete, PermissionScope.Self)
+                    },
+                ) { (state, actions) ->
+                    val node = remember(state) { state.value.underlyingState.node }
+                    ActionButton {
+                        sendNotice(
+                            "moved-to-trash:${node.nodeId}",
+                            "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash."
+                        )
+                        actions.trash(state.underlyingNodeId)
+                    }
                 },
+
+                // Empty trash
+                NodeActionButtonKind(
+                    label = "Empty",
+                    icon = Icons.Outlined.DeleteForever,
+                    color = Catppuccin.Current.red,
+                    visible = { state ->
+                        state.value.payload.castOrNull<Directory>()?.specialMode ==
+                            Directory.SpecialMode.Trash
+                    },
+                ) { (state, actions) ->
+                    val dialogVisible = remember { mutableStateOf(false) }
+                    YesNoDialog(
+                        visible = dialogVisible,
+                        icon = Icons.Outlined.DeleteForever,
+                        yesText = "Delete trash forever",
+                        yesColor = Catppuccin.Current.red,
+                        yesIcon = Icons.Filled.Dangerous,
+                        noText = "Don't empty trash",
+                        noIcon = Icons.Filled.ArrowBack,
+                        onYes = { actions.delete(state.underlyingNodeId) },
+                    )
+                    ActionButton { dialogVisible.value = true }
+                },
+
+                // Move node
+                NodeActionButtonKind(
+                    label = "Move",
+                    icon = Icons.Outlined.DriveFileMove,
+                    visible = { state ->
+                        state.permissions.hasPermission(
+                            PermissionKind.Move,
+                            PermissionScope.Self
+                        ) ||
+                            state.permissions.hasPermission(
+                                PermissionKind.MoveIn,
+                                PermissionScope.Self
+                            ) ||
+                            state.permissions.hasPermission(
+                                PermissionKind.MoveOut,
+                                PermissionScope.Self
+                            )
+                    },
+                ) { (state, actions) ->
+                    ActionButton { actions.move(state.underlyingNodeId) }
+                },
+
+                // Reorder nodes
+                NodeActionButtonKind(
+                    label = "Reorder",
+                    icon = Icons.Outlined.SwapVert,
+                    visible = { true },
+                ) { (state, actions) ->
+                    ActionButton { actions.reorder(state.underlyingNodeId) }
+                },
+
+                // Edit node
+                NodeActionButtonKind(
+                    label = "Edit",
+                    icon = Icons.Outlined.Edit,
+                    visible = { state ->
+                        state.permissions.hasPermission(PermissionKind.Edit, PermissionScope.Self)
+                    },
+                ) { (state, actions) ->
+                    ActionButton { actions.edit(state.underlyingNodeId) }
+                },
+
+                // View application info
+                NodeActionButtonKind(
+                    label = "Info",
+                    icon = Icons.Outlined.Info,
+                    visible = { it.value.node.kind == NodeKind.Application },
+                ) { (state) ->
+                    val context = LocalContext.current
+                    ActionButton { state.value.payload.cast<Application>().openInfo(context) }
+                }
             )
-            NodeActionButton(
-                fontSize,
-                lineHeight,
-                Icons.Outlined.DeleteForever,
-                "Empty",
-                color = Catppuccin.Current.red
+    }
+
+    @Composable
+    private fun ActionButton(action: () -> Unit) {
+        val interactionSource = remember { MutableInteractionSource() }
+        val indication = rememberCustomIndication(color = color, circular = true)
+        val fontSize = LocalNodeDimensions.current.fontSize
+        val lineHeight = LocalNodeDimensions.current.lineHeight
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier =
+                Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = indication,
+                    onClick = action
+                )
+        ) {
+            Column(
+                verticalArrangement =
+                    Arrangement.spacedBy(lineHeight * 0.125f, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.aspectRatio(1f, true)
             ) {
-                emptyTrashDialogVisible.value = true
-            }
-        }
-
-        if (showMoveButton) {
-            NodeActionButton(fontSize, lineHeight, Icons.Outlined.DriveFileMove, "Move") {
-                // navController.navigate("move/${node.nodeId}")
-            }
-        }
-
-        if (showReorderButton) {
-            NodeActionButton(fontSize, lineHeight, Icons.Outlined.SwapVert, "Reorder") {
-                // navController.navigate("reorder/${node.parentId}")
-            }
-        }
-
-        if (showEditButton) {
-            NodeActionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
-                // navController.navigate(Routes.Main.editForm(node.nodeId))
-            }
-        }
-
-        if (showInfoButton) {
-            val context = LocalContext.current
-            NodeActionButton(fontSize, lineHeight, Icons.Outlined.Info, "Info") {
-                // closeNodeOptionsSubject.onNext(Unit)
-                (payload as Application).openInfo(context)
+                Icon(
+                    icon,
+                    label,
+                    tint = color,
+                    modifier = Modifier.size(lineHeight * 1.15f),
+                )
+                Text(
+                    label,
+                    fontSize = fontSize * 0.65f,
+                    fontWeight = FontWeight.Bold,
+                    color = color,
+                    overflow = TextOverflow.Visible,
+                    softWrap = false,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun NodeActionButton(
-    fontSize: TextUnit,
-    lineHeight: Dp,
-    icon: ImageVector,
-    text: String,
-    color: Color = Foreground,
-    onClick: () -> Unit,
+fun NodeActionButtonRow(
+    nodeActions: NodeActions,
+    treeNodeState: TreeNodeState,
+    fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
+    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(color = color, circular = true)
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier =
-            Modifier.clickable(interactionSource = interactionSource, indication = indication) {
-                Log.d(TAG, "Node option button clicked: $text")
-                onClick()
-            }
-    ) {
-        Column(
-            verticalArrangement =
-                Arrangement.spacedBy(lineHeight * 0.125f, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.aspectRatio(1f, true)
-        ) {
-            Icon(
-                icon,
-                text,
-                tint = color,
-                modifier = Modifier.size(lineHeight * 1.15f),
-            )
-            Text(
-                text,
-                fontSize = fontSize * 0.65f,
-                fontWeight = FontWeight.Bold,
-                color = color,
-                overflow = TextOverflow.Visible,
-                softWrap = false,
-            )
+    val visibleActions =
+        remember(treeNodeState) { NodeActionButtonKind.kinds.filter { it.visible(treeNodeState) } }
+    val componentArguments =
+        remember(treeNodeState) {
+            NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions)
         }
+
+    NodeActionButtonsLayout(
+        Modifier.fillMaxHeight().background(Background.copy(alpha = 0.75f)).blockPointerEvents()
+    ) {
+        visibleActions.forEach { it.component(it, componentArguments) }
     }
 }
 
@@ -211,7 +239,8 @@ private fun NodeActionButtonsLayout(
     content: @Composable () -> Unit,
 ) {
     Layout(modifier = modifier, content = content) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints) }
+        val square = Constraints.fixed(constraints.minHeight, constraints.minHeight)
+        val placeables = measurables.map { it.measure(square) }
         layout(constraints.maxWidth, constraints.minHeight) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(

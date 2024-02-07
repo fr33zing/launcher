@@ -1,6 +1,8 @@
 package dev.fr33zing.launcher.ui.utility
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
@@ -25,6 +27,14 @@ import dev.fr33zing.launcher.ui.theme.Background
 // https://stackoverflow.com/a/72554087
 fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier =
     if (condition) then(modifier(Modifier)) else this
+
+fun Modifier.blockPointerEvents() = composed {
+    this.clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = {}
+    )
+}
 
 fun Modifier.longPressable(tapNotice: (() -> Notice)? = null, onLongPressed: () -> Unit) =
     composed {

@@ -28,7 +28,9 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 fun NodeRow(
     treeNodeState: TreeNodeState,
     treeState: TreeState? = null,
+    nodeActions: NodeActions? = null,
     onSelectNode: () -> Unit = {},
+    onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
@@ -82,16 +84,18 @@ fun NodeRow(
                     object {
                         @Composable
                         fun Interactions(content: @Composable () -> Unit) =
-                            if (hasFeature.interactive) {
+                            if (hasFeature.interactive && nodeActions != null)
                                 NodeInteractions(
                                     treeState,
                                     treeNodeState,
                                     features,
+                                    nodeActions,
                                     onSelectNode,
+                                    onClearSelectedNode,
                                     onActivatePayload,
                                     content = content
                                 )
-                            } else content()
+                            else content()
 
                         @Composable
                         fun Animation(content: @Composable () -> Unit) =

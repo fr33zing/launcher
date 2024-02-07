@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.ui.components.node.next
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NodeTree(
     treeStateFlow: Flow<TreeState>,
@@ -48,6 +50,8 @@ fun NodeTree(
     onDisableFlowStagger: () -> Unit = {},
     onActivatePayload: (TreeNodeState) -> Unit = {},
     onSelectNode: (TreeNodeKey) -> Unit = {},
+    onClearSelectedNode: () -> Unit = {},
+    nodeActions: NodeActions? = null,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -120,9 +124,11 @@ fun NodeTree(
                     NodeRow(
                         treeState = treeState,
                         treeNodeState = treeNodeState,
+                        nodeActions = nodeActions,
                         onSelectNode = { onSelectNode(treeNodeState.key) },
+                        onClearSelectedNode = onClearSelectedNode,
                         onActivatePayload = { onActivatePayload(treeNodeState) },
-                        appearAnimationProgress = appearAnimationProgress
+                        appearAnimationProgress = appearAnimationProgress,
                     )
                 }
             }

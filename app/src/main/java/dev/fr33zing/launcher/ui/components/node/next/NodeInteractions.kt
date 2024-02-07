@@ -7,13 +7,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeState
 import dev.fr33zing.launcher.ui.components.node.next.utility.NodeRowFeatureSet
@@ -27,14 +26,15 @@ fun NodeInteractions(
     treeState: TreeState?,
     treeNodeState: TreeNodeState,
     features: NodeRowFeatureSet,
-    onSelectNode: () -> Unit,
+    nodeActions: NodeActions,
+    onSelectNode: () -> Unit = {},
+    onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
     color: Color = LocalNodeAppearance.current.color,
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color, longPressable = true)
-
     val hasFeature =
         remember(features) {
             object {
@@ -42,25 +42,44 @@ fun NodeInteractions(
                 val ACTION_BUTTONS = features.contains(NodeRowFeatures.ACTION_BUTTONS)
             }
         }
+    val selected = treeNodeState.key == treeState?.selectedKey
 
-    Box(
-        Modifier.fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .combinedClickable(
+    NodeInteractionsLayout {
+        Box(
+            Modifier.combinedClickable(
                 interactionSource = interactionSource,
                 indication = indication,
-                onClick = onActivatePayload,
+                onClick = {
+                    onClearSelectedNode()
+                    onActivatePayload()
+                },
                 onLongClick = onSelectNode
             )
-    ) {
-        content()
-
-        AnimatedVisibility(
-            visible = treeNodeState.key == treeState?.selectedKey,
-            enter = fadeIn(),
-            exit = fadeOut(),
         ) {
-            NodeActionButtonRow(treeNodeState)
+            content()
+        }
+
+        if (hasFeature.ACTION_BUTTONS)
+            AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
+                NodeActionButtonRow(nodeActions, treeNodeState)
+            }
+    }
+}
+
+@Composable
+private fun NodeInteractionsLayout(
+    nodeRowIndex: Int = 0,
+    content: @Composable () -> Unit,
+) {
+    Layout(content = content) { measurables, constraints ->
+        val nodeRow = measurables[nodeRowIndex].measure(constraints)
+        val placeables =
+            measurables.mapIndexed { index, measurable ->
+                if (index == nodeRowIndex) nodeRow
+                else measurable.measure(Constraints.fixed(nodeRow.width, nodeRow.height))
+            }
+        layout(nodeRow.width, nodeRow.height) {
+            placeables.forEach { placeable -> placeable.placeRelative(x = 0, y = 0) }
         }
     }
 }
