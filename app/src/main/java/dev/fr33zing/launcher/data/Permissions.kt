@@ -1,5 +1,8 @@
 package dev.fr33zing.launcher.data
 
+import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.persistent.payloads.Payload
+
 enum class PermissionScope {
     Self,
     Recursive,
@@ -22,5 +25,28 @@ fun PermissionMap.hasPermission(kind: PermissionKind, scope: PermissionScope): B
 
 fun PermissionMap.clone(): PermissionMap = keys.associateWith { key -> this[key]!!.toMutableSet() }
 
-private val allScopes = PermissionScope.values().toMutableSet()
-val AllPermissions: PermissionMap = PermissionKind.values().associateWith { allScopes }
+fun PermissionMap.adjustOwnPermissions(payload: Payload): PermissionMap =
+    clone().also { permissions ->
+        if (payload !is Directory) return@also
+
+        PermissionKind.entries.forEach { kind ->
+            PermissionScope.entries.forEach { scope ->
+                if (!payload.hasPermission(kind, scope)) permissions[kind]!!.remove(scope)
+            }
+        }
+    }
+
+fun PermissionMap.adjustChildPermissions(payload: Payload): PermissionMap =
+    clone().also { permissions ->
+        if (payload !is Directory) return@also
+
+        PermissionKind.entries.forEach { kind ->
+            if (!payload.hasPermission(kind, PermissionScope.Recursive)) {
+                permissions[kind]!!.remove(PermissionScope.Self)
+                permissions[kind]!!.remove(PermissionScope.Recursive)
+            }
+        }
+    }
+
+private val allScopes = PermissionScope.entries.toTypedArray().toMutableSet()
+val AllPermissions: PermissionMap = PermissionKind.entries.associateWith { allScopes }

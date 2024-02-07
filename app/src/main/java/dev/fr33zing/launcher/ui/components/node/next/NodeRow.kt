@@ -28,8 +28,8 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 fun NodeRow(
     treeNodeState: TreeNodeState,
     treeState: TreeState? = null,
-    onLongClick: () -> Unit = {},
-    activate: () -> Unit = {},
+    onSelectNode: () -> Unit = {},
+    onActivatePayload: () -> Unit = {},
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
 ) {
@@ -44,7 +44,7 @@ fun NodeRow(
             }
         }
     val layers =
-        remember(features) {
+        remember(treeNodeState, treeState, features) {
             object {
                 @Composable
                 fun Providers(content: @Composable () -> Unit) =
@@ -82,15 +82,16 @@ fun NodeRow(
                     object {
                         @Composable
                         fun Interactions(content: @Composable () -> Unit) =
-                            if (hasFeature.interactive)
+                            if (hasFeature.interactive) {
                                 NodeInteractions(
+                                    treeState,
                                     treeNodeState,
                                     features,
-                                    onLongClick,
-                                    activate,
+                                    onSelectNode,
+                                    onActivatePayload,
                                     content = content
                                 )
-                            else content()
+                            } else content()
 
                         @Composable
                         fun Animation(content: @Composable () -> Unit) =

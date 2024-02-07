@@ -7,46 +7,40 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
+import dev.fr33zing.launcher.data.viewmodel.utility.TreeState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeStateHolder
 import dev.fr33zing.launcher.data.viewmodel.utility.stagger
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transformLatest
 
 @HiltViewModel
 class TreeViewModel
 @Inject
 constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
-    private var stateHolder: TreeStateHolder? = null
+    private val nodeId =
+        savedStateHandle.get<String>("nodeId")?.toInt()
+            ?: throw Exception("Invalid SavedStateHandle value for key: nodeId")
+    private val stateHolder = TreeStateHolder(db, nodeId)
     private var shouldStaggerFlow = mutableStateOf(true)
 
-    val treeState
-        get() = stateHolder?.state
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val flow: StateFlow<List<TreeNodeState>> =
-        savedStateHandle
-            .getStateFlow<String?>("nodeId", null)
-            .filterNotNull()
-            .distinctUntilChanged()
-            .transformLatest { nodeIdArgument ->
-                val nodeId = nodeIdArgument.toInt()
-                stateHolder = TreeStateHolder(db, nodeId)
-                emitAll(stateHolder!!.flow)
-            }
+    val treeNodeListFlow =
+        stateHolder.listFlow
             .stagger(shouldStaggerFlow)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
+    val treeStateFlow =
+        stateHolder.stateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TreeState())
+
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
-        stateHolder?.onActivateNode(treeNodeState)
+        stateHolder.onActivateNode(treeNodeState)
         treeNodeState.value.payload.activate(db, context)
+    }
+
+    fun selectNode(key: TreeNodeKey) {
+        stateHolder.onSelectNode(key)
     }
 
     fun disableFlowStagger() {

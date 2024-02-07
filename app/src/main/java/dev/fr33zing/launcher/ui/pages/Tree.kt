@@ -19,9 +19,10 @@ fun Tree(
     }
 
     NodeTree(
-        treeState = viewModel.treeState,
-        flow = viewModel.flow,
-        disableFlowStagger = viewModel::disableFlowStagger,
-        activate = ::activatePayload,
+        treeStateFlow = viewModel.treeStateFlow,
+        treeNodeListFlow = viewModel.treeNodeListFlow,
+        onDisableFlowStagger = viewModel::disableFlowStagger,
+        onActivatePayload = ::activatePayload,
+        onSelectNode = viewModel::selectNode,
     )
 }

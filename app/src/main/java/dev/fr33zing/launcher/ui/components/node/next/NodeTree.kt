@@ -26,6 +26,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.utility.TreeState
 import dev.fr33zing.launcher.ui.components.node.next.utility.LocalNodeDimensions
@@ -41,11 +42,12 @@ private const val APPEAR_ANIMATION_DURATION_MS = 350
 
 @Composable
 fun NodeTree(
-    treeState: TreeState?,
-    flow: Flow<List<TreeNodeState>>,
+    treeStateFlow: Flow<TreeState>,
+    treeNodeListFlow: Flow<List<TreeNodeState>>,
     features: NodeRowFeatureSet = NodeRowFeatures.All,
-    disableFlowStagger: () -> Unit = {},
-    activate: (TreeNodeState) -> Unit = {},
+    onDisableFlowStagger: () -> Unit = {},
+    onActivatePayload: (TreeNodeState) -> Unit = {},
+    onSelectNode: (TreeNodeKey) -> Unit = {},
     lazyListState: LazyListState = rememberLazyListState()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -81,8 +83,11 @@ fun NodeTree(
                     .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
-    val treeNodeStates by
-        flow.onEach(animation::resetRemovedNodes).collectAsStateWithLifecycle(emptyList())
+    val treeNodeList by
+        treeNodeListFlow
+            .onEach(animation::resetRemovedNodes)
+            .collectAsStateWithLifecycle(emptyList())
+    val treeState by treeStateFlow.collectAsStateWithLifecycle(TreeState())
 
     CompositionLocalProvider(LocalNodeDimensions provides createLocalNodeDimensions()) {
         Box(
@@ -93,7 +98,7 @@ fun NodeTree(
                     .pointerInput(Unit) {
                         awaitPointerEventScope {
                             awaitFirstDown(false)
-                            disableFlowStagger()
+                            onDisableFlowStagger()
                         }
                     },
         ) {
@@ -103,8 +108,7 @@ fun NodeTree(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items =
-                        treeNodeStates.map { Pair(it, animation.progress(it.underlyingNodeId)) },
+                    items = treeNodeList.map { Pair(it, animation.progress(it.underlyingNodeId)) },
                     key = { it.first.key },
                     contentType = { it.first.underlyingNodeKind }
                 ) { (initialTreeNodeState, appearAnimationProgress) ->
@@ -116,8 +120,8 @@ fun NodeTree(
                     NodeRow(
                         treeState = treeState,
                         treeNodeState = treeNodeState,
-                        onLongClick = {},
-                        activate = { activate(treeNodeState) },
+                        onSelectNode = { onSelectNode(treeNodeState.key) },
+                        onActivatePayload = { onActivatePayload(treeNodeState) },
                         appearAnimationProgress = appearAnimationProgress
                     )
                 }
@@ -125,32 +129,6 @@ fun NodeTree(
         }
     }
 }
-
-// @Composable
-// private fun LazyColumnItem(
-//    treeState: TreeState,
-//    treeNodeState: TreeNodeState,
-//    progress: Animatable<Float, AnimationVector1D>?,
-//    activate: () -> Unit
-// ) {
-//    val dimensions = LocalNodeDimensions.current
-//
-//    Box(
-//        Modifier.conditional(progress != null) {
-//            graphicsLayer {
-//                translationY = (1 - progress!!.value) * (dimensions.lineHeight.toPx() * 0.75f)
-//                alpha = progress.value
-//            }
-//        }
-//    ) {
-//        CompositionLocalProvider(
-//            LocalNodeAppearance provides rememberNodeAppearance(treeNodeState),
-//            LocalNodeRowFeatures provides NodeRowFeatures.All
-//        ) {
-//            NodeRow(treeState, treeNodeState, activate)
-//        }
-//    }
-// }
 
 @Composable
 private fun paddingAndShadowHeight(): Pair<Dp, Dp> {
