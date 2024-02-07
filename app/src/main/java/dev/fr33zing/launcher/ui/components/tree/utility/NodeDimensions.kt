@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.ui.components.tree.utility
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
@@ -16,6 +17,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 
 val LocalNodeDimensions = compositionLocalOf { NodeDimensions() }
 
+@Immutable
 data class NodeDimensions(
     private val fontSizeState: State<TextUnit> = derivedStateOf { 22.sp },
     private val indentState: State<Dp> = derivedStateOf { 0.dp },

@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 
+@Immutable
 data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
     constructor(parcel: Parcel) : this(parcel.readInt(), parcel.readInt()) {}
 
@@ -47,7 +48,7 @@ data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
     }
 }
 
-data class TreeState(val selectedKey: TreeNodeKey? = null)
+@Immutable data class TreeState(val selectedKey: TreeNodeKey? = null)
 
 @Immutable
 data class TreeNodeState(

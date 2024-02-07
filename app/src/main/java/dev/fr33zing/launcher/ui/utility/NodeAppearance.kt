@@ -3,6 +3,7 @@ package dev.fr33zing.launcher.ui.utility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -21,6 +22,7 @@ val LocalNodeAppearance = compositionLocalOf {
     )
 }
 
+@Immutable
 data class NodeAppearance(
     val color: Color,
     val icon: ImageVector,
