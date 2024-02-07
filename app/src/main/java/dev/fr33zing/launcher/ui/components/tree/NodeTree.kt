@@ -5,6 +5,7 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,6 +43,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
+private const val USE_LAZY_COLUMN = false
 
 @Composable
 fun NodeTree(
@@ -105,33 +109,43 @@ fun NodeTree(
                         }
                     },
         ) {
-            LazyColumn(
-                state = lazyListState,
-                contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(
-                    items = treeNodeList,
-                    key = { it.key },
-                    contentType = { it.underlyingNodeKind }
-                ) { initialTreeNodeState ->
-                    val treeNodeState by
-                        initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
-                            initialTreeNodeState
-                        )
-                    val appearAnimationProgress by remember {
-                        derivedStateOf { animation.progress(treeNodeState.key) }
-                    }
-
-                    NodeRow(
-                        treeState = treeState,
-                        treeNodeState = treeNodeState,
-                        nodeActions = nodeActions,
-                        onSelectNode = { onSelectNode(treeNodeState.key) },
-                        onClearSelectedNode = onClearSelectedNode,
-                        onActivatePayload = { onActivatePayload(treeNodeState) },
-                        appearAnimationProgress = appearAnimationProgress,
+            @Composable
+            fun listContent(initialTreeNodeState: TreeNodeState) {
+                val treeNodeState by
+                    initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
+                        initialTreeNodeState
                     )
+
+                NodeRow(
+                    treeState = treeState,
+                    treeNodeState = treeNodeState,
+                    nodeActions = nodeActions,
+                    onSelectNode = { onSelectNode(treeNodeState.key) },
+                    onClearSelectedNode = onClearSelectedNode,
+                    onActivatePayload = { onActivatePayload(treeNodeState) },
+                    appearAnimationProgress = animation.progress(treeNodeState.key),
+                )
+            }
+
+            if (USE_LAZY_COLUMN) {
+                LazyColumn(
+                    state = lazyListState,
+                    contentPadding = remember { PaddingValues(vertical = shadowHeight) },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(
+                        items = treeNodeList,
+                        key = { it.key },
+                        contentType = { it.underlyingNodeKind }
+                    ) { initialTreeNodeState ->
+                        listContent(initialTreeNodeState)
+                    }
+                }
+            } else {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    treeNodeList.forEach { initialTreeNodeState ->
+                        key(initialTreeNodeState.key) { listContent(initialTreeNodeState) }
+                    }
                 }
             }
         }
