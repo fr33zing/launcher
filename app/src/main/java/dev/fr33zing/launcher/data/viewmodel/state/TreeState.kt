@@ -54,7 +54,7 @@ data class TreeNodeState(
     val depth: Int,
     val showChildren: State<Boolean?>,
     val permissions: PermissionMap,
-    val value: NodePayloadWithReferenceTargetState,
+    val value: ReferenceFollowingNodePayloadState,
     val flow: Lazy<Flow<TreeNodeState>>
 ) {
     val key = TreeNodeKey(underlyingNodeId, depth)

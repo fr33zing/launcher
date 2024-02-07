@@ -47,7 +47,7 @@ open class NodePayloadState(
 }
 
 @Immutable
-class NodePayloadWithReferenceTargetState(
+class ReferenceFollowingNodePayloadState(
     val underlyingState: NodePayloadState,
     targetState: NodePayloadState?,
 ) :
@@ -62,14 +62,14 @@ class NodePayloadWithReferenceTargetState(
         suspend fun fromNode(
             db: AppDatabase,
             underlyingNode: Node,
-        ): NodePayloadWithReferenceTargetState {
+        ): ReferenceFollowingNodePayloadState {
             val underlyingState = NodePayloadState.fromNode(db, underlyingNode)
             val targetState =
                 (underlyingState.payload as? Reference)?.targetId?.let { targetId ->
                     fromNodeId(db, targetId)
                 }
 
-            return NodePayloadWithReferenceTargetState(underlyingState, targetState)
+            return ReferenceFollowingNodePayloadState(underlyingState, targetState)
         }
     }
 }
@@ -83,9 +83,9 @@ class NodePayloadStateHolder(
             NodePayloadState(node, payload ?: throw NullPayloadException(node))
         }
 
-    val flowWithReferenceTarget: Flow<NodePayloadWithReferenceTargetState> =
+    val flowWithReferenceTarget: Flow<ReferenceFollowingNodePayloadState> =
         flow.transform { state ->
-            val targetFlow: Flow<NodePayloadWithReferenceTargetState>? =
+            val targetFlow: Flow<ReferenceFollowingNodePayloadState>? =
                 if (node.kind != NodeKind.Reference) null
                 else {
                     (state.payload as? Reference ?: throw PayloadClassMismatchException(state.node))
@@ -95,7 +95,7 @@ class NodePayloadStateHolder(
                             db.getPayloadFlowByNodeId(targetNode.kind, targetNode.nodeId)
                                 .filterNotNull()
                                 .map { targetPayload ->
-                                    NodePayloadWithReferenceTargetState(
+                                    ReferenceFollowingNodePayloadState(
                                         underlyingState = state,
                                         targetState = NodePayloadState(targetNode, targetPayload)
                                     )
@@ -104,14 +104,14 @@ class NodePayloadStateHolder(
                 }
 
             if (targetFlow != null) emitAll(targetFlow)
-            else emit(NodePayloadWithReferenceTargetState(state, null))
+            else emit(ReferenceFollowingNodePayloadState(state, null))
         }
 }
 
 class NodePayloadListStateHolder(
     db: AppDatabase,
     nodes: List<Node>,
-    filterPredicate: ((NodePayloadWithReferenceTargetState) -> Boolean)? = null,
+    filterPredicate: ((ReferenceFollowingNodePayloadState) -> Boolean)? = null,
 ) {
     val flow =
         combine(

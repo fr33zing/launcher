@@ -46,13 +46,13 @@ class TreeBrowserStateHolder(
     private val containTraversalWithinInitialRoot: Boolean = true,
 
     /** If the predicate returns false, the node will be hidden. */
-    private val nodeVisiblePredicate: ((NodePayloadWithReferenceTargetState) -> Boolean)? = null,
+    private val nodeVisiblePredicate: ((ReferenceFollowingNodePayloadState) -> Boolean)? = null,
 
     /**
      * Function to call when a node is tapped. Not called when tapping directories if
      * `traverseDirectories` is true.
      */
-    onNodeSelected: TreeBrowserStateHolder.(NodePayloadWithReferenceTargetState) -> Unit = {},
+    onNodeSelected: TreeBrowserStateHolder.(ReferenceFollowingNodePayloadState) -> Unit = {},
 
     /**
      * Function to call when a node is tapped. Not called when tapping directories if
@@ -98,7 +98,7 @@ class TreeBrowserStateHolder(
                         nodeVisiblePredicate?.let { predicate ->
                             childNodes.filter { childNode ->
                                 predicate(
-                                    NodePayloadWithReferenceTargetState.fromNode(db, childNode)
+                                    ReferenceFollowingNodePayloadState.fromNode(db, childNode)
                                 )
                             }
                         } ?: childNodes
@@ -134,7 +134,7 @@ class TreeBrowserStateHolder(
         }
     }
 
-    fun selectNode(nodePayload: NodePayloadWithReferenceTargetState) {
+    fun selectNode(nodePayload: ReferenceFollowingNodePayloadState) {
         if (traverseDirectories && nodePayload.node.kind == NodeKind.Directory)
             traverseInward(nodePayload)
         else onNodeSelectedFn.value(this, nodePayload)
@@ -142,7 +142,7 @@ class TreeBrowserStateHolder(
 
     /** Sets the callback for when a node is selected. */
     fun onNodeSelected(
-        callback: TreeBrowserStateHolder.(NodePayloadWithReferenceTargetState) -> Unit
+        callback: TreeBrowserStateHolder.(ReferenceFollowingNodePayloadState) -> Unit
     ) {
         onNodeSelectedFn.value = callback
     }
@@ -155,7 +155,7 @@ class TreeBrowserStateHolder(
         }
     }
 
-    fun traverseInward(destination: NodePayloadWithReferenceTargetState) =
+    fun traverseInward(destination: ReferenceFollowingNodePayloadState) =
         updateStack(TreeBrowserState.Direction.Inward) { stack -> stack.addLast(destination.node) }
 
     private fun updateStack(

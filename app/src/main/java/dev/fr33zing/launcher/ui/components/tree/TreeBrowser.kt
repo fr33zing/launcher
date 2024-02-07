@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadWithReferenceTargetState
+import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeBrowserStateHolder
 import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -52,7 +52,7 @@ fun TreeBrowser(
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = ScreenHorizontalPadding,
     center: Boolean = false,
-    additionalRowContent: @Composable (NodePayloadWithReferenceTargetState) -> Unit = {},
+    additionalRowContent: @Composable (ReferenceFollowingNodePayloadState) -> Unit = {},
 ) {
     val state by stateHolder.flow.collectAsStateWithLifecycle(null)
 
@@ -153,7 +153,7 @@ private fun TraverseUpRow(
 @Composable
 private fun TreeBrowserRow(
     enabled: Boolean,
-    state: NodePayloadWithReferenceTargetState,
+    state: ReferenceFollowingNodePayloadState,
     horizontalPadding: Dp,
     fontSize: TextUnit,
     spacing: Dp,
