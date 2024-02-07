@@ -8,8 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavController
 import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.components.node.NodeSearchContainer
-import dev.fr33zing.launcher.ui.components.node.RecursiveNodeListSetup
+import dev.fr33zing.launcher.ui.components.tree.NodeSearchContainer
+import dev.fr33zing.launcher.ui.components.tree.old.RecursiveNodeListSetup
 
 @Composable
 fun Tree_old(db: AppDatabase, navController: NavController, rootNodeId: Int?) {

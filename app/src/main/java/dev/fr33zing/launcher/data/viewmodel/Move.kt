@@ -19,7 +19,7 @@ import dev.fr33zing.launcher.data.persistent.moveNode
 import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.utility.unreachable
-import dev.fr33zing.launcher.data.viewmodel.utility.TreeBrowserStateHolder
+import dev.fr33zing.launcher.data.viewmodel.state.TreeBrowserStateHolder
 import dev.fr33zing.launcher.nodeId
 import dev.fr33zing.launcher.ui.components.sendNotice
 import javax.inject.Inject

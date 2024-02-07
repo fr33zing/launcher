@@ -9,7 +9,7 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.viewmodel.utility.TreeBrowserStateHolder
+import dev.fr33zing.launcher.data.viewmodel.state.TreeBrowserStateHolder
 import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 

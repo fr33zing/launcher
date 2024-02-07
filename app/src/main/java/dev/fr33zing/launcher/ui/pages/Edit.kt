@@ -24,11 +24,11 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.viewmodel.EditViewModel
-import dev.fr33zing.launcher.ui.components.CancelButton
-import dev.fr33zing.launcher.ui.components.FinishButton
+import dev.fr33zing.launcher.ui.components.form.CancelButton
+import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.editform.EditForm
+import dev.fr33zing.launcher.ui.components.form.payload.EditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 
 data class EditFormArguments(val padding: PaddingValues, val node: Node, val payload: Payload)

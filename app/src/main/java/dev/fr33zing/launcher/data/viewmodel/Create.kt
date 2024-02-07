@@ -9,7 +9,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.NodeDeletedSubject
 import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.utility.notNull
-import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadState
+import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadState
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
 import dev.fr33zing.launcher.ui.components.Clock
-import dev.fr33zing.launcher.ui.components.TreeBrowser
+import dev.fr33zing.launcher.ui.components.tree.TreeBrowser
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.detectFlingUp
 import dev.fr33zing.launcher.ui.utility.longPressable

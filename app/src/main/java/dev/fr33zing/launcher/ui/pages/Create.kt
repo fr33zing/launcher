@@ -21,11 +21,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.CreateViewModel
-import dev.fr33zing.launcher.ui.components.CancelButton
-import dev.fr33zing.launcher.ui.components.FinishButton
+import dev.fr33zing.launcher.ui.components.form.CancelButton
+import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.editform.EditForm
+import dev.fr33zing.launcher.ui.components.form.payload.EditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 
 @OptIn(ExperimentalMaterial3Api::class)

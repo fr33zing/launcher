@@ -49,9 +49,9 @@ import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Preference
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.utility.exportBackupArchive
-import dev.fr33zing.launcher.data.utility.generateExportFilename
-import dev.fr33zing.launcher.data.utility.importBackupArchive
+import dev.fr33zing.launcher.data.persistent.exportBackupArchive
+import dev.fr33zing.launcher.data.persistent.generateExportFilename
+import dev.fr33zing.launcher.data.persistent.importBackupArchive
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog

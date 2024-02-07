@@ -6,9 +6,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.TreeNavigator
 import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
-import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
-import dev.fr33zing.launcher.ui.components.node.next.NodeActions
-import dev.fr33zing.launcher.ui.components.node.next.NodeTree
+import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
+import dev.fr33zing.launcher.ui.components.tree.NodeActions
+import dev.fr33zing.launcher.ui.components.tree.NodeTree
 
 @Composable
 fun Tree(

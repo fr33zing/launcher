@@ -9,8 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.viewmodel.utility.NodePayloadState
-import dev.fr33zing.launcher.data.viewmodel.utility.TreeNodeState
+import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadState
+import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.theme.Foreground
 
 val LocalNodeAppearance = compositionLocalOf {

@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
+import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
