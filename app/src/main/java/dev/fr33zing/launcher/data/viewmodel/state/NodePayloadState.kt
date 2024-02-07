@@ -79,8 +79,8 @@ class NodePayloadStateHolder(
     val node: Node,
 ) {
     val flow: Flow<NodePayloadState> =
-        db.getPayloadFlowByNodeId(node.kind, node.nodeId).map { payload ->
-            NodePayloadState(node, payload ?: throw NullPayloadException(node))
+        db.getPayloadFlowByNodeId(node.kind, node.nodeId).filterNotNull().map { payload ->
+            NodePayloadState(node, payload)
         }
 
     val flowWithReferenceTarget: Flow<ReferenceFollowingNodePayloadState> =
