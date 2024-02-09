@@ -13,15 +13,17 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -30,8 +32,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,9 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -51,16 +57,15 @@ import java.util.Timer
 import java.util.UUID
 import kotlin.concurrent.timerTask
 
-private const val NOTICE_DURATION_MS = 2750
 private const val ANIMATION_DURATION_MS = 300
 
 private val noticesSubject = PublishSubject.create<Notice>()
 
+@Immutable
 data class Notice(
     val id: String,
     val text: String,
     val kind: NoticeKind = NoticeKind.Information,
-    val duration: Int = NOTICE_DURATION_MS
 ) {
     val initialized: MutableState<Boolean> = mutableStateOf(false)
     val visible: MutableState<Boolean> = mutableStateOf(false)
@@ -82,8 +87,7 @@ fun sendNotice(
     id: String,
     text: String,
     kind: NoticeKind = NoticeKind.Information,
-    duration: Int = NOTICE_DURATION_MS
-) = noticesSubject.onNext(Notice(id, text, kind, duration))
+) = noticesSubject.onNext(Notice(id, text, kind))
 
 fun sendNotice(notice: Notice) = noticesSubject.onNext(notice)
 
@@ -92,6 +96,17 @@ fun Notices() {
     val slideAnimSpec = remember { tween<IntOffset>(ANIMATION_DURATION_MS) }
     val fadeAnimSpec = remember { tween<Float>(ANIMATION_DURATION_MS) }
     val notices = remember { mutableStateOf(listOf<Notice>()) }
+    val preferences = Preferences(LocalContext.current)
+    val positionAtTop by preferences.notices.positionAtTop.state
+    val durationSeconds by preferences.notices.durationSeconds.state
+    val duration by remember(durationSeconds) { derivedStateOf { durationSeconds * 1000.toLong() } }
+
+    val density = LocalDensity.current
+    val statusBarPadding =
+        with(density) {
+            if (positionAtTop) PaddingValues(top = WindowInsets.systemBars.getTop(density).toDp())
+            else PaddingValues(bottom = WindowInsets.systemBars.getBottom(density).toDp())
+        }
 
     DisposableEffect(Unit) {
         val subscription =
@@ -122,46 +137,51 @@ fun Notices() {
             initialized.value = true
             visible.value = true
 
-            Timer()
-                .schedule(
-                    timerTask { visible.value = false },
-                    duration - ANIMATION_DURATION_MS.toLong()
-                )
+            Timer().schedule(timerTask { visible.value = false }, duration - ANIMATION_DURATION_MS)
             Timer()
                 .schedule(
                     timerTask { notices.value = notices.value.filter { it.uuid != uuid } },
-                    duration.toLong()
+                    duration
                 )
         }
 
         AnimatedVisibility(
             visible = visible.value,
-            enter = fadeIn(fadeAnimSpec) + slideInVertically(slideAnimSpec) { -it },
-            exit = fadeOut(fadeAnimSpec) + slideOutVertically(slideAnimSpec) { -it },
+            enter =
+                fadeIn(fadeAnimSpec) +
+                    slideInVertically(slideAnimSpec) { if (positionAtTop) -it else it },
+            exit =
+                fadeOut(fadeAnimSpec) +
+                    slideOutVertically(slideAnimSpec) { if (positionAtTop) -it else it },
         ) {
-            Box(Modifier.fillMaxWidth().background(kind.color)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 12.dp)
-                            .absolutePadding(
-                                top =
-                                    with(LocalDensity.current) {
-                                        WindowInsets.statusBars.getTop(this).toDp()
-                                    }
-                            )
-                ) {
-                    Icon(
-                        kind.icon,
-                        null,
-                        modifier = Modifier.size(18.dp).offset(y = 1.dp),
-                        tint = textColor
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text, color = textColor)
+            @Composable
+            fun Notice() {
+                Box(Modifier.fillMaxWidth().background(kind.color)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 12.dp)
+                                .padding(statusBarPadding)
+                    ) {
+                        Icon(
+                            kind.icon,
+                            null,
+                            modifier = Modifier.size(18.dp).offset(y = 1.dp),
+                            tint = textColor
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text, color = textColor)
+                    }
                 }
             }
+
+            if (positionAtTop) Notice()
+            else
+                Column(Modifier.fillMaxSize()) {
+                    Spacer(Modifier.weight(1f))
+                    Notice()
+                }
         }
     }
 }

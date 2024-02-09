@@ -47,6 +47,7 @@ class Preferences(context: Context) {
     val nodeAppearance = NodeAppearancePreferences(context)
     val confirmationDialogs = ConfirmationDialogPreferences(context)
     val home = HomePreferences(context)
+    val notices = NoticePreferences(context)
     val debug = DebugPreferences(context)
 }
 
@@ -82,6 +83,13 @@ class ConfirmationDialogPreferences(context: Context) {
     val editNode = PreferenceGroup(context, "editNode")
     val moveNode = PreferenceGroup(context, "moveNode")
     val reorderNodes = PreferenceGroup(context, "reorderNodes")
+}
+
+class NoticePreferences(context: Context) {
+    val positionAtTop =
+        Preference(context, booleanPreferencesKey("notices.positionAtTop"), false, ::noMap)
+    val durationSeconds =
+        Preference(context, intPreferencesKey("notices.durationSeconds"), 3, ::noMap)
 }
 
 class DebugPreferences(context: Context) {

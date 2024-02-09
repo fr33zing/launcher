@@ -97,6 +97,7 @@ fun Preferences(db: AppDatabase) {
                 ItemAppearanceSection(preferences)
                 HomeSection(preferences)
                 ConfirmationDialogsSection(preferences)
+                NoticesSection(preferences)
                 DebugSection(preferences)
                 BackupSection(db)
             }
@@ -170,11 +171,6 @@ private fun PreferenceCheckbox(
             Text(text = label, style = typography.bodyLarge)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(inlineSpacing)) {
-            Text(
-                text = "Default: ${if (default) "Checked" else "Unchecked"}",
-                style = typography.bodyMedium,
-                color = Foreground.mix(Background, 0.5f)
-            )
             ResetButton(preference, default, state)
         }
     }
@@ -427,6 +423,21 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
                 PreferenceCheckbox(reorderNodes::askOnReject, "Reject")
             }
         }
+    }
+}
+
+//
+// Section: Notices
+//
+
+@Composable
+private fun NoticesSection(preferences: Preferences) {
+    Section("Notices", "Adjust the function of notices, i.e. informational messages.") {
+        PreferenceSlider(preferences.notices::durationSeconds, "Duration", 2f..8f, " seconds")
+        PreferenceCheckbox(
+            property = preferences.notices::positionAtTop,
+            label = "Position at top of screen"
+        )
     }
 }
 
