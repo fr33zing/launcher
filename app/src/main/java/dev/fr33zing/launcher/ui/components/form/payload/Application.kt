@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
+import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.form.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.pages.EditFormArguments

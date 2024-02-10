@@ -48,10 +48,10 @@ Update the ~payloadClasses~ and ~nodeKindToPayloadClassMap~ variables.
 
 ** Create an edit form
 
-Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/editform/EditForm.kt][EditForm.kt]]
+Relevant file: [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/form/NodeEditForm.kt][NodeEditForm.kt]]
 
-Create an edit form in the ~ui.components.editform~ package, then update the
-~EditForm~ composable function.
+Create an edit form in the ~ui.components.form.payload~ package, then update the
+~NodeEditForm~ composable function.
 
 *** Example implementation
 

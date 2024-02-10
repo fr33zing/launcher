@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.ConfigurationCompat
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox
+import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments

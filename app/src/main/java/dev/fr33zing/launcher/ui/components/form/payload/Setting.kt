@@ -13,6 +13,7 @@ import androidx.compose.ui.text.withStyle
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
+import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import kotlin.reflect.full.staticProperties

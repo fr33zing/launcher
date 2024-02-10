@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.viewmodel.payload.EditReferenceViewModel
+import dev.fr33zing.launcher.ui.components.form.EditFormExtraPadding
+import dev.fr33zing.launcher.ui.components.form.EditFormSpacing
 import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.components.tree.TreeBrowser
 import dev.fr33zing.launcher.ui.components.form.NodePath

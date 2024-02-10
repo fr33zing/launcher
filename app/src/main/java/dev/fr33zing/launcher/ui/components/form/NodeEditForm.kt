@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.form.payload
+package dev.fr33zing.launcher.ui.components.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,13 +17,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.ui.components.form.payload.ApplicationEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.CheckboxEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.DefaultEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.DirectoryEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.LocationEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.NoteEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.ReferenceEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.SettingEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.WebsiteEditForm
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 
 val EditFormExtraPadding = 16.dp
 val EditFormSpacing = 16.dp
 
 @Composable
-fun EditForm(arguments: EditFormArguments) {
+fun NodeEditForm(arguments: EditFormArguments) {
     when (arguments.node.kind) {
         NodeKind.Application -> ApplicationEditForm(arguments)
         NodeKind.Checkbox -> CheckboxEditForm(arguments)

@@ -25,7 +25,7 @@ import dev.fr33zing.launcher.ui.components.form.CancelButton
 import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.form.payload.EditForm
+import dev.fr33zing.launcher.ui.components.form.NodeEditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,6 +98,6 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
             )
         }
     ) { padding ->
-        nodePayload?.let { (node, payload) -> EditForm(EditFormArguments(padding, node, payload)) }
+        nodePayload?.let { (node, payload) -> NodeEditForm(EditFormArguments(padding, node, payload)) }
     }
 }

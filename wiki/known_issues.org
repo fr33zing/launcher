@@ -40,8 +40,6 @@ Probably need to use a flow for target payload.
 
 * Tree view
 
-Issues regarding the tree view, i.e. [[file:../app/src/main/java/dev/fr33zing/launcher/ui/components/node/RecursiveNodeList.kt::package dev.fr33zing.launcher.ui.components.node][RecursiveNodeList]].
-
 ** Last few nodes can be cut off
 
 1. Scroll to bottom of tree view.

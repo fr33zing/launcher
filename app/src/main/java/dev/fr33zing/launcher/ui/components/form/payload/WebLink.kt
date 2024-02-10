@@ -20,6 +20,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.payloads.UrlRegex
 import dev.fr33zing.launcher.data.persistent.payloads.Website
+import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
