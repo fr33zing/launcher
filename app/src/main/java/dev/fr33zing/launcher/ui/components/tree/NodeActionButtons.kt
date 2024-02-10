@@ -71,7 +71,11 @@ class NodeActionButtonKind(
     val visible: (TreeNodeState) -> Boolean,
     val component: @Composable NodeActionButtonKind.(ComponentArguments) -> Unit
 ) {
-    data class ComponentArguments(val state: TreeNodeState, val actions: NodeActions)
+    data class ComponentArguments(
+        val state: TreeNodeState,
+        val actions: NodeActions,
+        val clearSelectedNode: () -> Unit
+    )
 
     companion object {
         val kinds =
@@ -83,9 +87,9 @@ class NodeActionButtonKind(
                     visible = {
                         it.permissions.hasPermission(PermissionKind.Delete, PermissionScope.Self)
                     },
-                ) { (state, actions) ->
+                ) { (state, actions, clearSelectedNode) ->
                     val node = remember(state) { state.value.underlyingState.node }
-                    ActionButton {
+                    ActionButton(clearSelectedNode) {
                         sendNotice(
                             "moved-to-trash:${node.nodeId}",
                             "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash."
@@ -103,7 +107,7 @@ class NodeActionButtonKind(
                         state.value.payload.castOrNull<Directory>()?.specialMode ==
                             Directory.SpecialMode.Trash
                     },
-                ) { (state, actions) ->
+                ) { (state, actions, clearSelectedNode) ->
                     val dialogVisible = remember { mutableStateOf(false) }
                     YesNoDialog(
                         visible = dialogVisible,
@@ -115,7 +119,7 @@ class NodeActionButtonKind(
                         noIcon = Icons.Filled.ArrowBack,
                         onYes = { actions.delete(state.underlyingNodeId) },
                     )
-                    ActionButton { dialogVisible.value = true }
+                    ActionButton(clearSelectedNode) { dialogVisible.value = true }
                 },
 
                 // Move node
@@ -136,8 +140,8 @@ class NodeActionButtonKind(
                                 PermissionScope.Self
                             )
                     },
-                ) { (state, actions) ->
-                    ActionButton { actions.move(state.underlyingNodeId) }
+                ) { (state, actions, clearSelectedNode) ->
+                    ActionButton(clearSelectedNode) { actions.move(state.underlyingNodeId) }
                 },
 
                 // Reorder nodes
@@ -145,8 +149,8 @@ class NodeActionButtonKind(
                     label = "Reorder",
                     icon = Icons.Outlined.SwapVert,
                     visible = { true },
-                ) { (state, actions) ->
-                    ActionButton { actions.reorder(state.underlyingNodeId) }
+                ) { (state, actions, clearSelectedNode) ->
+                    ActionButton(clearSelectedNode) { actions.reorder(state.underlyingNodeId) }
                 },
 
                 // Edit node
@@ -156,8 +160,8 @@ class NodeActionButtonKind(
                     visible = { state ->
                         state.permissions.hasPermission(PermissionKind.Edit, PermissionScope.Self)
                     },
-                ) { (state, actions) ->
-                    ActionButton { actions.edit(state.underlyingNodeId) }
+                ) { (state, actions, clearSelectedNode) ->
+                    ActionButton(clearSelectedNode) { actions.edit(state.underlyingNodeId) }
                 },
 
                 // View application info
@@ -165,15 +169,17 @@ class NodeActionButtonKind(
                     label = "Info",
                     icon = Icons.Outlined.Info,
                     visible = { it.value.node.kind == NodeKind.Application },
-                ) { (state) ->
+                ) { (state, _, clearSelectedNode) ->
                     val context = LocalContext.current
-                    ActionButton { state.value.payload.cast<Application>().openInfo(context) }
+                    ActionButton(clearSelectedNode) {
+                        state.value.payload.cast<Application>().openInfo(context)
+                    }
                 }
             )
     }
 
     @Composable
-    private fun ActionButton(action: () -> Unit) {
+    private fun ActionButton(clearSelectedNode: () -> Unit, action: () -> Unit) {
         val interactionSource = remember { MutableInteractionSource() }
         val indication = rememberCustomIndication(color = color, circular = true)
         val fontSize = LocalNodeDimensions.current.fontSize
@@ -185,7 +191,10 @@ class NodeActionButtonKind(
                 Modifier.clickable(
                     interactionSource = interactionSource,
                     indication = indication,
-                    onClick = action
+                    onClick = {
+                        clearSelectedNode()
+                        action()
+                    }
                 )
         ) {
             Column(
@@ -217,6 +226,7 @@ class NodeActionButtonKind(
 fun NodeActionButtonRow(
     nodeActions: NodeActions,
     treeNodeState: TreeNodeState,
+    onClearSelectedNode: () -> Unit = {},
     fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
     lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
@@ -224,7 +234,7 @@ fun NodeActionButtonRow(
         remember(treeNodeState) { NodeActionButtonKind.kinds.filter { it.visible(treeNodeState) } }
     val componentArguments =
         remember(treeNodeState) {
-            NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions)
+            NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions, onClearSelectedNode)
         }
 
     NodeActionButtonsLayout(
