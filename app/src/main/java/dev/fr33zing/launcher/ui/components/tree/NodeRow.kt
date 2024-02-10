@@ -22,6 +22,7 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun NodeRow(
+    simple: Boolean,
     treeState: TreeState? = null,
     treeNodeState: TreeNodeState,
     adjacentTreeNodeStates: AdjacentTreeNodeStates,
@@ -102,7 +103,11 @@ fun NodeRow(
             }
         }
 
-    layers.Providers {
-        layers.features.Animation { layers.features.Interactions { layers.Detail() } }
+    if (simple) {
+        layers.Providers { layers.features.Animation { layers.Detail() } }
+    } else {
+        layers.Providers {
+            layers.features.Animation { layers.features.Interactions { layers.Detail() } }
+        }
     }
 }

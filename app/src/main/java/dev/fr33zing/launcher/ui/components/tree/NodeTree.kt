@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
+private const val APPEAR_ANIMATION_STAGGER_MS: Long = 5
 private const val USE_LAZY_COLUMN = false
 
 data class AdjacentTreeNodeStates(val above: TreeNodeState?, val below: TreeNodeState?)
@@ -76,6 +77,7 @@ fun NodeTree(
         }
     val animation =
         object {
+
             val progressMap = remember {
                 mutableStateMapOf<TreeNodeKey, Animatable<Float, AnimationVector1D>>()
             }
@@ -135,6 +137,7 @@ fun NodeTree(
                     )
 
                 NodeRow(
+                    simple = (appearAnimationProgress?.value ?: 1f) < 1f,
                     treeState = treeState,
                     treeNodeState = treeNodeState,
                     adjacentTreeNodeStates = adjacentTreeNodeStates,
