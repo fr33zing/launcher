@@ -20,6 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
@@ -49,10 +51,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
-private const val APPEAR_ANIMATION_STAGGER_MS: Long = 5
-private const val USE_LAZY_COLUMN = false
+private const val USE_LAZY_COLUMN = true
 
-data class AdjacentTreeNodeStates(val above: TreeNodeState?, val below: TreeNodeState?)
+@Immutable data class AdjacentTreeNodeStates(val above: TreeNodeState?, val below: TreeNodeState?)
 
 @Composable
 fun NodeTree(
@@ -136,8 +137,13 @@ fun NodeTree(
                         initialTreeNodeState
                     )
 
+                val simpleMode by
+                    remember(appearAnimationProgress) {
+                        derivedStateOf { (appearAnimationProgress?.value ?: 1f) < 1f }
+                    }
+
                 NodeRow(
-                    simple = (appearAnimationProgress?.value ?: 1f) < 1f,
+                    simple = simpleMode,
                     treeState = treeState,
                     treeNodeState = treeNodeState,
                     adjacentTreeNodeStates = adjacentTreeNodeStates,
@@ -160,8 +166,10 @@ fun NodeTree(
                     }
                 }
 
-            val listItems =
-                remember(treeNodeList) { treeNodeList.map { Pair(it, animation.progress(it.key)) } }
+            val listItems by
+                remember(treeNodeList) {
+                    derivedStateOf { treeNodeList.map { Pair(it, animation.progress(it.key)) } }
+                }
 
             if (USE_LAZY_COLUMN) {
                 LazyColumn(
@@ -174,11 +182,15 @@ fun NodeTree(
                         key = { _, item -> item.first.key },
                         contentType = { _, item -> item.first.underlyingNodeKind }
                     ) { index, (initialTreeNodeState, appearAnimationProgress) ->
-                        val adjacentTreeNodeStates =
-                            AdjacentTreeNodeStates(
-                                above = listItems.getOrNull(index - 1)?.first,
-                                below = listItems.getOrNull(index + 1)?.first,
-                            )
+                        val adjacentTreeNodeStates by
+                            remember(listItems, index) {
+                                derivedStateOf {
+                                    AdjacentTreeNodeStates(
+                                        above = listItems.getOrNull(index - 1)?.first,
+                                        below = listItems.getOrNull(index + 1)?.first,
+                                    )
+                                }
+                            }
                         listItem(
                             adjacentTreeNodeStates,
                             initialTreeNodeState,
@@ -196,11 +208,15 @@ fun NodeTree(
                         index,
                         (initialTreeNodeState, appearAnimationProgress) ->
                         key(initialTreeNodeState.key) {
-                            val adjacentTreeNodeStates =
-                                AdjacentTreeNodeStates(
-                                    above = listItems.getOrNull(index - 1)?.first,
-                                    below = listItems.getOrNull(index + 1)?.first,
-                                )
+                            val adjacentTreeNodeStates by
+                                remember(listItems, index) {
+                                    derivedStateOf {
+                                        AdjacentTreeNodeStates(
+                                            above = listItems.getOrNull(index - 1)?.first,
+                                            below = listItems.getOrNull(index + 1)?.first,
+                                        )
+                                    }
+                                }
                             listItem(
                                 adjacentTreeNodeStates,
                                 initialTreeNodeState,

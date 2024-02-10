@@ -76,14 +76,19 @@ fun NodeDetail(
                     fontSize = fontSize
                 )
         )
-    val text = buildAnnotatedString {
-        append(label)
-        if (isValidReference) {
-            withStyle(SpanStyle(textDecoration = TextDecoration.None)) { append("  ") }
-            appendInlineContent("reference", "→")
+    val text =
+        remember(label) {
+            buildAnnotatedString {
+                append(label)
+                if (isValidReference) {
+                    withStyle(SpanStyle(textDecoration = TextDecoration.None)) { append("  ") }
+                    appendInlineContent("reference", "→")
+                }
+            }
         }
-    }
     val iconSize = remember { 1f }
+    val textDecoration =
+        remember(lineThrough) { if (lineThrough) TextDecoration.LineThrough else null }
 
     Icon(
         icon,
@@ -101,7 +106,7 @@ fun NodeDetail(
         fontSize = fontSize,
         softWrap = true,
         overflow = TextOverflow.Visible,
-        textDecoration = if (lineThrough) TextDecoration.LineThrough else null,
+        textDecoration = textDecoration,
         inlineContent = inlineContentMap
     )
 }
