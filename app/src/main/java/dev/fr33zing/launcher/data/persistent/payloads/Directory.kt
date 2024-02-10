@@ -63,7 +63,8 @@ class Directory(
             permissions =
                 run {
                     val permissions = AllPermissions.clone().toMutableMap()
-                    permissions[PermissionKind.Create] = mutableSetOf(PermissionScope.Recursive)
+                    permissions[PermissionKind.Create] =
+                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive)
                     permissions[PermissionKind.Delete] = mutableSetOf(PermissionScope.Recursive)
                     permissions
                 }
@@ -75,6 +76,7 @@ class Directory(
             collapsedIcon = Icons.Outlined.NewReleases,
             permissions =
                 mapOf(
+                    PermissionKind.Create to mutableSetOf(PermissionScope.Self),
                     PermissionKind.Edit to
                         mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
                     PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
@@ -87,6 +89,7 @@ class Directory(
             collapsedIcon = Icons.Outlined.Delete,
             permissions =
                 mapOf(
+                    PermissionKind.Create to mutableSetOf(PermissionScope.Self),
                     PermissionKind.Edit to mutableSetOf(PermissionScope.Self),
                     PermissionKind.MoveIn to mutableSetOf(PermissionScope.Recursive),
                     PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),

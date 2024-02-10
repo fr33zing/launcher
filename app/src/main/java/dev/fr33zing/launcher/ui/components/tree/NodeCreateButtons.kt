@@ -15,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
@@ -29,25 +32,52 @@ private val icon = Icons.Outlined.Add
 enum class NodeCreateButtonPosition(
     val expandFrom: Alignment.Vertical,
 ) {
+    //    OutsideAbove(Alignment.Top),
     Above(Alignment.Top),
     Below(Alignment.Bottom),
-    Outside(Alignment.Bottom),
+    OutsideBelow(Alignment.Bottom),
 }
 
 @Composable
 fun NodeCreateButton(
     treeState: TreeState,
     treeNodeState: TreeNodeState,
+    adjacentTreeNodeStates: AdjacentTreeNodeStates,
     position: NodeCreateButtonPosition,
     spacing: Dp = LocalNodeDimensions.current.spacing,
     indent: Dp = LocalNodeDimensions.current.indent,
     onClick: (RelativeNodePosition) -> Unit,
 ) {
+    val showChildren =
+        remember(treeNodeState.showChildren.value) { treeNodeState.showChildren.value == true }
     val visible =
-        remember(treeState.selectedKey, treeNodeState.key) {
-            val selected = treeState.selectedKey == treeNodeState.key
-            if (position == NodeCreateButtonPosition.Outside) selected && treeNodeState.lastChild
-            else selected
+        remember(
+            showChildren,
+            position,
+            treeState.selectedKey,
+            treeNodeState.key,
+            treeNodeState.permissions,
+        ) {
+            fun TreeNodeState.canCreate(scope: PermissionScope) =
+                permissions.hasPermission(PermissionKind.Create, scope)
+
+            val hasPermission =
+                when (position) {
+                    NodeCreateButtonPosition.Above -> treeNodeState.canCreate(PermissionScope.Self)
+                    NodeCreateButtonPosition.Below ->
+                        if (showChildren) treeNodeState.canCreate(PermissionScope.Recursive)
+                        else treeNodeState.canCreate(PermissionScope.Self)
+                    NodeCreateButtonPosition.OutsideBelow ->
+                        adjacentTreeNodeStates.below?.canCreate(PermissionScope.Self)
+                } ?: false
+
+            if (!hasPermission) false
+            else {
+                val selected = treeState.selectedKey == treeNodeState.key
+                if (position == NodeCreateButtonPosition.OutsideBelow)
+                    selected && treeNodeState.lastChild
+                else selected
+            }
         }
 
     AnimatedVisibility(
@@ -57,27 +87,25 @@ fun NodeCreateButton(
         modifier = Modifier.fillMaxWidth()
     ) {
         val label =
-            remember(treeNodeState.showChildren.value, position) {
+            remember(showChildren, position) {
                 when (position) {
                     NodeCreateButtonPosition.Above -> "Add item above"
                     NodeCreateButtonPosition.Below ->
-                        if (treeNodeState.showChildren.value == true) "Add item within"
-                        else "Add item below"
-                    NodeCreateButtonPosition.Outside -> "Add item outside"
+                        if (showChildren) "Add item within" else "Add item below"
+                    NodeCreateButtonPosition.OutsideBelow -> "Add item outside"
                 }
             }
         val depth =
-            remember(treeNodeState.showChildren.value, treeNodeState.depth, position) {
+            remember(showChildren, position, treeNodeState.depth) {
                 when (position) {
                     NodeCreateButtonPosition.Above -> treeNodeState.depth
                     NodeCreateButtonPosition.Below ->
-                        if (treeNodeState.showChildren.value == true) treeNodeState.depth + 1
-                        else treeNodeState.depth
-                    NodeCreateButtonPosition.Outside -> treeNodeState.depth - 1
+                        if (showChildren) treeNodeState.depth + 1 else treeNodeState.depth
+                    NodeCreateButtonPosition.OutsideBelow -> treeNodeState.depth - 1
                 }
             }
         val onClickFn =
-            remember(treeNodeState.value.node, treeNodeState.showChildren.value, position) {
+            remember(showChildren, position, treeNodeState.value.node) {
                 when (position) {
                     NodeCreateButtonPosition.Above -> {
                         {
@@ -94,14 +122,13 @@ fun NodeCreateButton(
                             onClick(
                                 RelativeNodePosition(
                                     treeNodeState.value.node.nodeId,
-                                    if (treeNodeState.showChildren.value == true)
-                                        RelativeNodeOffset.Within
+                                    if (showChildren) RelativeNodeOffset.Within
                                     else RelativeNodeOffset.Below
                                 )
                             )
                         }
                     }
-                    NodeCreateButtonPosition.Outside -> {
+                    NodeCreateButtonPosition.OutsideBelow -> {
                         {
                             onClick(
                                 RelativeNodePosition(

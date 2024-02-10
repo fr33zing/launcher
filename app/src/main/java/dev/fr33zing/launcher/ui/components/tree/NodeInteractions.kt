@@ -32,6 +32,7 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 fun NodeInteractions(
     treeState: TreeState?,
     treeNodeState: TreeNodeState,
+    adjacentTreeNodeStates: AdjacentTreeNodeStates,
     features: NodeRowFeatureSet,
     nodeActions: NodeActions,
     onSelectNode: () -> Unit = {},
@@ -108,6 +109,7 @@ fun NodeInteractions(
             NodeCreateButton(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
+                adjacentTreeNodeStates = adjacentTreeNodeStates,
                 position = NodeCreateButtonPosition.Above,
                 onClick = ::showCreateNodeDialog
             )
@@ -117,13 +119,15 @@ fun NodeInteractions(
             NodeCreateButton(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
+                adjacentTreeNodeStates = adjacentTreeNodeStates,
                 position = NodeCreateButtonPosition.Below,
                 onClick = ::showCreateNodeDialog
             )
             NodeCreateButton(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
-                position = NodeCreateButtonPosition.Outside,
+                adjacentTreeNodeStates = adjacentTreeNodeStates,
+                position = NodeCreateButtonPosition.OutsideBelow,
                 onClick = ::showCreateNodeDialog
             )
         }

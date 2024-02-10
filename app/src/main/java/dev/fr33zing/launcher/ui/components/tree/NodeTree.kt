@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -50,6 +50,8 @@ import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
 private const val USE_LAZY_COLUMN = false
+
+data class AdjacentTreeNodeStates(val above: TreeNodeState?, val below: TreeNodeState?)
 
 @Composable
 fun NodeTree(
@@ -123,6 +125,7 @@ fun NodeTree(
         ) {
             @Composable
             fun listItem(
+                adjacentTreeNodeStates: AdjacentTreeNodeStates,
                 initialTreeNodeState: TreeNodeState,
                 appearAnimationProgress: Animatable<Float, AnimationVector1D>?
             ) {
@@ -134,6 +137,7 @@ fun NodeTree(
                 NodeRow(
                     treeState = treeState,
                     treeNodeState = treeNodeState,
+                    adjacentTreeNodeStates = adjacentTreeNodeStates,
                     nodeActions = nodeActions,
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,
@@ -162,12 +166,21 @@ fun NodeTree(
                     contentPadding = remember { PaddingValues(vertical = shadowHeight) },
                     modifier = Modifier.fillMaxSize().disableFlowStaggerOnOverflow()
                 ) {
-                    items(
+                    itemsIndexed(
                         items = listItems,
-                        key = { it.first.key },
-                        contentType = { it.first.underlyingNodeKind }
-                    ) { (initialTreeNodeState, appearAnimationProgress) ->
-                        listItem(initialTreeNodeState, appearAnimationProgress)
+                        key = { _, item -> item.first.key },
+                        contentType = { _, item -> item.first.underlyingNodeKind }
+                    ) { index, (initialTreeNodeState, appearAnimationProgress) ->
+                        val adjacentTreeNodeStates =
+                            AdjacentTreeNodeStates(
+                                above = listItems.getOrNull(index - 1)?.first,
+                                below = listItems.getOrNull(index + 1)?.first,
+                            )
+                        listItem(
+                            adjacentTreeNodeStates,
+                            initialTreeNodeState,
+                            appearAnimationProgress
+                        )
                     }
                 }
             } else {
@@ -176,9 +189,20 @@ fun NodeTree(
                         .verticalScroll(rememberScrollState())
                         .disableFlowStaggerOnOverflow()
                 ) {
-                    listItems.forEach { (initialTreeNodeState, appearAnimationProgress) ->
+                    listItems.forEachIndexed {
+                        index,
+                        (initialTreeNodeState, appearAnimationProgress) ->
                         key(initialTreeNodeState.key) {
-                            listItem(initialTreeNodeState, appearAnimationProgress)
+                            val adjacentTreeNodeStates =
+                                AdjacentTreeNodeStates(
+                                    above = listItems.getOrNull(index - 1)?.first,
+                                    below = listItems.getOrNull(index + 1)?.first,
+                                )
+                            listItem(
+                                adjacentTreeNodeStates,
+                                initialTreeNodeState,
+                                appearAnimationProgress
+                            )
                         }
                     }
                 }

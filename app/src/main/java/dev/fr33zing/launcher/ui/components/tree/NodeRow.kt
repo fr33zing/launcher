@@ -2,10 +2,14 @@ package dev.fr33zing.launcher.ui.components.tree
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
+import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
@@ -18,8 +22,9 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun NodeRow(
-    treeNodeState: TreeNodeState,
     treeState: TreeState? = null,
+    treeNodeState: TreeNodeState,
+    adjacentTreeNodeStates: AdjacentTreeNodeStates,
     nodeActions: NodeActions? = null,
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
@@ -49,6 +54,17 @@ fun NodeRow(
                 @Composable
                 fun Detail() =
                     NodeDetailContainer(treeNodeState.depth) {
+                        val self =
+                            treeNodeState.permissions.hasPermission(
+                                PermissionKind.Create,
+                                PermissionScope.Self
+                            )
+                        val children =
+                            treeNodeState.permissions.hasPermission(
+                                PermissionKind.Create,
+                                PermissionScope.Recursive
+                            )
+                        Text("  ${if (self) "x" else "-"}${if (children) "x" else "-"}")
                         NodeDetail(
                             label =
                                 if (treeNodeState.value.isValidReference)
@@ -66,6 +82,7 @@ fun NodeRow(
                                 NodeInteractions(
                                     treeState,
                                     treeNodeState,
+                                    adjacentTreeNodeStates,
                                     features,
                                     nodeActions,
                                     onSelectNode,
