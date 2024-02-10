@@ -1,8 +1,12 @@
 package dev.fr33zing.launcher.ui.components.tree
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -10,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,7 +30,30 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
+
+@Composable
+fun NodeDetailContainer(
+    depth: Int,
+    modifier: Modifier = Modifier,
+    spacing: Dp = LocalNodeDimensions.current.spacing,
+    indent: Dp = LocalNodeDimensions.current.indent,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    vertical = spacing / 2,
+                    horizontal = ScreenHorizontalPadding,
+                )
+                .padding(start = indent * depth),
+        content = content
+    )
+}
 
 @Composable
 fun NodeDetail(

@@ -54,6 +54,7 @@ data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
 data class TreeNodeState(
     val depth: Int,
     val showChildren: State<Boolean?>,
+    val lastChild: Boolean,
     val permissions: PermissionMap,
     val value: ReferenceFollowingNodePayloadState,
     val flow: Lazy<Flow<TreeNodeState>>
@@ -91,9 +92,10 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         fun traverse(
             depth: Int = -1,
             node: Node,
+            lastChild: Boolean = false,
             permissions: PermissionMap = AllPermissions.clone()
         ): Flow<List<TreeNodeState>> {
-            val parentFlow = getTreeNodeStateFlow(depth, node, permissions)
+            val parentFlow = getTreeNodeStateFlow(depth, node, lastChild, permissions)
 
             return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
             else {
@@ -107,12 +109,16 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                     .distinctUntilChangedBy { it.map { node -> node.nodeId } }
                                     .flatMapLatest { childNodes ->
                                         val childNodeFlows =
-                                            childNodes.map { childNode ->
-                                                val childPermissions =
-                                                    permissions.adjustChildPermissions(
-                                                        treeNode.value.payload
-                                                    )
-                                                traverse(depth + 1, childNode, childPermissions)
+                                            childNodes.mapIndexed { index, childNode ->
+                                                traverse(
+                                                    depth = depth + 1,
+                                                    node = childNode,
+                                                    lastChild = index == childNodes.indices.last,
+                                                    permissions =
+                                                        permissions.adjustChildPermissions(
+                                                            treeNode.value.payload
+                                                        )
+                                                )
                                             }
                                         combine(childNodeFlows) { arrayOfLists ->
                                             arrayOfLists.toList().flatten()
@@ -147,6 +153,7 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
     private fun getTreeNodeStateFlow(
         depth: Int,
         node: Node,
+        lastChild: Boolean,
         parentPermissions: PermissionMap
     ): Flow<TreeNodeState> =
         treeNodeStateFlows.computeIfAbsent(TreeNodeKey(node.nodeId, depth)) {
@@ -158,12 +165,13 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                 }
                 val permissions = parentPermissions.adjustOwnPermissions(value.payload)
                 val flow = lazy { // TODO reuse current flow somehow
-                    getTreeNodeStateFlow(depth, node, parentPermissions)
+                    getTreeNodeStateFlow(depth, node, lastChild, parentPermissions)
                 }
 
                 TreeNodeState(
                     depth,
                     showChildren,
+                    lastChild,
                     permissions,
                     value,
                     flow,

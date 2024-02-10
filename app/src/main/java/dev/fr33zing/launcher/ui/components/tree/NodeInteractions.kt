@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.tree
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -7,12 +8,15 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
+import dev.fr33zing.launcher.TAG
+import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
@@ -44,26 +48,59 @@ fun NodeInteractions(
         }
     val selected = treeNodeState.key == treeState?.selectedKey
 
-    NodeInteractionsLayout {
-        Box(
-            Modifier.combinedClickable(
-                interactionSource = interactionSource,
-                indication = indication,
-                onClick = {
-                    onClearSelectedNode()
-                    onActivatePayload()
-                },
-                onLongClick = onSelectNode
-            )
-        ) {
-            content()
-        }
-
-        if (hasFeature.ACTION_BUTTONS)
-            AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
-                NodeActionButtonRow(nodeActions, treeNodeState)
+    @Composable
+    fun nodeRow() {
+        NodeInteractionsLayout {
+            Box(
+                Modifier.combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = indication,
+                    onClick = {
+                        onClearSelectedNode()
+                        onActivatePayload()
+                    },
+                    onLongClick = onSelectNode
+                )
+            ) {
+                content()
             }
+
+            if (hasFeature.ACTION_BUTTONS)
+                AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
+                    NodeActionButtonRow(nodeActions, treeNodeState)
+                }
+        }
     }
+
+    if (!hasFeature.CREATE_ADJACENT || treeState == null) nodeRow()
+    else
+        Column {
+            fun onNodeCreateButtonClicked(newNodePosition: RelativeNodePosition) {
+                Log.d(TAG, "Creating new node @ $newNodePosition")
+            }
+
+            NodeCreateButton(
+                treeState = treeState,
+                treeNodeState = treeNodeState,
+                position = NodeCreateButtonPosition.Above,
+                onClick = ::onNodeCreateButtonClicked
+            )
+
+            nodeRow()
+
+            NodeCreateButton(
+                treeState = treeState,
+                treeNodeState = treeNodeState,
+                position = NodeCreateButtonPosition.Below,
+                onClick = ::onNodeCreateButtonClicked
+            )
+            NodeCreateButton(
+                treeState = treeState,
+                treeNodeState = treeNodeState,
+                position = NodeCreateButtonPosition.Outside,
+                onClick = ::onNodeCreateButtonClicked
+            )
+        }
 }
 
 @Composable

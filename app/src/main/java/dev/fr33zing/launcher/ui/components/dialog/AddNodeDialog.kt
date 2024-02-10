@@ -35,7 +35,7 @@ fun AddNodeDialog(
     val localDensity = LocalDensity.current
     val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
-    val kinds = remember { NodeKind.values() }
+    val kinds = remember { NodeKind.entries }
 
     BaseDialog(
         visible,
