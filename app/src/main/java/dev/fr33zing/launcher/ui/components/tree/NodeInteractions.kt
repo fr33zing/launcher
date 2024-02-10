@@ -1,6 +1,5 @@
 package dev.fr33zing.launcher.ui.components.tree
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,15 +9,19 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
-import dev.fr33zing.launcher.TAG
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
@@ -34,6 +37,7 @@ fun NodeInteractions(
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
+    onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     color: Color = LocalNodeAppearance.current.color,
     content: @Composable () -> Unit,
 ) {
@@ -73,17 +77,39 @@ fun NodeInteractions(
     }
 
     if (!hasFeature.CREATE_ADJACENT || treeState == null) nodeRow()
-    else
+    else {
         Column {
-            fun onNodeCreateButtonClicked(newNodePosition: RelativeNodePosition) {
-                Log.d(TAG, "Creating new node @ $newNodePosition")
+            val nodeKindPickerDialogVisible = remember { mutableStateOf(false) }
+            var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
+
+            fun showCreateNodeDialog(position: RelativeNodePosition) {
+                newNodePosition = position
+                nodeKindPickerDialogVisible.value = true
             }
+
+            fun onCreateNodeDialogDismissed() {
+                newNodePosition = null
+                onClearSelectedNode()
+            }
+
+            fun onNewNodeKindChosen(kind: NodeKind) =
+                newNodePosition?.let { position ->
+                    nodeKindPickerDialogVisible.value = false
+                    onCreateNode(position, kind)
+                    onClearSelectedNode()
+                } ?: throw Exception("newNodePosition is null")
+
+            NodeKindPickerDialog(
+                visible = nodeKindPickerDialogVisible,
+                onDismissRequest = ::onCreateNodeDialogDismissed,
+                onKindChosen = ::onNewNodeKindChosen
+            )
 
             NodeCreateButton(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
                 position = NodeCreateButtonPosition.Above,
-                onClick = ::onNodeCreateButtonClicked
+                onClick = ::showCreateNodeDialog
             )
 
             nodeRow()
@@ -92,15 +118,16 @@ fun NodeInteractions(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
                 position = NodeCreateButtonPosition.Below,
-                onClick = ::onNodeCreateButtonClicked
+                onClick = ::showCreateNodeDialog
             )
             NodeCreateButton(
                 treeState = treeState,
                 treeNodeState = treeNodeState,
                 position = NodeCreateButtonPosition.Outside,
-                onClick = ::onNodeCreateButtonClicked
+                onClick = ::showCreateNodeDialog
             )
         }
+    }
 }
 
 @Composable

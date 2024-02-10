@@ -113,7 +113,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Note
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
-import dev.fr33zing.launcher.ui.components.dialog.AddNodeDialog
+import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
 import dev.fr33zing.launcher.ui.components.dialog.NoteBodyDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
@@ -1115,7 +1115,7 @@ private fun AddNodeButton(
         }
     }
 
-    AddNodeDialog(
+    NodeKindPickerDialog(
         visible = dialogVisible,
         onDismissRequest = onDialogClosed,
         onKindChosen = {

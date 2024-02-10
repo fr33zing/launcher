@@ -33,6 +33,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
@@ -58,6 +60,7 @@ fun NodeTree(
     onActivatePayload: (TreeNodeState) -> Unit = {},
     onSelectNode: (TreeNodeKey) -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
+    onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     nodeActions: NodeActions? = null,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
@@ -135,6 +138,7 @@ fun NodeTree(
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,
                     onActivatePayload = { onActivatePayload(treeNodeState) },
+                    onCreateNode = onCreateNode,
                     appearAnimationProgress = appearAnimationProgress,
                 )
             }

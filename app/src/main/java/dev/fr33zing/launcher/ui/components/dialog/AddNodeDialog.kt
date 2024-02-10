@@ -26,7 +26,7 @@ import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
-fun AddNodeDialog(
+fun NodeKindPickerDialog(
     visible: MutableState<Boolean>,
     onDismissRequest: () -> Unit,
     onKindChosen: (NodeKind) -> Unit

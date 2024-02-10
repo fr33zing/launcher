@@ -6,7 +6,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.utility.notNull
@@ -19,6 +22,9 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -51,6 +57,19 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
 
     fun clearSelectedNode() {
         stateHolder.onClearSelectedNode()
+    }
+
+    fun createNode(
+        position: RelativeNodePosition,
+        kind: NodeKind,
+        callback: (nodeId: Int) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.Main).launch {
+            flow { emit(db.createNode(position, kind)) }
+                .flowOn(Dispatchers.IO)
+                .single()
+                .let(callback)
+        }
     }
 
     fun moveNodeToTrash(nodeId: Int) {

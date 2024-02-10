@@ -5,6 +5,8 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeRowFeatures
@@ -22,6 +24,7 @@ fun NodeRow(
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
+    onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
 ) {
@@ -68,6 +71,7 @@ fun NodeRow(
                                     onSelectNode,
                                     onClearSelectedNode,
                                     onActivatePayload,
+                                    onCreateNode,
                                     content = content
                                 )
                             else content()

@@ -45,8 +45,8 @@ import dev.fr33zing.launcher.data.utility.cast
 import dev.fr33zing.launcher.data.utility.castOrNull
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
-import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.sendNotice
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
@@ -60,6 +60,7 @@ class NodeActions(
     val move: (Int) -> Unit,
     val reorder: (Int) -> Unit,
     val edit: (Int) -> Unit,
+    val create: (Int) -> Unit,
 )
 
 @Immutable
