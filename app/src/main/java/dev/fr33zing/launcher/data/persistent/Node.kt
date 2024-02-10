@@ -74,7 +74,7 @@ interface NodeDao {
     suspend fun getChildNodes(nodeId: Int?): List<Node>
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
-    fun getChildNodesFlow(nodeId: Int?): Flow<List<Node>>
+    fun getChildNodesFlow(nodeId: Int): Flow<List<Node>>
 
     @Query(
         "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1"

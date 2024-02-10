@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
@@ -108,20 +109,25 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                     .getChildNodesFlow(treeNode.value.node.nodeId)
                                     .distinctUntilChangedBy { it.map { node -> node.nodeId } }
                                     .flatMapLatest { childNodes ->
-                                        val childNodeFlows =
-                                            childNodes.mapIndexed { index, childNode ->
-                                                traverse(
-                                                    depth = depth + 1,
-                                                    node = childNode,
-                                                    lastChild = index == childNodes.indices.last,
-                                                    permissions =
-                                                        permissions.adjustChildPermissions(
-                                                            treeNode.value.payload
-                                                        )
-                                                )
+                                        if (childNodes.isEmpty()) {
+                                            flowOf(emptyList<TreeNodeState>())
+                                        } else {
+                                            val childNodeFlows =
+                                                childNodes.mapIndexed { index, childNode ->
+                                                    traverse(
+                                                        depth = depth + 1,
+                                                        node = childNode,
+                                                        lastChild =
+                                                            index == childNodes.indices.last,
+                                                        permissions =
+                                                            permissions.adjustChildPermissions(
+                                                                treeNode.value.payload
+                                                            )
+                                                    )
+                                                }
+                                            combine(childNodeFlows) { arrayOfLists ->
+                                                arrayOfLists.toList().flatten()
                                             }
-                                        combine(childNodeFlows) { arrayOfLists ->
-                                            arrayOfLists.toList().flatten()
                                         }
                                     }
                             )
