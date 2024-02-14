@@ -2,21 +2,25 @@ package dev.fr33zing.launcher.ui.pages
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -37,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -63,7 +69,7 @@ import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.theme.typography
 import dev.fr33zing.launcher.ui.utility.mix
-import dev.fr33zing.launcher.ui.utility.wholeScreenVerticalScrollShadows
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import java.util.Date
 import kotlin.reflect.KProperty0
 import kotlinx.coroutines.CoroutineScope
@@ -71,9 +77,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private val sectionSpacing = 42.dp
+private val pageShadowHeight = 6.dp
+private val sectionSpacing = 38.dp
 private val sectionTitleSpacing = 4.dp
 private val sectionHeaderSpacing = 18.dp
+private val sectionHeaderShadowHeight = 12.dp
 private val preferenceSpacing = 20.dp
 private val inlineSpacing = 6.dp
 private val lineSpacing = 8.dp
@@ -83,24 +91,21 @@ fun Preferences(db: AppDatabase) {
     val preferences = Preferences(LocalContext.current)
 
     Box(
-        Modifier.fillMaxSize().systemBarsPadding().imePadding().wholeScreenVerticalScrollShadows()
+        Modifier.fillMaxSize()
+            .systemBarsPadding()
+            .imePadding()
+            .verticalScrollShadows(pageShadowHeight)
     ) {
-        Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(sectionSpacing),
-                modifier =
-                    Modifier.systemBarsPadding()
-                        .padding(horizontal = ScreenHorizontalPadding)
-                        .padding(top = lineSpacing, bottom = preferenceSpacing)
-                        .fillMaxSize()
-            ) {
-                ItemAppearanceSection(preferences)
-                HomeSection(preferences)
-                ConfirmationDialogsSection(preferences)
-                NoticesSection(preferences)
-                DebugSection(preferences)
-                BackupSection(db)
-            }
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = pageShadowHeight),
+            modifier = Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxSize()
+        ) {
+            itemAppearanceSection(preferences)
+            homeSection(preferences)
+            confirmationDialogsSection(preferences)
+            noticesSection(preferences)
+            debugSection(preferences)
+            backupSection(db)
         }
     }
 }
@@ -109,29 +114,45 @@ fun Preferences(db: AppDatabase) {
 // Common components
 //
 
-@Composable
-private fun Section(
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.section(
     name: String,
     description: String,
+    last: Boolean = false,
     children: @Composable () -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(sectionHeaderSpacing),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(sectionTitleSpacing),
-        ) {
-            Text(text = name, style = typography.titleLarge)
+    stickyHeader {
+        Column(Modifier.fillMaxWidth()) {
+            val modifier = Modifier.fillMaxWidth().background(Background)
+            Text(
+                text = name,
+                style = typography.titleLarge,
+                modifier = modifier.padding(top = pageShadowHeight)
+            )
+            Spacer(modifier.height(sectionTitleSpacing))
             Text(
                 text = description,
                 style = typography.bodyMedium,
-                color = Foreground.mix(Background, 0.5f)
+                color = Foreground.mix(Background, 0.5f),
+                modifier = modifier
+            )
+            Spacer(modifier.height(sectionHeaderSpacing - sectionHeaderShadowHeight))
+            Box(
+                Modifier.fillMaxWidth().height(sectionHeaderShadowHeight).drawWithCache {
+                    val brush = Brush.verticalGradient(0f to Background, 1f to Color.Transparent)
+                    onDrawBehind { drawRect(brush) }
+                }
             )
         }
+    }
+    item {
         Column(
             verticalArrangement = Arrangement.spacedBy(preferenceSpacing),
-            modifier = Modifier.fillMaxWidth()
+            modifier =
+                Modifier.fillMaxWidth()
+                    .absolutePadding(
+                        bottom = if (!last) sectionSpacing - pageShadowHeight else 0.dp
+                    )
         ) {
             children()
         }
@@ -328,9 +349,8 @@ private fun <T> ResetButton(
 // Section: Item appearance
 //
 
-@Composable
-private fun ItemAppearanceSection(preferences: Preferences) {
-    Section(
+private fun LazyListScope.itemAppearanceSection(preferences: Preferences) {
+    section(
         "Item appearance",
         "Adjust the style and layout of items in the tree view and on the home screen."
     ) {
@@ -344,9 +364,8 @@ private fun ItemAppearanceSection(preferences: Preferences) {
 // Section: Home
 //
 
-@Composable
-private fun HomeSection(preferences: Preferences) {
-    Section("Home", "Adjust the appearance and function of the home screen.") {
+private fun LazyListScope.homeSection(preferences: Preferences) {
+    section("Home", "Adjust the appearance and function of the home screen.") {
         PreferenceCheckbox(property = preferences.home::use24HourTime, label = "Use 24-hour time")
         ApplicationPreference(preferences.home.defaultApplications::clock, "Clock application")
         ApplicationPreference(
@@ -391,8 +410,7 @@ private fun ApplicationPreference(property: KProperty0<Preference<String, String
 // Section: Confirmation dialogs
 //
 
-@Composable
-private fun ConfirmationDialogsSection(preferences: Preferences) {
+private fun LazyListScope.confirmationDialogsSection(preferences: Preferences) {
     @Composable
     fun Subsection(label: String, children: @Composable () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
@@ -401,7 +419,7 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
         }
     }
 
-    Section(
+    section(
         "Confirmation dialogs",
         "Adjust which actions ask for additional confirmation, and under what circumstances."
     ) {
@@ -430,9 +448,8 @@ private fun ConfirmationDialogsSection(preferences: Preferences) {
 // Section: Notices
 //
 
-@Composable
-private fun NoticesSection(preferences: Preferences) {
-    Section("Notices", "Adjust the function of notices, i.e. informational messages.") {
+private fun LazyListScope.noticesSection(preferences: Preferences) {
+    section("Notices", "Adjust the function of notices, i.e. informational messages.") {
         PreferenceSlider(preferences.notices::durationSeconds, "Duration", 2f..8f, " seconds")
         PreferenceCheckbox(
             property = preferences.notices::positionAtTop,
@@ -445,9 +462,8 @@ private fun NoticesSection(preferences: Preferences) {
 // Section: Debug
 //
 
-@Composable
-private fun DebugSection(preferences: Preferences) {
-    Section("Debug", "These settings are only available to aid in development.") {
+private fun LazyListScope.debugSection(preferences: Preferences) {
+    section("Debug", "These settings are only available to aid in development.") {
         PreferenceCheckbox(property = preferences.debug::useNewTree, label = "Use new tree")
     }
 }
@@ -456,11 +472,11 @@ private fun DebugSection(preferences: Preferences) {
 // Section: Backup & restore
 //
 
-@Composable
-private fun BackupSection(db: AppDatabase) {
-    Section(
+private fun LazyListScope.backupSection(db: AppDatabase) {
+    section(
         "Backup & restore",
-        "Backup database and preferences into a ZIP archive. Restoring a backup will cause the application to restart."
+        "Backup database and preferences into a ZIP archive. Restoring a backup will cause the application to restart.",
+        last = true,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
