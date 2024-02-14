@@ -80,7 +80,6 @@ fun NodeTree(
         }
     val animation =
         object {
-
             val progressMap = remember {
                 mutableStateMapOf<TreeNodeKey, Animatable<Float, AnimationVector1D>>()
             }

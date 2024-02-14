@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.tree
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -52,6 +53,8 @@ fun NodeInteractions(
             }
         }
     val selected = treeNodeState.key == treeState?.selectedKey
+
+    BackHandler(enabled = selected) { onClearSelectedNode() }
 
     @Composable
     fun nodeRow() {
