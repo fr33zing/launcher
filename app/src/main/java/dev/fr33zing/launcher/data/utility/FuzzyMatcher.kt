@@ -11,14 +11,20 @@ fun <T> rememberFuzzyMatcher(elements: List<T>, toStringFn: (T) -> String) = rem
 class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
     data class Substring(val text: String, val matches: Boolean, val index: Int)
 
-    data class Result<T>(val score: Int, val substrings: List<Substring>, val element: T)
+    data class Result<T>(val score: Int, val substrings: List<Substring>, val element: T) {
+        fun <R> transform(transform: (T) -> R) = Result(score, substrings, transform(this.element))
+    }
 
     private val elementStrings = elements.associateWith { toStringFn(it) }
 
-    fun match(query: String): List<Result<T>> =
+    fun match(
+        query: String,
+        filterPredicate: (T) -> Boolean = { true },
+    ): List<Result<T>> =
         if (query.isEmpty()) listOf()
         else
             elementStrings
+                .filter { filterPredicate(it.key) }
                 .map { (element, elementString) ->
                     data class Match(var start: Int = 0, var length: Int = 0)
 

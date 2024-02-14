@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import dev.fr33zing.launcher.data.AllPermissions
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionMap
@@ -53,9 +54,9 @@ data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
 
 @Immutable
 data class TreeNodeState(
-    val depth: Int,
-    val showChildren: State<Boolean?>,
-    val lastChild: Boolean,
+    val depth: Int = 0,
+    val showChildren: State<Boolean?> = mutableStateOf(false),
+    val lastChild: Boolean = false,
     val permissions: PermissionMap,
     val value: ReferenceFollowingNodePayloadState,
     val flow: Lazy<Flow<TreeNodeState>>

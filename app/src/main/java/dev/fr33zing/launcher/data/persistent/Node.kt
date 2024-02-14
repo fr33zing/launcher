@@ -53,6 +53,8 @@ interface NodeDao {
 
     @Query("SELECT nodeId, kind, label FROM Node") suspend fun getAllMinimal(): List<NodeMinimal>
 
+    @Query("SELECT * FROM Node") fun getAllFlow(): Flow<List<Node>>
+
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
 
     @Query("SELECT * FROM Node WHERE label == :label")
