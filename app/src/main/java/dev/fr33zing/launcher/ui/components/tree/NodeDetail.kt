@@ -87,8 +87,7 @@ fun NodeDetail(
             }
         }
     val iconSize = remember { 1f }
-    val textDecoration =
-        remember(lineThrough) { if (lineThrough) TextDecoration.LineThrough else null }
+    val textDecoration = if (lineThrough) TextDecoration.LineThrough else null
 
     Icon(
         icon,
