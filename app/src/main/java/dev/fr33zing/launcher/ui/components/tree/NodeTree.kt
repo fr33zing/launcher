@@ -53,6 +53,8 @@ import kotlinx.coroutines.launch
 private const val APPEAR_ANIMATION_DURATION_MS = 350
 private const val USE_LAZY_COLUMN = true
 
+private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVector1D>?>
+
 @Immutable data class AdjacentTreeNodeStates(val above: TreeNodeState?, val below: TreeNodeState?)
 
 @Composable
@@ -128,10 +130,21 @@ fun NodeTree(
         ) {
             @Composable
             fun listItem(
-                adjacentTreeNodeStates: AdjacentTreeNodeStates,
+                listItems: List<ListItem>,
+                index: Int,
                 initialTreeNodeState: TreeNodeState,
                 appearAnimationProgress: Animatable<Float, AnimationVector1D>?
             ) {
+                val adjacentTreeNodeStates by
+                    remember(listItems, index) {
+                        derivedStateOf {
+                            AdjacentTreeNodeStates(
+                                above = listItems.getOrNull(index - 1)?.first,
+                                below = listItems.getOrNull(index + 1)?.first,
+                            )
+                        }
+                    }
+
                 val treeNodeState by
                     initialTreeNodeState.flow.value.collectAsStateWithLifecycle(
                         initialTreeNodeState
@@ -166,7 +179,7 @@ fun NodeTree(
                     }
                 }
 
-            val listItems by
+            val listItems: List<ListItem> by
                 remember(treeNodeList) {
                     derivedStateOf { treeNodeList.map { Pair(it, animation.progress(it.key)) } }
                 }
@@ -182,20 +195,7 @@ fun NodeTree(
                         key = { _, item -> item.first.key },
                         contentType = { _, item -> item.first.underlyingNodeKind }
                     ) { index, (initialTreeNodeState, appearAnimationProgress) ->
-                        val adjacentTreeNodeStates by
-                            remember(listItems, index) {
-                                derivedStateOf {
-                                    AdjacentTreeNodeStates(
-                                        above = listItems.getOrNull(index - 1)?.first,
-                                        below = listItems.getOrNull(index + 1)?.first,
-                                    )
-                                }
-                            }
-                        listItem(
-                            adjacentTreeNodeStates,
-                            initialTreeNodeState,
-                            appearAnimationProgress
-                        )
+                        listItem(listItems, index, initialTreeNodeState, appearAnimationProgress)
                     }
                 }
             } else {
@@ -208,17 +208,9 @@ fun NodeTree(
                         index,
                         (initialTreeNodeState, appearAnimationProgress) ->
                         key(initialTreeNodeState.key) {
-                            val adjacentTreeNodeStates by
-                                remember(listItems, index) {
-                                    derivedStateOf {
-                                        AdjacentTreeNodeStates(
-                                            above = listItems.getOrNull(index - 1)?.first,
-                                            below = listItems.getOrNull(index + 1)?.first,
-                                        )
-                                    }
-                                }
                             listItem(
-                                adjacentTreeNodeStates,
+                                listItems,
+                                index,
                                 initialTreeNodeState,
                                 appearAnimationProgress
                             )
