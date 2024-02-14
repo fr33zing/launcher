@@ -86,14 +86,13 @@ fun NodeDetail(
                 }
             }
         }
-    val iconSize = remember { 1f }
     val textDecoration = if (lineThrough) TextDecoration.LineThrough else null
 
     Icon(
         icon,
         contentDescription = null,
         tint = color,
-        modifier = Modifier.size(lineHeight * iconSize),
+        modifier = Modifier.size(lineHeight),
     )
     Text(
         text = text,
