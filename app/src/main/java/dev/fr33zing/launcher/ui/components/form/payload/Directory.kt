@@ -19,29 +19,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.viewmodel.payload.EditDirectoryViewModel
 import dev.fr33zing.launcher.ui.components.form.EditFormColumn
-import dev.fr33zing.launcher.ui.components.form.OutlinedValue
+import dev.fr33zing.launcher.ui.components.form.NodePath
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
-fun DirectoryEditForm(arguments: EditFormArguments) {
+fun DirectoryEditForm(
+    arguments: EditFormArguments,
+    viewModel: EditDirectoryViewModel = hiltViewModel(),
+) {
     val (padding, node, payload) = arguments
     val directory = payload as Directory
 
     EditFormColumn(padding) {
         val labelState = remember { mutableStateOf(node.label) }
         OutlinedValue(label = "Path", modifier = Modifier.fillMaxWidth()) { padding ->
-            //            NodePath(
-            //                db,
-            //                node,
-            //                lastNodeLabelState = labelState,
-            //                modifier = Modifier.padding(padding)
-            //            )
+            val nodeLineage = remember(labelState.value) { viewModel.nodePath + listOf(node) }
+            NodePath(nodeLineage, modifier = Modifier.padding(padding))
         }
         NodePropertyTextField(node::label, state = labelState)
         InitialState(directory)
@@ -50,7 +52,7 @@ fun DirectoryEditForm(arguments: EditFormArguments) {
 
 @Composable
 private fun InitialState(directory: Directory) {
-    val radioOptions = Directory.InitialVisibility.values()
+    val radioOptions = Directory.InitialVisibility.entries
     val selectedOption = remember { mutableStateOf(directory.initialVisibility) }
 
     OutlinedValue(
