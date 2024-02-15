@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadState
@@ -103,9 +102,6 @@ private fun TraverseUpRow(
     enabled: Boolean,
     horizontalPadding: Dp,
     onTraverseUp: () -> Unit,
-    fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
-    spacing: Dp = LocalNodeDimensions.current.spacing,
-    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val label = remember { ".." }
