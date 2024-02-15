@@ -64,7 +64,7 @@ fun NodeRow(
 
     @Composable
     fun Interactions(content: @Composable () -> Unit) =
-        if (hasFeature.interactive && nodeActions != null)
+        if (!simple && hasFeature.interactive && nodeActions != null)
             NodeInteractions(
                 treeState,
                 treeNodeState,
@@ -85,9 +85,5 @@ fun NodeRow(
             NodeAppearAnimation(appearAnimationProgress, content)
         else content()
 
-    if (simple) {
-        Providers { Animation { Detail() } }
-    } else {
-        Providers { Animation { Interactions { Detail() } } }
-    }
+    Providers { Animation { Interactions { Detail() } } }
 }
