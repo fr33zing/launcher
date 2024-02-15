@@ -29,8 +29,6 @@ import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
-const val DOUBLE_TAP_DELAY: Long = 300
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NodeInteractions(
