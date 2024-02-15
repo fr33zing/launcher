@@ -81,7 +81,7 @@ fun NodeInteractions(
                         if (!requireDoubleTapToActivate) onActivatePayload()
                         else
                             sendNotice(
-                                "double-tap-to-activate:${treeNodeState.key}",
+                                "double-tap-to-activate-node",
                                 requireDoubleTapToActivateMessage
                                     ?: throw Exception("requireDoubleTapToActivateMessage is null")
                             )
