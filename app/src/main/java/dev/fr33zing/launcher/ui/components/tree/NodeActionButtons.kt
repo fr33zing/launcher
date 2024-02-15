@@ -3,10 +3,6 @@ package dev.fr33zing.launcher.ui.components.tree
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -24,13 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -181,41 +177,53 @@ class NodeActionButtonKind(
     @Composable
     private fun ActionButton(clearSelectedNode: () -> Unit, action: () -> Unit) {
         val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color = color, circular = true)
+        val indication =
+            rememberCustomIndication(color = color, circular = true, circularSizeFactor = 1.2f)
         val fontSize = LocalNodeDimensions.current.fontSize
         val lineHeight = LocalNodeDimensions.current.lineHeight
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier =
-                Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = indication,
-                    onClick = {
-                        clearSelectedNode()
-                        action()
-                    }
-                )
+        NodeActionButtonLayout(
+            Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = indication,
+                onClick = {
+                    clearSelectedNode()
+                    action()
+                }
+            )
         ) {
-            Column(
-                verticalArrangement =
-                    Arrangement.spacedBy(lineHeight * 0.125f, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.aspectRatio(1f, true)
-            ) {
-                Icon(
-                    icon,
-                    label,
-                    tint = color,
-                    modifier = Modifier.size(lineHeight * 1.15f),
-                )
-                Text(
-                    label,
-                    fontSize = fontSize * 0.65f,
-                    fontWeight = FontWeight.Bold,
-                    color = color,
-                    overflow = TextOverflow.Visible,
-                    softWrap = false,
+            Icon(
+                icon,
+                label,
+                tint = color,
+                modifier = Modifier.size(lineHeight * 1.15f),
+            )
+            Text(
+                label,
+                fontSize = fontSize * 0.65f,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                overflow = TextOverflow.Visible,
+                softWrap = false,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NodeActionButtonLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(modifier = modifier, content = content) { measurables, constraints ->
+        val placeables =
+            measurables.map { it.measure(Constraints(maxHeight = constraints.minHeight)) }
+        layout(constraints.maxWidth, constraints.minHeight) {
+            placeables.forEachIndexed { index, placeable ->
+                placeable.placeRelative(
+                    x = constraints.maxWidth / 2 - placeable.width / 2,
+                    y = if (index == 0) 0 else constraints.maxHeight - placeable.height
                 )
             }
         }
@@ -237,7 +245,7 @@ fun NodeActionButtonRow(
             NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions, onClearSelectedNode)
         }
 
-    NodeActionButtonsLayout(
+    NodeActionButtonRowLayout(
         Modifier.fillMaxHeight().background(Background.copy(alpha = 0.75f)).blockPointerEvents()
     ) {
         visibleActions.forEach { it.component(it, componentArguments) }
@@ -245,21 +253,24 @@ fun NodeActionButtonRow(
 }
 
 @Composable
-private fun NodeActionButtonsLayout(
+private fun NodeActionButtonRowLayout(
     modifier: Modifier = Modifier,
+    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
+    spacing: Dp = LocalNodeDimensions.current.spacing,
     content: @Composable () -> Unit,
 ) {
     Layout(modifier = modifier, content = content) { measurables, constraints ->
-        val square = Constraints.fixed(constraints.minHeight, constraints.minHeight)
+        val singleLineItemHeight = (spacing + lineHeight).toPx().toInt()
+        val square = Constraints.fixed(singleLineItemHeight, singleLineItemHeight)
         val placeables = measurables.map { it.measure(square) }
         layout(constraints.maxWidth, constraints.minHeight) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
                     x =
-                        ((constraints.maxWidth / placeables.size * (index + 0.5f)) -
+                        (constraints.maxWidth / placeables.size * (index + 0.5f) -
                                 placeable.width / 2)
                             .toInt(),
-                    y = 0
+                    y = constraints.maxHeight / 2 - placeable.height / 2
                 )
             }
         }
