@@ -85,12 +85,13 @@ class NodeActionButtonKind(
                     },
                 ) { (state, actions, clearSelectedNode) ->
                     val node = remember(state) { state.value.underlyingState.node }
-                    ActionButton(clearSelectedNode) {
+                    ActionButton {
                         sendNotice(
                             "moved-to-trash:${node.nodeId}",
                             "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash."
                         )
                         actions.trash(state.underlyingNodeId)
+                        clearSelectedNode()
                     }
                 },
 
@@ -113,9 +114,12 @@ class NodeActionButtonKind(
                         yesIcon = Icons.Filled.Dangerous,
                         noText = "Don't empty trash",
                         noIcon = Icons.Filled.ArrowBack,
-                        onYes = { actions.delete(state.underlyingNodeId) },
+                        onYes = {
+                            actions.delete(state.underlyingNodeId)
+                            clearSelectedNode()
+                        },
                     )
-                    ActionButton(clearSelectedNode) { dialogVisible.value = true }
+                    ActionButton { dialogVisible.value = true }
                 },
 
                 // Move node
@@ -137,7 +141,10 @@ class NodeActionButtonKind(
                             )
                     },
                 ) { (state, actions, clearSelectedNode) ->
-                    ActionButton(clearSelectedNode) { actions.move(state.underlyingNodeId) }
+                    ActionButton {
+                        actions.move(state.underlyingNodeId)
+                        clearSelectedNode()
+                    }
                 },
 
                 // Reorder nodes
@@ -146,7 +153,10 @@ class NodeActionButtonKind(
                     icon = Icons.Outlined.SwapVert,
                     visible = { true },
                 ) { (state, actions, clearSelectedNode) ->
-                    ActionButton(clearSelectedNode) { actions.reorder(state.underlyingNodeId) }
+                    ActionButton {
+                        actions.reorder(state.underlyingNodeId)
+                        clearSelectedNode()
+                    }
                 },
 
                 // Edit node
@@ -157,7 +167,10 @@ class NodeActionButtonKind(
                         state.permissions.hasPermission(PermissionKind.Edit, PermissionScope.Self)
                     },
                 ) { (state, actions, clearSelectedNode) ->
-                    ActionButton(clearSelectedNode) { actions.edit(state.underlyingNodeId) }
+                    ActionButton {
+                        actions.edit(state.underlyingNodeId)
+                        clearSelectedNode()
+                    }
                 },
 
                 // View application info
@@ -167,15 +180,16 @@ class NodeActionButtonKind(
                     visible = { it.value.node.kind == NodeKind.Application },
                 ) { (state, _, clearSelectedNode) ->
                     val context = LocalContext.current
-                    ActionButton(clearSelectedNode) {
+                    ActionButton {
                         state.value.payload.cast<Application>().openInfo(context)
+                        clearSelectedNode()
                     }
                 }
             )
     }
 
     @Composable
-    private fun ActionButton(clearSelectedNode: () -> Unit, action: () -> Unit) {
+    private fun ActionButton(action: () -> Unit) {
         val interactionSource = remember { MutableInteractionSource() }
         val indication =
             rememberCustomIndication(color = color, circular = true, circularSizeFactor = 1.2f)
@@ -186,10 +200,7 @@ class NodeActionButtonKind(
             Modifier.clickable(
                 interactionSource = interactionSource,
                 indication = indication,
-                onClick = {
-                    clearSelectedNode()
-                    action()
-                }
+                onClick = action
             )
         ) {
             Icon(
