@@ -238,6 +238,8 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                         )
                     )
 
+                    nodeDao().getChildNodes(parentId).fixOrder().let { updateMany(it) }
+
                     if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
                     lastNodeId
                 }
@@ -288,6 +290,7 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
     withTransaction {
         deleteMany(nodes)
         payloads.forEach { delete(it) }
+        nodeDao().getChildNodes(node.parentId ?: ROOT_NODE_ID).fixOrder().let { updateMany(it) }
     }
     NodeDeletedSubject.onNext(
         Pair(
