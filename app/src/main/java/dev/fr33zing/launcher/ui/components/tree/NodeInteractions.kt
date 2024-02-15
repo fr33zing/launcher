@@ -23,10 +23,13 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
+import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
+
+const val DOUBLE_TAP_DELAY: Long = 300
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -59,14 +62,31 @@ fun NodeInteractions(
     @Composable
     fun nodeRow() {
         NodeInteractionsLayout {
+            val requireDoubleTapToActivateMessage =
+                remember(treeNodeState.value.node.kind) {
+                    treeNodeState.value.node.kind.requiresDoubleTapToActivate()
+                }
+            val requireDoubleTapToActivate =
+                remember(requireDoubleTapToActivateMessage) {
+                    requireDoubleTapToActivateMessage != null
+                }
+
             Box(
                 Modifier.combinedClickable(
                     interactionSource = interactionSource,
                     indication = indication,
                     onClick = {
                         onClearSelectedNode()
-                        onActivatePayload()
+
+                        if (!requireDoubleTapToActivate) onActivatePayload()
+                        else
+                            sendNotice(
+                                "double-tap-to-activate:${treeNodeState.key}",
+                                requireDoubleTapToActivateMessage
+                                    ?: throw Exception("requireDoubleTapToActivateMessage is null")
+                            )
                     },
+                    onDoubleClick = if (requireDoubleTapToActivate) onActivatePayload else null,
                     onLongClick = onSelectNode
                 )
             ) {

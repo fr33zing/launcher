@@ -195,6 +195,16 @@ enum class NodeKind {
             Setting -> "Setting"
         }
 
+    /**
+     * Determines if a NodeKind requires a double tap to activate. The return value is used as a
+     * message to the user. If null, the NodeKind does not require a double tap.
+     */
+    fun requiresDoubleTapToActivate(): String? =
+        when (this) {
+            Checkbox -> "Double tap to toggle this checkbox."
+            else -> null
+        }
+
     val color
         get() = color()
 
