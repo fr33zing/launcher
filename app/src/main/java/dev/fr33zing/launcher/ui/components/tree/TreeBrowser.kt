@@ -153,7 +153,7 @@ private fun TreeBrowserRow(
             Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
         ) {
             NodeDetail(
-                label = state.node.label,
+                label = state.underlyingState.node.label,
                 isValidReference = state.isValidReference,
                 textModifier = Modifier.weight(1f)
             )
