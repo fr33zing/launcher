@@ -16,16 +16,24 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import dev.fr33zing.launcher.ui.components.sendNotice
+import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
+import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
 fun CancelButton(onClick: () -> Unit) =
-    FormButton(color = Catppuccin.Current.red, Icons.Filled.Close, onClick)
+    FormButton(Catppuccin.Current.red, Icons.Filled.Close, onClick)
 
 @Composable
-fun FinishButton(onClick: () -> Unit) =
-    FormButton(color = Catppuccin.Current.green, Icons.Filled.Check, onClick)
+fun FinishButton(disableReason: String? = null, onClick: () -> Unit) =
+    disableReason?.let {
+        FormButton(Background.mix(Foreground, 0.25f), Icons.Filled.Check) {
+            sendNotice("saving-disabled-reason", disableReason)
+        }
+    } ?: FormButton(Catppuccin.Current.green, Icons.Filled.Check, onClick)
 
 @Composable
 fun FormButton(color: Color, icon: ImageVector, onClick: () -> Unit) {

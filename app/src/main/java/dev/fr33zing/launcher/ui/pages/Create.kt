@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -21,10 +22,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.CreateViewModel
-import dev.fr33zing.launcher.ui.components.form.CancelButton
-import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.form.CancelButton
+import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.form.NodeEditForm
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 
@@ -38,6 +39,17 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
     val preferences = Preferences(LocalContext.current)
     val askOnAccept by preferences.confirmationDialogs.createNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.createNode.askOnReject.state
+
+    // If non-null, the save button will be disabled and tapping it will show the value in a notice.
+    var disableSavingReason by remember { mutableStateOf<String?>(null) }
+
+    fun disableSaving(message: String) {
+        disableSavingReason = message
+    }
+
+    fun enableSaving() {
+        disableSavingReason = null
+    }
 
     fun cancelChanges() {
         viewModel.cancelChanges(navigateBack)
@@ -91,13 +103,15 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
                     CancelButton {
                         if (askOnReject) cancelDialogVisible.value = true else cancelChanges()
                     }
-                    FinishButton {
+                    FinishButton(disableSavingReason) {
                         if (askOnAccept) saveDialogVisible.value = true else commitChanges()
                     }
                 },
             )
         }
     ) { padding ->
-        nodePayload?.let { (node, payload) -> NodeEditForm(EditFormArguments(padding, node, payload)) }
+        nodePayload?.let { (node, payload) ->
+            NodeEditForm(EditFormArguments(padding, node, payload, ::disableSaving, ::enableSaving))
+        }
     }
 }
