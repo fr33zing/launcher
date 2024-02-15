@@ -16,6 +16,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
+import dev.fr33zing.launcher.data.UnlabeledNodeColor
+import dev.fr33zing.launcher.data.UnlabeledNodeText
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import kotlin.text.Typography.nbsp
@@ -43,21 +45,18 @@ fun NodePath(
                 }
         )
     }
-    val annotatedString =
-        // HACK: does not update without toList
-        remember(nodeLineage.toList()) {
-            buildAnnotatedString {
-                nodeLineage.forEachIndexed { index, node ->
-                    // Don't show root node
-                    if (node.nodeId == ROOT_NODE_ID) return@forEachIndexed
+    val annotatedString = buildAnnotatedString {
+        nodeLineage.forEachIndexed { index, node ->
+            // Don't show root node
+            if (node.nodeId == ROOT_NODE_ID) return@forEachIndexed
 
-                    withStyle(SpanStyle(color = node.kind.color)) {
-                        append(node.label.replace(' ', nbsp))
-                    }
-                    if (index < nodeLineage.size - 1) appendInlineContent("delimiter", ">")
-                }
-            }
+            val color = if (node.label.isBlank()) UnlabeledNodeColor else node.kind.color
+            val label = node.label.ifBlank { UnlabeledNodeText }
+
+            withStyle(SpanStyle(color = color)) { append(label.replace(' ', nbsp)) }
+            if (index < nodeLineage.size - 1) appendInlineContent("delimiter", ">")
         }
+    }
 
     Text(text = annotatedString, inlineContent = inlineContents, modifier = modifier)
 }

@@ -52,7 +52,7 @@ fun NodeRow(
 
     @Composable
     fun Detail() =
-        NodeDetailContainer(treeNodeState.depth) {
+        NodeDetailContainer(depth = treeNodeState.depth) {
             NodeDetail(
                 label =
                     if (treeNodeState.value.isValidReference)

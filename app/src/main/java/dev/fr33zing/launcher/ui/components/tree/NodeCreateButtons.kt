@@ -159,13 +159,14 @@ fun NodeCreateButton(
         val indication = rememberCustomIndication(color)
 
         NodeDetailContainer(
-            depth,
-            Modifier.clickable(
-                interactionSource,
-                indication,
-                enabled = visible,
-                onClick = onClickFn
-            )
+            depth = depth,
+            modifier =
+                Modifier.clickable(
+                    interactionSource,
+                    indication,
+                    enabled = visible,
+                    onClick = onClickFn
+                )
         ) {
             NodeDetail(label, color = color, icon = icon, lineThrough = false)
         }

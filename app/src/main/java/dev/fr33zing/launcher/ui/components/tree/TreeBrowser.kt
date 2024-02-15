@@ -12,33 +12,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.SubdirectoryArrowLeft
 import androidx.compose.material.icons.outlined.SubdirectoryArrowRight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
-import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeBrowserStateHolder
-import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
@@ -56,53 +53,44 @@ fun TreeBrowser(
 ) {
     val state by stateHolder.flow.collectAsStateWithLifecycle(null)
 
-    val preferences = Preferences(LocalContext.current)
-    val fontSize by preferences.nodeAppearance.fontSize.state
-    val spacing by preferences.nodeAppearance.spacing.state
-    val lineHeight = with(LocalDensity.current) { fontSize.toDp() }
-
     if (state == null) return
 
     BackHandler(enabled = state!!.canTraverseUpward) { stateHolder.traverseUpward() }
 
-    AnimatedContent(
-        targetState = state!!,
-        label = "tree browser",
-        transitionSpec = {
-            val direction = state!!.direction.depthChange
-            fadeIn() + slideInHorizontally { it * direction } togetherWith
-                fadeOut() + slideOutHorizontally { -it * direction }
-        },
-        modifier = modifier,
-    ) { targetState ->
-        val children by targetState.children.flow.collectAsStateWithLifecycle(emptyArray())
-        Column(
-            verticalArrangement = if (center) Arrangement.Center else Arrangement.Top,
-            modifier = if (center) Modifier.fillMaxSize() else Modifier.fillMaxWidth()
-        ) {
-            if (targetState.canTraverseUpward) {
-                TraverseUpRow(
-                    enabled = !transition.isRunning,
-                    horizontalPadding = horizontalPadding,
-                    fontSize = fontSize,
-                    spacing = spacing,
-                    lineHeight = lineHeight,
-                    onTraverseUp = stateHolder::traverseUpward
-                )
-            }
-
-            for (nodePayload in children) {
-                key(nodePayload.node.nodeId) {
-                    TreeBrowserRow(
+    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
+        AnimatedContent(
+            targetState = state!!,
+            label = "tree browser",
+            transitionSpec = {
+                val direction = state!!.direction.depthChange
+                fadeIn() + slideInHorizontally { it * direction } togetherWith
+                    fadeOut() + slideOutHorizontally { -it * direction }
+            },
+            modifier = modifier,
+        ) { targetState ->
+            val children by targetState.children.flow.collectAsStateWithLifecycle(emptyArray())
+            Column(
+                verticalArrangement = if (center) Arrangement.Center else Arrangement.Top,
+                modifier = if (center) Modifier.fillMaxSize() else Modifier.fillMaxWidth()
+            ) {
+                if (targetState.canTraverseUpward) {
+                    TraverseUpRow(
                         enabled = !transition.isRunning,
-                        state = nodePayload,
                         horizontalPadding = horizontalPadding,
-                        fontSize = fontSize,
-                        spacing = spacing,
-                        lineHeight = lineHeight,
-                        onNodeSelected = { stateHolder.selectNode(nodePayload) },
-                    ) {
-                        additionalRowContent(nodePayload)
+                        onTraverseUp = stateHolder::traverseUpward
+                    )
+                }
+
+                for (nodePayload in children) {
+                    key(nodePayload.node.nodeId) {
+                        TreeBrowserRow(
+                            enabled = !transition.isRunning,
+                            state = nodePayload,
+                            horizontalPadding = horizontalPadding,
+                            onNodeSelected = { stateHolder.selectNode(nodePayload) },
+                        ) {
+                            additionalRowContent(nodePayload)
+                        }
                     }
                 }
             }
@@ -114,10 +102,10 @@ fun TreeBrowser(
 private fun TraverseUpRow(
     enabled: Boolean,
     horizontalPadding: Dp,
-    fontSize: TextUnit,
-    spacing: Dp,
-    lineHeight: Dp,
     onTraverseUp: () -> Unit,
+    fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
+    spacing: Dp = LocalNodeDimensions.current.spacing,
+    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val label = remember { ".." }
@@ -131,22 +119,15 @@ private fun TraverseUpRow(
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color)
 
-    Row(
-        modifier =
-            Modifier.clickable(interactionSource, indication) { if (enabled) onTraverseUp() }
-                .padding(horizontal = horizontalPadding, vertical = spacing / 2)
-                .fillMaxWidth()
+    NodeDetailContainer(
+        Modifier.clickable(interactionSource, indication) { if (enabled) onTraverseUp() }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            NodeIconAndText(
-                fontSize = fontSize,
-                lineHeight = lineHeight,
-                label = label,
-                color = color,
-                icon = icon,
-                textModifier = Modifier.weight(1f),
-            )
-        }
+        NodeDetail(
+            label = label,
+            color = color,
+            icon = icon,
+            textModifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -155,40 +136,29 @@ private fun TreeBrowserRow(
     enabled: Boolean,
     state: ReferenceFollowingNodePayloadState,
     horizontalPadding: Dp,
-    fontSize: TextUnit,
-    spacing: Dp,
-    lineHeight: Dp,
     onNodeSelected: () -> Unit,
     additionalContent: @Composable () -> Unit,
 ) {
-    val (node) = state
-    val nodeAppearance =
-        rememberNodeAppearance(
-            nodePayload = state,
-            ignoreState = node.kind == NodeKind.Directory,
-        )
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(nodeAppearance.color)
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier =
-            Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
-                .padding(horizontal = horizontalPadding, vertical = spacing / 2)
-                .fillMaxWidth()
+    CompositionLocalProvider(
+        LocalNodeAppearance provides
+            rememberNodeAppearance(
+                nodePayload = state,
+                ignoreState = state.node.kind == NodeKind.Directory,
+            )
     ) {
-        NodeIconAndText(
-            fontSize = fontSize,
-            lineHeight = lineHeight,
-            label = node.label,
-            color = nodeAppearance.color,
-            icon = nodeAppearance.icon,
-            lineThrough = nodeAppearance.lineThrough,
-            isValidReference = state.isValidReference,
-            textModifier = Modifier.weight(1f),
-        )
+        val interactionSource = remember { MutableInteractionSource() }
+        val indication = rememberCustomIndication(LocalNodeAppearance.current.color)
 
-        additionalContent()
+        NodeDetailContainer(
+            Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
+        ) {
+            NodeDetail(
+                label = state.node.label,
+                isValidReference = state.isValidReference,
+                textModifier = Modifier.weight(1f)
+            )
+
+            additionalContent()
+        }
     }
 }

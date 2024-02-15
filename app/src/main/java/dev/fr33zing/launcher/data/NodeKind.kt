@@ -35,6 +35,9 @@ private val directoryColor = Catppuccin.Current.sapphire
 private val rootDirectoryColor = Foreground.mix(Background, 0.5f)
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
 
+val UnlabeledNodeColor = Foreground.mix(Background, 0.5f)
+const val UnlabeledNodeText = "<Blank>"
+
 enum class NodeKind {
     /** Like a symbolic link */
     Reference,

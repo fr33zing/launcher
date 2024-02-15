@@ -29,17 +29,19 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.UnlabeledNodeColor
+import dev.fr33zing.launcher.data.UnlabeledNodeText
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 
 @Composable
 fun NodeDetailContainer(
-    depth: Int,
     modifier: Modifier = Modifier,
+    depth: Int = 0,
     spacing: Dp = LocalNodeDimensions.current.spacing,
     indent: Dp = LocalNodeDimensions.current.indent,
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable() (RowScope.() -> Unit),
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -79,7 +81,9 @@ fun NodeDetail(
     val text =
         remember(label) {
             buildAnnotatedString {
-                append(label)
+                if (label.isNotBlank()) append(label)
+                else withStyle(SpanStyle(color = UnlabeledNodeColor)) { append(UnlabeledNodeText) }
+
                 if (isValidReference) {
                     withStyle(SpanStyle(textDecoration = TextDecoration.None)) { append("  ") }
                     appendInlineContent("reference", "→")
