@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -112,6 +113,8 @@ fun NodeTree(
     /** Used to check for scrollable content overflow */
     var containerHeight by remember { mutableStateOf<Int?>(null) }
     var scrollableContentOverflow by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { onClearSelectedNode() }
 
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         Box(

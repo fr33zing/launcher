@@ -93,7 +93,7 @@ fun NodeInteractions(
 
             if (hasFeature.ACTION_BUTTONS)
                 AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
-                    NodeActionButtonRow(nodeActions, treeNodeState, onClearSelectedNode)
+                    NodeActionButtonRow(nodeActions, treeNodeState)
                 }
         }
     }

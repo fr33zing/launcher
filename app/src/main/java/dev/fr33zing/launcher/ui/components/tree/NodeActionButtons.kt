@@ -70,7 +70,6 @@ class NodeActionButtonKind(
     data class ComponentArguments(
         val state: TreeNodeState,
         val actions: NodeActions,
-        val clearSelectedNode: () -> Unit
     )
 
     companion object {
@@ -83,7 +82,7 @@ class NodeActionButtonKind(
                     visible = {
                         it.permissions.hasPermission(PermissionKind.Delete, PermissionScope.Self)
                     },
-                ) { (state, actions, clearSelectedNode) ->
+                ) { (state, actions) ->
                     val node = remember(state) { state.value.underlyingState.node }
                     ActionButton {
                         sendNotice(
@@ -91,7 +90,6 @@ class NodeActionButtonKind(
                             "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash."
                         )
                         actions.trash(state.underlyingNodeId)
-                        clearSelectedNode()
                     }
                 },
 
@@ -104,7 +102,7 @@ class NodeActionButtonKind(
                         state.value.payload.castOrNull<Directory>()?.specialMode ==
                             Directory.SpecialMode.Trash
                     },
-                ) { (state, actions, clearSelectedNode) ->
+                ) { (state, actions) ->
                     val dialogVisible = remember { mutableStateOf(false) }
                     YesNoDialog(
                         visible = dialogVisible,
@@ -114,10 +112,7 @@ class NodeActionButtonKind(
                         yesIcon = Icons.Filled.Dangerous,
                         noText = "Don't empty trash",
                         noIcon = Icons.Filled.ArrowBack,
-                        onYes = {
-                            actions.delete(state.underlyingNodeId)
-                            clearSelectedNode()
-                        },
+                        onYes = { actions.delete(state.underlyingNodeId) },
                     )
                     ActionButton { dialogVisible.value = true }
                 },
@@ -140,11 +135,8 @@ class NodeActionButtonKind(
                                 PermissionScope.Self
                             )
                     },
-                ) { (state, actions, clearSelectedNode) ->
-                    ActionButton {
-                        actions.move(state.underlyingNodeId)
-                        clearSelectedNode()
-                    }
+                ) { (state, actions) ->
+                    ActionButton { actions.move(state.underlyingNodeId) }
                 },
 
                 // Reorder nodes
@@ -152,11 +144,8 @@ class NodeActionButtonKind(
                     label = "Reorder",
                     icon = Icons.Outlined.SwapVert,
                     visible = { true },
-                ) { (state, actions, clearSelectedNode) ->
-                    ActionButton {
-                        actions.reorder(state.underlyingNodeId)
-                        clearSelectedNode()
-                    }
+                ) { (state, actions) ->
+                    ActionButton { actions.reorder(state.underlyingNodeId) }
                 },
 
                 // Edit node
@@ -166,11 +155,8 @@ class NodeActionButtonKind(
                     visible = { state ->
                         state.permissions.hasPermission(PermissionKind.Edit, PermissionScope.Self)
                     },
-                ) { (state, actions, clearSelectedNode) ->
-                    ActionButton {
-                        actions.edit(state.underlyingNodeId)
-                        clearSelectedNode()
-                    }
+                ) { (state, actions) ->
+                    ActionButton { actions.edit(state.underlyingNodeId) }
                 },
 
                 // View application info
@@ -178,12 +164,9 @@ class NodeActionButtonKind(
                     label = "Info",
                     icon = Icons.Outlined.Info,
                     visible = { it.value.node.kind == NodeKind.Application },
-                ) { (state, _, clearSelectedNode) ->
+                ) { (state) ->
                     val context = LocalContext.current
-                    ActionButton {
-                        state.value.payload.cast<Application>().openInfo(context)
-                        clearSelectedNode()
-                    }
+                    ActionButton { state.value.payload.cast<Application>().openInfo(context) }
                 }
             )
     }
@@ -245,7 +228,6 @@ private fun NodeActionButtonLayout(
 fun NodeActionButtonRow(
     nodeActions: NodeActions,
     treeNodeState: TreeNodeState,
-    onClearSelectedNode: () -> Unit = {},
     fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
     lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
@@ -253,7 +235,7 @@ fun NodeActionButtonRow(
         remember(treeNodeState) { NodeActionButtonKind.kinds.filter { it.visible(treeNodeState) } }
     val componentArguments =
         remember(treeNodeState) {
-            NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions, onClearSelectedNode)
+            NodeActionButtonKind.ComponentArguments(treeNodeState, nodeActions)
         }
 
     NodeActionButtonRowLayout(
