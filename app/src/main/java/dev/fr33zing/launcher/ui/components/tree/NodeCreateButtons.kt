@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.hasPermission
@@ -32,7 +33,6 @@ private val icon = Icons.Outlined.Add
 enum class NodeCreateButtonPosition(
     val expandFrom: Alignment.Vertical,
 ) {
-    //    OutsideAbove(Alignment.Top),
     Above(Alignment.Top),
     Below(Alignment.Bottom),
     OutsideBelow(Alignment.Bottom),
@@ -58,25 +58,38 @@ fun NodeCreateButton(
             treeNodeState.key,
             treeNodeState.permissions,
         ) {
-            fun TreeNodeState.canCreate(scope: PermissionScope) =
-                permissions.hasPermission(PermissionKind.Create, scope)
 
-            val hasPermission =
-                when (position) {
-                    NodeCreateButtonPosition.Above -> treeNodeState.canCreate(PermissionScope.Self)
-                    NodeCreateButtonPosition.Below ->
-                        if (showChildren) treeNodeState.canCreate(PermissionScope.Recursive)
-                        else treeNodeState.canCreate(PermissionScope.Self)
-                    NodeCreateButtonPosition.OutsideBelow ->
-                        adjacentTreeNodeStates.below?.canCreate(PermissionScope.Self)
-                } ?: false
-
-            if (!hasPermission) false
+            // Only show for the selected node
+            if (treeState.selectedKey != treeNodeState.key) false
             else {
-                val selected = treeState.selectedKey == treeNodeState.key
-                if (position == NodeCreateButtonPosition.OutsideBelow)
-                    selected && treeNodeState.lastChild
-                else selected
+                fun TreeNodeState.canCreate(scope: PermissionScope) =
+                    permissions.hasPermission(PermissionKind.Create, scope)
+                val hasPermission =
+                    when (position) {
+                        NodeCreateButtonPosition.Above ->
+                            treeNodeState.canCreate(PermissionScope.Self)
+                        NodeCreateButtonPosition.Below ->
+                            if (showChildren) treeNodeState.canCreate(PermissionScope.Recursive)
+                            else treeNodeState.canCreate(PermissionScope.Self)
+                        NodeCreateButtonPosition.OutsideBelow ->
+                            adjacentTreeNodeStates.below?.canCreate(PermissionScope.Self)
+                    } ?: false
+
+                // Only show for nodes with the required permissions
+                hasPermission &&
+                    when (position) {
+                        NodeCreateButtonPosition.OutsideBelow ->
+                            // Don't show for top level nodes
+                            treeNodeState.depth > 0 &&
+                                // Only show for nodes that are the last child of their parent
+                                treeNodeState.lastChild &&
+                                // Don't show for directories with visible children
+                                (treeNodeState.value.node.kind != NodeKind.Directory ||
+                                    (adjacentTreeNodeStates.below?.depth?.let {
+                                        it <= treeNodeState.depth
+                                    } == true))
+                        else -> true
+                    }
             }
         }
 

@@ -145,14 +145,13 @@ fun NodeInteractions(
                 onClick = ::showCreateNodeDialog
             )
 
-            if (treeNodeState.depth > 0)
-                NodeCreateButton(
-                    treeState = treeState,
-                    treeNodeState = treeNodeState,
-                    adjacentTreeNodeStates = adjacentTreeNodeStates,
-                    position = NodeCreateButtonPosition.OutsideBelow,
-                    onClick = ::showCreateNodeDialog
-                )
+            NodeCreateButton(
+                treeState = treeState,
+                treeNodeState = treeNodeState,
+                adjacentTreeNodeStates = adjacentTreeNodeStates,
+                position = NodeCreateButtonPosition.OutsideBelow,
+                onClick = ::showCreateNodeDialog
+            )
         }
     }
 }
