@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -51,7 +50,6 @@ fun ReferenceEditForm(
         verticalArrangement = Arrangement.spacedBy(EditFormSpacing),
         modifier = Modifier.padding(padding).padding(EditFormExtraPadding).fillMaxHeight(),
     ) {
-        Text("cyclic: ${viewModel.cyclic}")
         NodePropertyTextField(node::label)
         OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) { padding ->
             NodePath(viewModel.selectedNodePath, modifier = Modifier.padding(padding))
