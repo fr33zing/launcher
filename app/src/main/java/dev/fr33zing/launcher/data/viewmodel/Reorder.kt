@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.nodeId
@@ -27,8 +26,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
 
     init {
         viewModelScope.launch {
-            val nodeToReorder = db.nodeDao().getNodeById(savedStateHandle.nodeId()).notNull()
-            parentNode = db.nodeDao().getNodeById(nodeToReorder.parentId ?: ROOT_NODE_ID).notNull()
+            parentNode = db.nodeDao().getParentByChildId(savedStateHandle.nodeId()).notNull()
             val parentPayload =
                 db.getPayloadByNodeId(parentNode!!.kind, parentNode!!.nodeId).notNull(parentNode)
 
