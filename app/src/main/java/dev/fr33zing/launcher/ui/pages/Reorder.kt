@@ -22,12 +22,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,17 +35,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.nodeIndent
-import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
-import dev.fr33zing.launcher.data.persistent.NodeUpdatedSubject
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.form.CancelButton
-import dev.fr33zing.launcher.ui.components.form.FinishButton
+import dev.fr33zing.launcher.data.viewmodel.ReorderViewModel
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
+import dev.fr33zing.launcher.ui.components.form.CancelButton
+import dev.fr33zing.launcher.ui.components.form.FinishButton
 import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
@@ -56,9 +52,6 @@ import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -68,9 +61,19 @@ private val extraPadding = 6.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
-    var parentNode by remember { mutableStateOf<Node?>(null) }
-    val nodes = remember { mutableStateOf<List<Pair<Node, Payload>>?>(null) }
+fun Reorder(
+    navigateBack: () -> Unit,
+    viewModel: ReorderViewModel = hiltViewModel(),
+) {
+    fun onCancelChanges() {
+        navigateBack()
+    }
+
+    fun onSaveChanges() {
+        viewModel.saveChanges()
+        navigateBack()
+    }
+
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
@@ -78,30 +81,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
     val askOnAccept by preferences.confirmationDialogs.reorderNodes.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.reorderNodes.askOnReject.state
 
-    LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            parentNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("Parent node is null")
-            val parentPayload =
-                db.getPayloadByNodeId(parentNode!!.kind, parentNode!!.nodeId)
-                    ?: throw Exception("Parent payload is null")
-            // Parent node is added as the first element in the list due to a bug with the
-            // reorderable modifier implementation which prevents the first element from being
-            // animated properly. See here: https://github.com/aclassen/ComposeReorderable#Notes
-            nodes.value =
-                listOf(Pair(parentNode!!, parentPayload)) +
-                    db.nodeDao()
-                        .getChildNodes(nodeId)
-                        .sortedBy { it.order }
-                        .map {
-                            val payload =
-                                db.getPayloadByNodeId(it.kind, it.nodeId)
-                                    ?: throw Exception("Payload is null")
-                            Pair(it, payload)
-                        }
-        }
-    }
-
-    if (parentNode == null || nodes.value == null) return
+    if (viewModel.parentNode == null || viewModel.reorderableNodes == null) return
 
     YesNoDialog(
         visible = cancelDialogVisible,
@@ -112,7 +92,7 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue reordering",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = { onCancelChanges(navController) },
+        onYes = ::onCancelChanges,
     )
 
     YesNoDialog(
@@ -123,12 +103,10 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue reordering",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, nodes.value!!.map { it.first }) },
+        onYes = ::onSaveChanges
     )
 
-    BackHandler {
-        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
-    }
+    BackHandler { if (askOnReject) cancelDialogVisible.value = true else onCancelChanges() }
 
     Scaffold(
         topBar = {
@@ -137,20 +115,18 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                     Text(
                         buildAnnotatedString {
                             append("Reordering ")
-                            withStyle(SpanStyle(color = parentNode!!.kind.color)) {
-                                append(parentNode!!.kind.label)
+                            withStyle(SpanStyle(color = viewModel.parentNode!!.kind.color)) {
+                                append(viewModel.parentNode!!.kind.label)
                             }
                         }
                     )
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true
-                        else onCancelChanges(navController)
+                        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges()
                     }
                     FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true
-                        else onSaveChanges(navController, db, nodes.value!!.map { it.first })
+                        if (askOnAccept) saveDialogVisible.value = true else onSaveChanges()
                     }
                 },
             )
@@ -162,30 +138,17 @@ fun Reorder(db: AppDatabase, navController: NavController, nodeId: Int) {
                 .padding(horizontal = extraPadding)
                 .verticalScrollShadows(preferences.nodeAppearance.spacing.mappedDefault)
         ) {
-            ReorderableList(parentNode!!, nodes)
+            ReorderableList(viewModel.parentNode!!, viewModel.reorderableNodes, viewModel::move)
         }
     }
 }
 
-private fun onCancelChanges(navController: NavController) {
-    navController.popBackStack()
-}
-
-private fun onSaveChanges(navController: NavController, db: AppDatabase, nodes: List<Node>) {
-    // Discard first element due to the aforementioned bug.
-    val fixedNodes = nodes.subList(1, nodes.size)
-
-    fixedNodes.forEachIndexed { index, node -> node.order = index }
-    CoroutineScope(Dispatchers.IO).launch {
-        db.nodeDao().updateMany(fixedNodes)
-        fixedNodes.forEach { node -> NodeUpdatedSubject.onNext(Pair(node.nodeId, node.parentId!!)) }
-    }
-
-    navController.popBackStack()
-}
-
 @Composable
-private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Pair<Node, Payload>>?>) {
+private fun ReorderableList(
+    parentNode: Node,
+    reorderableNodes: List<Pair<Node, Payload>>?,
+    onMove: (from: Int, to: Int) -> Unit
+) {
     val preferences = Preferences(LocalContext.current)
     val localDensity = LocalDensity.current
     val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
@@ -199,10 +162,7 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Pair<Node
     val reorderableState =
         rememberReorderableLazyListState(
             listState = listState,
-            onMove = { from, to ->
-                nodes.value =
-                    nodes.value!!.toMutableList().apply { add(to.index, removeAt(from.index)) }
-            },
+            onMove = { from, to -> onMove(from.index, to.index) },
             canDragOver = { from, to -> to.index != 0 && from.index != 0 }
         )
 
@@ -210,7 +170,7 @@ private fun ReorderableList(parentNode: Node, nodes: MutableState<List<Pair<Node
         state = reorderableState.listState,
         modifier = Modifier.reorderable(reorderableState).fillMaxSize()
     ) {
-        items(nodes.value!!, { it.first.nodeId }) { (node, payload) ->
+        items(reorderableNodes!!, { it.first.nodeId }) { (node, payload) ->
             ReorderableItem(
                 reorderableState,
                 key = node.nodeId,

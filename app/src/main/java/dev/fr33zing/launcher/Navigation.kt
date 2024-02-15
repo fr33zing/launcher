@@ -129,9 +129,7 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
 
         composable(Routes.Main.create()) { Create(navigateBack) }
 
-        composable(Routes.Main.reorder()) { backStackEntry ->
-            Reorder(db, navController, backStackEntry.nodeId())
-        }
+        composable(Routes.Main.reorder()) { Reorder(navigateBack) }
 
         composable(Routes.Main.move()) { Move(navigateBack) }
 
