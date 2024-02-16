@@ -97,6 +97,7 @@ class SearchStateHolder(private val db: AppDatabase) {
                 }
 
                 TreeNodeState(
+                    key = TreeNodeKey.topLevelKey(value.node.nodeId),
                     permissions = AllPermissions,
                     value = value,
                     flow = flow,

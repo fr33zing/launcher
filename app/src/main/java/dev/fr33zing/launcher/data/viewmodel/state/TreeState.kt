@@ -33,17 +33,24 @@ import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 
 @Immutable
-data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.readInt(), parcel.readInt()) {}
+data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
+    constructor(
+        parcel: Parcel
+    ) : this(
+        mutableListOf<Int>().also { parcel.readList(it, it.javaClass.classLoader, Int::class.java) }
+    )
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(nodeId)
-        parcel.writeInt(depth)
-    }
+    fun childKey(childNodeId: Int) = TreeNodeKey(nodeLineage + listOf(childNodeId))
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) = parcel.writeList(nodeLineage)
 
     override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<TreeNodeKey> {
+        fun topLevelKey(nodeId: Int) = TreeNodeKey(listOf(nodeId))
+
+        fun rootKey() = TreeNodeKey(emptyList())
+
         override fun createFromParcel(parcel: Parcel): TreeNodeKey = TreeNodeKey(parcel)
 
         override fun newArray(size: Int): Array<TreeNodeKey?> = arrayOfNulls(size)
@@ -54,6 +61,7 @@ data class TreeNodeKey(val nodeId: Int, val depth: Int) : Parcelable {
 
 @Immutable
 data class TreeNodeState(
+    val key: TreeNodeKey,
     val depth: Int = 0,
     val showChildren: State<Boolean?> = mutableStateOf(false),
     val lastChild: Boolean = false,
@@ -61,8 +69,6 @@ data class TreeNodeState(
     val value: ReferenceFollowingNodePayloadState,
     val flow: Lazy<Flow<TreeNodeState>>
 ) {
-    val key = TreeNodeKey(underlyingNodeId, depth)
-
     val underlyingNodeId
         get() = value.underlyingState.node.nodeId
 
@@ -92,12 +98,13 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
 
     val listFlow: Flow<List<TreeNodeState>> = flow {
         fun traverse(
-            depth: Int = -1,
+            key: TreeNodeKey,
             node: Node,
+            depth: Int = -1,
             lastChild: Boolean = false,
-            permissions: PermissionMap = AllPermissions.clone()
+            permissions: PermissionMap = AllPermissions.clone(),
         ): Flow<List<TreeNodeState>> {
-            val parentFlow = getTreeNodeStateFlow(depth, node, lastChild, permissions)
+            val parentFlow = getTreeNodeStateFlow(key, depth, node, lastChild, permissions)
 
             return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
             else {
@@ -116,8 +123,9 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                             val childNodeFlows =
                                                 childNodes.mapIndexed { index, childNode ->
                                                     traverse(
-                                                        depth = depth + 1,
+                                                        key = key.childKey(childNode.nodeId),
                                                         node = childNode,
+                                                        depth = depth + 1,
                                                         lastChild =
                                                             index == childNodes.indices.last,
                                                         permissions =
@@ -152,30 +160,30 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow = traverse(node = rootNode)
+        val flow = traverse(key = TreeNodeKey.rootKey(), node = rootNode)
 
         emitAll(flow)
     }
 
     private fun getTreeNodeStateFlow(
+        key: TreeNodeKey,
         depth: Int,
         node: Node,
         lastChild: Boolean,
         parentPermissions: PermissionMap
     ): Flow<TreeNodeState> =
-        treeNodeStateFlows.computeIfAbsent(TreeNodeKey(node.nodeId, depth)) {
+        treeNodeStateFlows.computeIfAbsent(key) {
             val parentStateHolder = NodePayloadStateHolder(db, node)
 
             parentStateHolder.flowWithReferenceTarget.mapLatest { value ->
-                val showChildren = derivedStateOf {
-                    showChildren[TreeNodeKey(value.underlyingState.node.nodeId, depth)]
-                }
+                val showChildren = derivedStateOf { showChildren[key] }
                 val permissions = parentPermissions.adjustOwnPermissions(value.payload)
                 val flow = lazy { // TODO reuse current flow somehow
-                    getTreeNodeStateFlow(depth, node, lastChild, parentPermissions)
+                    getTreeNodeStateFlow(key, depth, node, lastChild, parentPermissions)
                 }
 
                 TreeNodeState(
+                    key,
                     depth,
                     showChildren,
                     lastChild,
