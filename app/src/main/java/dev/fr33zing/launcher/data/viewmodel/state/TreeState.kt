@@ -113,7 +113,7 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                     .getChildNodesFlow(treeNode.value.node.nodeId)
                                     .distinctUntilChangedBy { it.map { node -> node.nodeId } }
                                     .flatMapLatest { childNodes ->
-                                        if (childNodes.isEmpty()) flowOf(emptyList<TreeNodeState>())
+                                        if (childNodes.isEmpty()) flowOf(emptyList())
                                         else {
                                             val childNodeFlows =
                                                 childNodes.mapIndexed { index, childNode ->
@@ -121,11 +121,10 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                                         key = key.childKey(childNode.nodeId),
                                                         node = childNode,
                                                         depth = depth + 1,
-                                                        lastChild =
-                                                            index == childNodes.indices.last,
+                                                        lastChild = index == childNodes.lastIndex,
                                                         permissions =
                                                             permissions.adjustChildPermissions(
-                                                                treeNode.value.payload
+                                                                payload = treeNode.value.payload
                                                             )
                                                     )
                                                 }
