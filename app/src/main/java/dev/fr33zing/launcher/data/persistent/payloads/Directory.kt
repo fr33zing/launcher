@@ -41,21 +41,18 @@ class Directory(
     //
 
     enum class SpecialMode(
-        val modeName: String,
         val defaultDirectoryName: String,
         val icon: ImageVector,
         val collapsedIcon: ImageVector? = null,
         val initiallyCollapsed: Boolean = false,
-        val permissions: PermissionMap = mapOf()
+        val permissions: PermissionMap = mapOf(),
     ) {
         Root(
-            modeName = "Root",
-            defaultDirectoryName = "~",
+            defaultDirectoryName = "Root",
             icon = Icons.Rounded.DeviceHub,
             permissions = AllPermissions
         ),
         Home(
-            modeName = "Home",
             defaultDirectoryName = "Home",
             icon = Icons.Rounded.Home,
             collapsedIcon = Icons.Outlined.Home,
@@ -70,7 +67,6 @@ class Directory(
                 }
         ),
         NewApplications(
-            modeName = "New Applications",
             defaultDirectoryName = "New Applications",
             icon = Icons.Filled.NewReleases,
             collapsedIcon = Icons.Outlined.NewReleases,
@@ -83,7 +79,6 @@ class Directory(
                 ),
         ),
         Trash(
-            modeName = "Trash",
             defaultDirectoryName = "Trash",
             icon = Icons.Filled.Delete,
             collapsedIcon = Icons.Outlined.Delete,
