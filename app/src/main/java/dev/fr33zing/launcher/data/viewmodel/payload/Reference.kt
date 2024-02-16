@@ -48,8 +48,15 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
         viewModelScope.launch { onNodeSelected(getInitialRootNode()) }
     }
 
-    private suspend fun getInitialRootNode() =
-        db.nodeDao().getParentByChildId(editingNodeId).notNull()
+    private suspend fun getInitialRootNode(): Node {
+        val node = db.nodeDao().getNodeById(editingNodeId).notNull()
+        val payload = db.getPayloadByNodeId(node.kind, node.nodeId).notNull(node).cast<Reference>()
+        val targetId = payload.targetId ?: node.parentId ?: ROOT_NODE_ID
+        val target = db.nodeDao().getNodeById(targetId).notNull()
+
+        return if (target.kind == NodeKind.Directory) target
+        else db.nodeDao().getNodeById(target.parentId ?: ROOT_NODE_ID).notNull()
+    }
 
     private suspend fun onNodeSelected(node: Node) {
         selectedNode = node
