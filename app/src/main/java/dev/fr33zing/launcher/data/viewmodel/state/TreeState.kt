@@ -108,32 +108,31 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                     parentFlow
                         .distinctUntilChangedBy { it.value.node.nodeId }
                         .transformLatest { treeNode: TreeNodeState ->
-                            emitAll(
-                                db.nodeDao()
-                                    .getChildNodesFlow(treeNode.value.node.nodeId)
-                                    .distinctUntilChangedBy { it.map { node -> node.nodeId } }
-                                    .flatMapLatest { childNodes ->
-                                        if (childNodes.isEmpty()) flowOf(emptyList())
-                                        else {
-                                            val childNodeFlows =
-                                                childNodes.mapIndexed { index, childNode ->
-                                                    traverse(
-                                                        key = key.childKey(childNode.nodeId),
-                                                        node = childNode,
-                                                        depth = depth + 1,
-                                                        lastChild = index == childNodes.lastIndex,
-                                                        permissions =
-                                                            permissions.adjustChildPermissions(
-                                                                payload = treeNode.value.payload
-                                                            )
-                                                    )
-                                                }
-                                            combine(childNodeFlows) { arrayOfLists ->
-                                                arrayOfLists.toList().flatten()
+                            db.nodeDao()
+                                .getChildNodesFlow(treeNode.value.node.nodeId)
+                                .distinctUntilChangedBy { it.map { node -> node.nodeId } }
+                                .flatMapLatest { childNodes ->
+                                    if (childNodes.isEmpty()) flowOf(emptyList())
+                                    else {
+                                        val childNodeFlows =
+                                            childNodes.mapIndexed { index, childNode ->
+                                                traverse(
+                                                    key = key.childKey(childNode.nodeId),
+                                                    node = childNode,
+                                                    depth = depth + 1,
+                                                    lastChild = index == childNodes.lastIndex,
+                                                    permissions =
+                                                        permissions.adjustChildPermissions(
+                                                            payload = treeNode.value.payload
+                                                        )
+                                                )
                                             }
+                                        combine(childNodeFlows) { arrayOfLists ->
+                                            arrayOfLists.toList().flatten()
                                         }
                                     }
-                            )
+                                }
+                                .also { emitAll(it) }
                         }
                         .distinctUntilChangedBy { it.map { state -> state.underlyingNodeId } }
 
