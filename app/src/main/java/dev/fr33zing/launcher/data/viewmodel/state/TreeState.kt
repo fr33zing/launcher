@@ -88,13 +88,9 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         if (state.key in showChildren) showChildren[state.key] = !showChildren[state.key]!!
     }
 
-    fun onSelectNode(key: TreeNodeKey) {
-        _stateFlow.update { it.copy(selectedKey = key) }
-    }
+    fun onSelectNode(key: TreeNodeKey) = _stateFlow.update { it.copy(selectedKey = key) }
 
-    fun onClearSelectedNode() {
-        _stateFlow.update { it.copy(selectedKey = null) }
-    }
+    fun onClearSelectedNode() = _stateFlow.update { it.copy(selectedKey = null) }
 
     val listFlow: Flow<List<TreeNodeState>> = flow {
         fun traverse(
@@ -117,9 +113,8 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                                     .getChildNodesFlow(treeNode.value.node.nodeId)
                                     .distinctUntilChangedBy { it.map { node -> node.nodeId } }
                                     .flatMapLatest { childNodes ->
-                                        if (childNodes.isEmpty()) {
-                                            flowOf(emptyList<TreeNodeState>())
-                                        } else {
+                                        if (childNodes.isEmpty()) flowOf(emptyList<TreeNodeState>())
+                                        else {
                                             val childNodeFlows =
                                                 childNodes.mapIndexed { index, childNode ->
                                                     traverse(
@@ -182,15 +177,7 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                     getTreeNodeStateFlow(key, depth, node, lastChild, parentPermissions)
                 }
 
-                TreeNodeState(
-                    key,
-                    depth,
-                    showChildren,
-                    lastChild,
-                    permissions,
-                    value,
-                    flow,
-                )
+                TreeNodeState(key, depth, showChildren, lastChild, permissions, value, flow)
             }
         }
 }
