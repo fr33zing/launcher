@@ -66,6 +66,8 @@ fun NodeDetail(
     color: Color = LocalNodeAppearance.current.color,
     icon: ImageVector = LocalNodeAppearance.current.icon,
     lineThrough: Boolean = LocalNodeAppearance.current.lineThrough,
+    softWrap: Boolean = true,
+    overflow: TextOverflow = TextOverflow.Visible,
     @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
 ) {
     val inlineContentMap =
@@ -106,8 +108,8 @@ fun NodeDetail(
                 .then(textModifier),
         color = color,
         fontSize = fontSize,
-        softWrap = true,
-        overflow = TextOverflow.Visible,
+        softWrap = softWrap,
+        overflow = overflow,
         textDecoration = textDecoration,
         inlineContent = inlineContentMap
     )

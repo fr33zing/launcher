@@ -50,7 +50,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
     }
 
     fun saveChanges() {
-        if (reorderableNodes == null) throw Exception("reorderableNodes is null")
+        reorderableNodes ?: throw Exception("reorderableNodes is null")
 
         val fixedNodes =
             reorderableNodes!!

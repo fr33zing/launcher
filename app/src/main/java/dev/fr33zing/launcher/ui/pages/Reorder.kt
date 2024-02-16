@@ -2,10 +2,8 @@ package dev.fr33zing.launcher.ui.pages
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,21 +20,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import dev.fr33zing.launcher.data.nodeIndent
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
@@ -45,12 +41,16 @@ import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.form.CancelButton
 import dev.fr33zing.launcher.ui.components.form.FinishButton
-import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
+import dev.fr33zing.launcher.ui.components.tree.NodeDetail
+import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.utility.conditional
+import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
@@ -80,8 +80,6 @@ fun Reorder(
     val preferences = Preferences(LocalContext.current)
     val askOnAccept by preferences.confirmationDialogs.reorderNodes.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.reorderNodes.askOnReject.state
-
-    if (viewModel.parentNode == null || viewModel.reorderableNodes == null) return
 
     YesNoDialog(
         visible = cancelDialogVisible,
@@ -115,8 +113,10 @@ fun Reorder(
                     Text(
                         buildAnnotatedString {
                             append("Reordering ")
-                            withStyle(SpanStyle(color = viewModel.parentNode!!.kind.color)) {
-                                append(viewModel.parentNode!!.kind.label)
+                            viewModel.parentNode?.let { parentNode ->
+                                withStyle(SpanStyle(color = parentNode.kind.color)) {
+                                    append(parentNode.kind.label)
+                                }
                             }
                         }
                     )
@@ -138,7 +138,12 @@ fun Reorder(
                 .padding(horizontal = extraPadding)
                 .verticalScrollShadows(preferences.nodeAppearance.spacing.mappedDefault)
         ) {
-            ReorderableList(viewModel.parentNode!!, viewModel.reorderableNodes, viewModel::move)
+            if (viewModel.parentNode != null && viewModel.reorderableNodes != null)
+                ReorderableList(
+                    viewModel.parentNode!!,
+                    viewModel.reorderableNodes!!,
+                    viewModel::move
+                )
         }
     }
 }
@@ -146,18 +151,9 @@ fun Reorder(
 @Composable
 private fun ReorderableList(
     parentNode: Node,
-    reorderableNodes: List<Pair<Node, Payload>>?,
+    reorderableNodes: List<Pair<Node, Payload>>,
     onMove: (from: Int, to: Int) -> Unit
 ) {
-    val preferences = Preferences(LocalContext.current)
-    val localDensity = LocalDensity.current
-    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
-    val spacing = preferences.nodeAppearance.spacing.mappedDefault
-    val lineHeight = with(localDensity) { fontSize.toDp() }
-    val indent = remember {
-        nodeIndent(1, preferences.nodeAppearance.indent.mappedDefault, lineHeight)
-    }
-
     val listState = rememberLazyListState()
     val reorderableState =
         rememberReorderableLazyListState(
@@ -166,51 +162,50 @@ private fun ReorderableList(
             canDragOver = { from, to -> to.index != 0 && from.index != 0 }
         )
 
-    LazyColumn(
-        state = reorderableState.listState,
-        modifier = Modifier.reorderable(reorderableState).fillMaxSize()
-    ) {
-        items(reorderableNodes!!, { it.first.nodeId }) { (node, payload) ->
-            ReorderableItem(
-                reorderableState,
-                key = node.nodeId,
-                modifier = Modifier.fillMaxWidth()
-            ) { isDragging ->
-                val draggable = remember { node.nodeId != parentNode.nodeId }
+    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
+        LazyColumn(
+            state = reorderableState.listState,
+            modifier = Modifier.reorderable(reorderableState).fillMaxSize()
+        ) {
+            items(reorderableNodes, { it.first.nodeId }) { (node, payload) ->
+                ReorderableItem(
+                    reorderableState,
+                    key = node.nodeId,
+                ) { isDragging ->
+                    val draggable = remember { node.nodeId != parentNode.nodeId }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(spacing / 2)
-                            .alpha(if (isDragging) 0.65f else 1f)
-                            .conditional(draggable) { absolutePadding(left = indent) },
-                ) {
-                    NodeIconAndText(
-                        fontSize = fontSize,
-                        lineHeight = lineHeight,
-                        label = node.label,
-                        color =
-                            if (!draggable) Foreground.mix(Background, 0.5f)
-                            else node.kind.color(payload),
-                        icon = node.kind.icon(payload),
-                        lineThrough = node.kind.lineThrough(payload),
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis,
-                        textModifier = Modifier.weight(1f)
-                    )
-
-                    if (draggable) {
-                        Box(
-                            Modifier.absolutePadding(left = lineHeight)
-                                .detectReorder(reorderableState)
+                    CompositionLocalProvider(
+                        LocalNodeAppearance provides rememberNodeAppearance(node, payload)
+                    ) {
+                        NodeDetailContainer(
+                            depth = if (draggable) 1 else 0,
+                            modifier = Modifier.alpha(if (isDragging) 0.65f else 1f)
                         ) {
-                            Icon(
-                                Icons.Filled.DragIndicator,
-                                contentDescription = "drag indicator",
-                                modifier = Modifier.size(lineHeight),
-                                tint = Foreground,
+                            NodeDetail(
+                                label = node.label,
+                                color =
+                                    if (!draggable) Foreground.mix(Background, 0.5f)
+                                    else LocalNodeAppearance.current.color,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis,
+                                textModifier = Modifier.weight(1f),
                             )
+
+                            if (draggable) {
+                                with(LocalNodeDimensions.current) {
+                                    Box(
+                                        Modifier.absolutePadding(left = lineHeight)
+                                            .detectReorder(reorderableState)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.DragIndicator,
+                                            contentDescription = "drag indicator",
+                                            modifier = Modifier.size(lineHeight),
+                                            tint = Foreground,
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
