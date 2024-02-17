@@ -376,6 +376,9 @@ suspend fun AppDatabase.nodeLineage(node: Node): ArrayDeque<Node> =
         }
     }
 
+suspend fun AppDatabase.nodeLineage(nodeId: Int): ArrayDeque<Node> =
+    nodeDao().getNodeById(nodeId).notNull().let { nodeLineage(it) }
+
 fun AppDatabase.checkpoint() {
     if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
         throw Exception("Database checkpoint failed")

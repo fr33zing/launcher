@@ -39,6 +39,8 @@ fun Tree(
     NodeTree(
         treeStateFlow = viewModel.treeStateFlow,
         treeNodeListFlow = viewModel.treeNodeListFlow,
+        scrollToKeyFlow = viewModel.scrollToKeyFlow,
+        onScrolledToKey = viewModel::onScrolledToKey,
         onDisableFlowStagger = viewModel::disableFlowStagger,
         onActivatePayload = ::activatePayload,
         onSelectNode = viewModel::selectNode,

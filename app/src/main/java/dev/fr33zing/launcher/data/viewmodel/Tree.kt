@@ -12,6 +12,7 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.moveToTrash
+import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
@@ -21,11 +22,13 @@ import dev.fr33zing.launcher.data.viewmodel.state.stagger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -38,6 +41,10 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
     private val stateHolder = TreeStateHolder(db, nodeId)
     private var shouldStaggerFlow = mutableStateOf(true)
 
+    private val _scrollToKeyFlow = MutableStateFlow<TreeNodeKey?>(null)
+    val scrollToKeyFlow =
+        _scrollToKeyFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+
     val treeNodeListFlow =
         stateHolder.listFlow
             .stagger(shouldStaggerFlow)
@@ -45,6 +52,8 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
 
     val treeStateFlow =
         stateHolder.stateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TreeState())
+
+    fun onScrolledToKey() = _scrollToKeyFlow.update { null }
 
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
         stateHolder.onActivateNode(treeNodeState)
@@ -59,13 +68,15 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
         stateHolder.onClearSelectedNode()
     }
 
-    fun createNode(
-        position: RelativeNodePosition,
-        kind: NodeKind,
-        callback: (nodeId: Int) -> Unit
-    ) {
+    fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
-            flow { emit(db.createNode(position, kind)) }
+            flow {
+                    val nodeId = db.createNode(position, kind)
+                    val lineage = db.nodeLineage(nodeId)
+                    val key = TreeNodeKey(lineage.map { it.nodeId })
+                    _scrollToKeyFlow.update { key }
+                    emit(nodeId)
+                }
                 .flowOn(Dispatchers.IO)
                 .single()
                 .let(callback)

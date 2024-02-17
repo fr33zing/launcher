@@ -47,9 +47,7 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
     override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<TreeNodeKey> {
-        fun topLevelKey(nodeId: Int) = TreeNodeKey(listOf(nodeId))
-
-        fun rootKey() = TreeNodeKey(emptyList())
+        fun rootKey(nodeId: Int) = TreeNodeKey(listOf(nodeId))
 
         override fun createFromParcel(parcel: Parcel): TreeNodeKey = TreeNodeKey(parcel)
 
@@ -153,7 +151,7 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow = traverse(key = TreeNodeKey.rootKey(), node = rootNode)
+        val flow = traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
 
         emitAll(flow)
     }

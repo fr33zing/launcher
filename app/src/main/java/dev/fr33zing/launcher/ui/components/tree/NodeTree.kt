@@ -48,6 +48,7 @@ import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -60,16 +61,21 @@ private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVect
 
 @Composable
 fun NodeTree(
+    // Flows
     treeStateFlow: Flow<TreeState>,
     treeNodeListFlow: Flow<List<TreeNodeState>>,
-    features: NodeRowFeatureSet = NodeRowFeatures.All,
+    scrollToKeyFlow: Flow<TreeNodeKey?>,
+    // Events
+    onScrolledToKey: () -> Unit = {},
     onDisableFlowStagger: () -> Unit = {},
     onActivatePayload: (TreeNodeState) -> Unit = {},
     onSelectNode: (TreeNodeKey) -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
+    // Other
+    features: NodeRowFeatureSet = NodeRowFeatures.All,
     nodeActions: NodeActions? = null,
-    lazyListState: LazyListState = rememberLazyListState()
+    lazyListState: LazyListState = rememberLazyListState(),
 ) {
     val coroutineScope = rememberCoroutineScope()
     val (paddingHeight, shadowHeight) = rememberPaddingAndShadowHeight()
@@ -108,7 +114,18 @@ fun NodeTree(
     val treeNodeList by
         treeNodeListFlow
             .onEach(animation::resetRemovedNodes)
+            .map { treeNodeList -> treeNodeList.map { Pair(it, animation.progress(it.key)) } }
             .collectAsStateWithLifecycle(emptyList())
+
+    val scrollToKey by scrollToKeyFlow.collectAsStateWithLifecycle(null)
+    fun scrollToItemByKey() {
+        if (scrollToKey == null) return
+        val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == scrollToKey }
+        if (index == -1) return
+        val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == scrollToKey }
+        if (!visible) coroutineScope.launch { lazyListState.scrollToItem(index) }
+        onScrolledToKey()
+    }
 
     /** Used to check for scrollable content overflow */
     var containerHeight by remember { mutableStateOf<Int?>(null) }
@@ -181,23 +198,19 @@ fun NodeTree(
                     }
                 }
 
-            val listItems: List<ListItem> by
-                remember(treeNodeList) {
-                    derivedStateOf { treeNodeList.map { Pair(it, animation.progress(it.key)) } }
-                }
-
             if (USE_LAZY_COLUMN) {
                 LazyColumn(
                     state = lazyListState,
                     contentPadding = remember { PaddingValues(vertical = shadowHeight) },
                     modifier = Modifier.fillMaxSize().disableFlowStaggerOnOverflow()
                 ) {
+                    item(treeNodeList) { LaunchedEffect(Unit) { scrollToItemByKey() } }
                     itemsIndexed(
-                        items = listItems,
+                        items = treeNodeList,
                         key = { _, item -> item.first.key },
                         contentType = { _, item -> item.first.underlyingNodeKind }
                     ) { index, (initialTreeNodeState, appearAnimationProgress) ->
-                        listItem(listItems, index, initialTreeNodeState, appearAnimationProgress)
+                        listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
                     }
                 }
             } else {
@@ -206,12 +219,12 @@ fun NodeTree(
                         .verticalScroll(rememberScrollState())
                         .disableFlowStaggerOnOverflow()
                 ) {
-                    listItems.forEachIndexed {
+                    treeNodeList.forEachIndexed {
                         index,
                         (initialTreeNodeState, appearAnimationProgress) ->
                         key(initialTreeNodeState.key) {
                             listItem(
-                                listItems,
+                                treeNodeList,
                                 index,
                                 initialTreeNodeState,
                                 appearAnimationProgress
