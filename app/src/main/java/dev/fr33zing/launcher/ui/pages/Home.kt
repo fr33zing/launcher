@@ -44,7 +44,7 @@ fun Home(
                 .longPressable { navigateToSettings() }
                 .pointerInput(Unit) { detectFlingUp(navigateToTree) }
     ) {
-        Clock(ScreenHorizontalPadding)
+        Clock(viewModel.nextAlarmFlow, ScreenHorizontalPadding)
         TreeBrowser(viewModel.treeBrowser, center = true, modifier = Modifier.weight(1f))
     }
 }
