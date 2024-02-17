@@ -10,6 +10,7 @@ import dev.fr33zing.launcher.data.utility.NullNodeException
 import dev.fr33zing.launcher.data.utility.NullPayloadException
 import dev.fr33zing.launcher.data.utility.PayloadClassMismatchException
 import dev.fr33zing.launcher.data.utility.maybeFilter
+import dev.fr33zing.launcher.data.utility.notNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
@@ -79,10 +80,13 @@ class NodePayloadStateHolder(
     db: AppDatabase,
     val node: Node,
 ) {
-    val flow: Flow<NodePayloadState> =
-        db.getPayloadFlowByNodeId(node.kind, node.nodeId).filterNotNull().map { payload ->
-            NodePayloadState(node, payload)
-        }
+    private val nodeFlow: Flow<Node> =
+        db.nodeDao().getNodeFlowById(node.nodeId).map { it.notNull() }
+
+    private val payloadFlow: Flow<Payload> =
+        db.getPayloadFlowByNodeId(node.kind, node.nodeId).map { it.notNull(node) }
+
+    val flow = nodeFlow.combine(payloadFlow) { node, payload -> NodePayloadState(node, payload) }
 
     val flowWithReferenceTarget: Flow<ReferenceFollowingNodePayloadState> =
         flow.transform { state ->

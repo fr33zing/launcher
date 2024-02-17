@@ -57,6 +57,9 @@ interface NodeDao {
 
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
 
+    @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
+    fun getNodeFlowById(nodeId: Int): Flow<Node?>
+
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
 

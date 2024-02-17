@@ -51,16 +51,19 @@ fun NodeRow(
         )
 
     @Composable
-    fun Detail() =
+    fun Detail() {
         NodeDetailContainer(depth = treeNodeState.depth) {
-            NodeDetail(
-                label =
-                    if (treeNodeState.value.isValidReference)
-                        treeNodeState.value.underlyingState.node.label
-                    else treeNodeState.value.node.label,
-                isValidReference = treeNodeState.value.isValidReference
-            )
+            val label by
+                remember(treeNodeState) {
+                    derivedStateOf {
+                        if (treeNodeState.value.isValidReference)
+                            treeNodeState.value.underlyingState.node.label
+                        else treeNodeState.value.node.label
+                    }
+                }
+            NodeDetail(label, isValidReference = treeNodeState.value.isValidReference)
         }
+    }
 
     @Composable
     fun Interactions(content: @Composable () -> Unit) =
