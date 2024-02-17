@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.data.viewmodel.state
+package dev.fr33zing.launcher.data.utility
 
 import androidx.compose.runtime.State
 import kotlinx.coroutines.ExperimentalCoroutinesApi

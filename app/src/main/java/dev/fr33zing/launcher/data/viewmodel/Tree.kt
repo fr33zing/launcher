@@ -18,7 +18,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeStateHolder
-import dev.fr33zing.launcher.data.viewmodel.state.stagger
+import dev.fr33zing.launcher.data.utility.stagger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

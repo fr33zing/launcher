@@ -9,6 +9,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.utility.NullNodeException
 import dev.fr33zing.launcher.data.utility.NullPayloadException
 import dev.fr33zing.launcher.data.utility.PayloadClassMismatchException
+import dev.fr33zing.launcher.data.utility.maybeFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
