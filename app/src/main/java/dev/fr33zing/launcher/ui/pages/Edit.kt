@@ -68,7 +68,6 @@ fun Edit(
 
     fun commitChanges() {
         viewModel.commitChanges(navigateBack)
-        navigateBack()
     }
 
     YesNoDialog(
