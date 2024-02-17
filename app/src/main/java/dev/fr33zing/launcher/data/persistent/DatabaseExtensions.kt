@@ -131,10 +131,7 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
     }
 }
 
-/**
- * Create a new node (and its payload, if applicable) relative to another node. Returns the new
- * node's id.
- */
+/** Create a new node relative to another node. Returns the new node's id. */
 suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: NodeKind): Int {
     val relativeToNode =
         nodeDao().getNodeById(position.relativeToNodeId) ?: throw Exception("Node does not exist")
@@ -224,7 +221,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             nodeId = nodeId,
                             parentId = parentId,
                             kind = NodeKind.Directory,
-                            order = 0,
+                            order = -1,
                             label = specialMode.defaultDirectoryName,
                         )
                     )
