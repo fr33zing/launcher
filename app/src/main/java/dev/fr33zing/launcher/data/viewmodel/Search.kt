@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.stateIn
 class SearchViewModel
 @Inject
 constructor(private val db: AppDatabase, private val searchHistory: SearchHistory) : ViewModel() {
-
     private val searchStateHolder = SearchStateHolder(db)
     val stateFlow =
         searchStateHolder.stateFlow.stateIn(
