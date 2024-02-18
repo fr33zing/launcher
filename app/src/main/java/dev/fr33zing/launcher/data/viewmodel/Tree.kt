@@ -1,6 +1,8 @@
 package dev.fr33zing.launcher.data.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,11 +16,11 @@ import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.utility.notNull
+import dev.fr33zing.launcher.data.utility.stagger
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeStateHolder
-import dev.fr33zing.launcher.data.utility.stagger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +42,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
             ?: throw Exception("Invalid SavedStateHandle value for key: nodeId")
     private val stateHolder = TreeStateHolder(db, nodeId)
     private var shouldStaggerFlow = mutableStateOf(true)
+    val flowStaggered by derivedStateOf { shouldStaggerFlow.value }
 
     private val _scrollToKeyFlow = MutableStateFlow<TreeNodeKey?>(null)
     val scrollToKeyFlow =

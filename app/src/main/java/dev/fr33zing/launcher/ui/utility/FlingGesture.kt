@@ -4,52 +4,63 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import kotlin.math.abs
-import kotlin.math.max
 
-private suspend fun PointerInputScope.detectFling(direction: Int, onFling: () -> Unit) {
-    // TODO make preferences for these
-    val flingUpDragAmountThreshold = 75.dp
-    val flingUpDragVelocityThreshold = 2.5.dp // per millisecond
+suspend fun PointerInputScope.detectFling(
+    flingUpEnabled: () -> Boolean = { true },
+    flingDownEnabled: () -> Boolean = { true },
+    onFirstDown: (() -> Unit)? = null,
+    onFlingUp: (() -> Unit)? = null,
+    onFlingDown: (() -> Unit)? = null,
+) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false)
+        if (onFirstDown != null) onFirstDown()
 
-    var cumulativeDragAmount = 0.dp
-    var maxDragVelocity = 0.dp
-    var flingUpGestureComplete = false
+        val flingDragAmountThreshold = 75.dp
+        val flingDragVelocityThreshold = 2.5.dp // per millisecond
 
-    detectVerticalDragGestures(
-        onDragStart = {
-            cumulativeDragAmount = 0.dp
-            maxDragVelocity = 0.dp
-            flingUpGestureComplete = false
-        },
-        onVerticalDrag = { change, dragAmountPx ->
+        var cumulativeDragAmount = 0.dp
+        var maxDragVelocity = 0.dp
+        var flingGestureComplete = false
+
+        do {
+            val event = awaitPointerEvent()
+            if (event.changes.count { it.pressed } != 1) continue
+
+            val change = event.changes[0]
+            val dragAmountPx = change.position.y - change.previousPosition.y
+
+            if (dragAmountPx == 0f) continue
+            else if (dragAmountPx < 0 && !flingUpEnabled()) continue
+            else if (dragAmountPx > 0 && !flingDownEnabled()) continue
+
             val elapsedMillis = change.uptimeMillis - change.previousUptimeMillis
-            val dragAmountUpward = max(0f, dragAmountPx * direction)
-            val dragAmount = dragAmountUpward.toDp()
-            val dragVelocity = (dragAmountUpward / elapsedMillis).toDp()
+            val dragAmount = dragAmountPx.toDp()
+            val dragVelocity = abs(dragAmountPx / elapsedMillis).toDp()
 
             cumulativeDragAmount += dragAmount
             maxDragVelocity = max(maxDragVelocity, dragVelocity)
 
-            if (
-                !flingUpGestureComplete &&
-                    cumulativeDragAmount >= flingUpDragAmountThreshold &&
-                    maxDragVelocity >= flingUpDragVelocityThreshold
-            ) {
-                flingUpGestureComplete = true
-                onFling()
+            if (flingGestureComplete) continue
+
+            if (maxDragVelocity >= flingDragVelocityThreshold) {
+                if (onFlingDown != null && cumulativeDragAmount >= flingDragAmountThreshold) {
+                    flingGestureComplete = true
+                    onFlingDown()
+                } else if (onFlingUp != null && -cumulativeDragAmount >= flingDragAmountThreshold) {
+                    flingGestureComplete = true
+                    onFlingUp()
+                }
             }
-        }
-    )
+
+            change.consume()
+        } while (event.changes.any { it.pressed })
+    }
 }
-
-suspend fun PointerInputScope.detectFlingUp(onFlingUp: () -> Unit) = detectFling(-1, onFlingUp)
-
-suspend fun PointerInputScope.detectFlingDown(onFlingUp: () -> Unit) = detectFling(1, onFlingUp)
 
 // Adapted from: https://stackoverflow.com/a/72668732
 suspend fun PointerInputScope.detectZoom(

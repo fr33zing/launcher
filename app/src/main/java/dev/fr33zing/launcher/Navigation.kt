@@ -1,15 +1,22 @@
 package dev.fr33zing.launcher
 
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -26,10 +33,12 @@ import dev.fr33zing.launcher.ui.pages.Home
 import dev.fr33zing.launcher.ui.pages.Move
 import dev.fr33zing.launcher.ui.pages.Preferences
 import dev.fr33zing.launcher.ui.pages.Reorder
+import dev.fr33zing.launcher.ui.pages.Search
 import dev.fr33zing.launcher.ui.pages.Setup
 import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.pages.Tree_old
 import io.reactivex.rxjava3.subjects.PublishSubject
+import kotlin.math.roundToInt
 
 val GoHomeSubject = PublishSubject.create<Unit>()
 var goHomeOnNextPause = true
@@ -48,6 +57,8 @@ object Routes {
 
         fun settings() = "settings"
 
+        fun search() = "search"
+
         fun tree(nodeId: Int? = null) = "${home()}/tree/${nodeId ?: "{nodeId}"}"
 
         fun create(nodeId: Int? = null) = "create/${nodeId ?: "{nodeId}"}"
@@ -61,6 +72,7 @@ object Routes {
 }
 
 class TreeNavigator(navController: NavController) {
+    val search = { navController.navigate(Routes.Main.search()) }
     val create = { nodeId: Int -> navController.navigate(Routes.Main.create(nodeId)) }
     val reorder = { nodeId: Int -> navController.navigate(Routes.Main.reorder(nodeId)) }
     val move = { nodeId: Int -> navController.navigate(Routes.Main.move(nodeId)) }
@@ -111,7 +123,25 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
                 navigateToSetup = navigateTo(Routes.Main.setup()),
                 navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID)),
                 navigateToSettings = navigateTo(Routes.Main.settings()),
+                navigateToSearch = navigateTo(Routes.Main.search()),
             )
+        }
+
+        val searchOffsetFactor = 1f / 2
+        val searchOffsetY = { it: Int -> (-it * searchOffsetFactor).roundToInt() }
+        val searchAnimSpec: FiniteAnimationSpec<IntOffset> =
+            spring(
+                stiffness = Spring.StiffnessMedium,
+                visibilityThreshold = IntOffset.VisibilityThreshold
+            )
+        composable(
+            Routes.Main.search(),
+            enterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
+            exitTransition = { fadeOut() + slideOutVertically(searchAnimSpec, searchOffsetY) },
+            popEnterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
+            popExitTransition = { fadeOut() + slideOutVertically(searchAnimSpec, searchOffsetY) },
+        ) {
+            Search()
         }
 
         composable(

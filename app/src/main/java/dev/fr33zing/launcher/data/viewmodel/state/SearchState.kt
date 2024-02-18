@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 
+typealias SearchResult = FuzzyMatcher.Result<TreeNodeState>
+
+typealias SearchResultsFlow = Flow<List<SearchResult>>
+
 @Immutable
 data class SearchState(
     val rawQuery: String = "",
@@ -38,7 +42,7 @@ class SearchStateHolder(private val db: AppDatabase) {
     val stateFlow = _stateFlow.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val resultsFlow: Flow<List<FuzzyMatcher.Result<TreeNodeState>>> =
+    val resultsFlow: SearchResultsFlow =
         db.nodeDao()
             .getAllFlow()
             .distinctUntilChanged()
@@ -63,18 +67,15 @@ class SearchStateHolder(private val db: AppDatabase) {
                 }
             }
 
-    fun updateQuery(query: String) {
-        _stateFlow.update { state -> state.copy(rawQuery = query) }
-    }
+    fun updateQuery(query: String) = _stateFlow.update { state -> state.copy(rawQuery = query) }
 
-    fun updateFilter(nodeKind: NodeKind, enabled: Boolean) {
+    fun updateFilter(nodeKind: NodeKind, enabled: Boolean) =
         _stateFlow.update { state ->
             state.copy(
                 nodeKindFilter =
                     state.nodeKindFilter.toMutableMap().also { map -> map[nodeKind] = enabled }
             )
         }
-    }
 
     private fun removeTreeNodeStateFlowsIfMissingFromResults(
         results: List<FuzzyMatcher.Result<Node>>

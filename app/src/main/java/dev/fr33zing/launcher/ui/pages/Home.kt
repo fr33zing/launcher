@@ -17,7 +17,7 @@ import dev.fr33zing.launcher.data.viewmodel.HomeViewModel
 import dev.fr33zing.launcher.ui.components.Clock
 import dev.fr33zing.launcher.ui.components.tree.TreeBrowser
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
-import dev.fr33zing.launcher.ui.utility.detectFlingUp
+import dev.fr33zing.launcher.ui.utility.detectFling
 import dev.fr33zing.launcher.ui.utility.longPressable
 
 @Composable
@@ -25,6 +25,7 @@ fun Home(
     navigateToSetup: () -> Unit,
     navigateToTree: () -> Unit,
     navigateToSettings: () -> Unit,
+    navigateToSearch: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     if (viewModel.isFirstRun) navigateToSetup()
@@ -42,7 +43,9 @@ fun Home(
                 .padding(vertical = 32.dp)
                 .fillMaxSize()
                 .longPressable { navigateToSettings() }
-                .pointerInput(Unit) { detectFlingUp(navigateToTree) }
+                .pointerInput(Unit) {
+                    detectFling(onFlingUp = navigateToTree, onFlingDown = navigateToSearch)
+                }
     ) {
         Clock(viewModel.nextAlarmFlow, ScreenHorizontalPadding)
         TreeBrowser(viewModel.treeBrowser, center = true, modifier = Modifier.weight(1f))

@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -83,7 +84,10 @@ fun Modifier.verticalScrollShadows(height: Dp) = drawWithContent {
     )
 }
 
-fun Modifier.wholeScreenVerticalScrollShadows() = composed {
+data class PaddingAndShadowHeight(val paddingHeight: Dp, val shadowHeight: Dp)
+
+@Composable
+fun rememberPaddingAndShadowHeight(): PaddingAndShadowHeight {
     val density = LocalDensity.current
     val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
     val navigationBarsBottom =
@@ -92,9 +96,12 @@ fun Modifier.wholeScreenVerticalScrollShadows() = composed {
         remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
             listOf(statusBarsTop, navigationBarsBottom).max()
         }
-    val hiddenRatio = 0.666f
+    val hiddenRatio = 0.75f
     val shadowRatio = 1f - hiddenRatio
+    val paddingHeight = verticalPadding * hiddenRatio
     val shadowHeight = verticalPadding * shadowRatio
 
-    verticalScrollShadows(shadowHeight)
+    return remember(paddingHeight, shadowHeight) {
+        PaddingAndShadowHeight(paddingHeight, shadowHeight)
+    }
 }

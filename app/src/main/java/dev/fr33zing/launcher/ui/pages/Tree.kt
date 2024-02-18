@@ -1,6 +1,8 @@
 package dev.fr33zing.launcher.ui.pages
 
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -11,6 +13,8 @@ import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.tree.NodeActions
 import dev.fr33zing.launcher.ui.components.tree.NodeTree
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
 @Composable
 fun Tree(
@@ -19,6 +23,7 @@ fun Tree(
     viewModel: TreeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val lazyListState = rememberLazyListState()
     val nodeActions = remember {
         NodeActions(
             trash = viewModel::moveNodeToTrash,
@@ -36,16 +41,20 @@ fun Tree(
     fun createNode(position: RelativeNodePosition, kind: NodeKind) =
         viewModel.createNode(position, kind) { nodeId -> nodeActions.create(nodeId) }
 
-    NodeTree(
-        treeStateFlow = viewModel.treeStateFlow,
-        treeNodeListFlow = viewModel.treeNodeListFlow,
-        scrollToKeyFlow = viewModel.scrollToKeyFlow,
-        onScrolledToKey = viewModel::onScrolledToKey,
-        onDisableFlowStagger = viewModel::disableFlowStagger,
-        onActivatePayload = ::activatePayload,
-        onSelectNode = viewModel::selectNode,
-        onClearSelectedNode = viewModel::clearSelectedNode,
-        onCreateNode = ::createNode,
-        nodeActions = nodeActions,
-    )
+    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
+        NodeTree(
+            treeStateFlow = viewModel.treeStateFlow,
+            treeNodeListFlow = viewModel.treeNodeListFlow,
+            scrollToKeyFlow = viewModel.scrollToKeyFlow,
+            onFlingDown = navigateTo.search,
+            onScrolledToKey = viewModel::onScrolledToKey,
+            onDisableFlowStagger = viewModel::disableFlowStagger,
+            onActivatePayload = ::activatePayload,
+            onSelectNode = viewModel::selectNode,
+            onClearSelectedNode = viewModel::clearSelectedNode,
+            onCreateNode = ::createNode,
+            nodeActions = nodeActions,
+            lazyListState = lazyListState,
+        )
+    }
 }

@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.tree
+package dev.fr33zing.launcher.ui.components.tree.old
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -82,10 +82,6 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.rememberFuzzyMatcher
-import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
-import dev.fr33zing.launcher.ui.components.tree.old.NodeListDimensions
-import dev.fr33zing.launcher.ui.components.tree.old.RecursiveNodeListHorizontalPadding
-import dev.fr33zing.launcher.ui.components.tree.old.rememberNodeListDimensions
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground

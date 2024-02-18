@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.data.utility
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 
 @Composable
@@ -9,8 +10,9 @@ fun <T> rememberFuzzyMatcher(elements: List<T>, toStringFn: (T) -> String) = rem
 }
 
 class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
-    data class Substring(val text: String, val matches: Boolean, val index: Int)
+    @Immutable data class Substring(val text: String, val matches: Boolean, val index: Int)
 
+    @Immutable
     data class Result<T>(val score: Int, val substrings: List<Substring>, val element: T) {
         fun <R> transform(transform: (T) -> R) = Result(score, substrings, transform(this.element))
     }
