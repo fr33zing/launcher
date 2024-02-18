@@ -34,4 +34,6 @@ enum class NodeRowFeatures {
 }
 
 fun NodeRowFeatureSet.interactive() =
-    contains(NodeRowFeatures.CREATE_ADJACENT) || contains(NodeRowFeatures.ACTION_BUTTONS)
+    contains(NodeRowFeatures.ACTIVATE) ||
+        contains(NodeRowFeatures.CREATE_ADJACENT) ||
+        contains(NodeRowFeatures.ACTION_BUTTONS)

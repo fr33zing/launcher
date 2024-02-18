@@ -67,7 +67,7 @@ fun NodeRow(
 
     @Composable
     fun Interactions(content: @Composable () -> Unit) =
-        if (!simple && hasFeature.interactive && nodeActions != null)
+        if (!simple && hasFeature.interactive)
             NodeInteractions(
                 treeState,
                 treeNodeState,

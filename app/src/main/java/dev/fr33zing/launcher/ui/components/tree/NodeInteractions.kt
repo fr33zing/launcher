@@ -27,6 +27,7 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
+import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -36,7 +37,7 @@ fun NodeInteractions(
     treeNodeState: TreeNodeState,
     adjacentTreeNodeStates: AdjacentTreeNodeStates?,
     features: NodeRowFeatureSet,
-    nodeActions: NodeActions,
+    nodeActions: NodeActions? = null,
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
@@ -49,6 +50,7 @@ fun NodeInteractions(
     val hasFeature =
         remember(features) {
             object {
+                val ACTIVATE = features.contains(NodeRowFeatures.ACTIVATE)
                 val CREATE_ADJACENT = features.contains(NodeRowFeatures.CREATE_ADJACENT)
                 val ACTION_BUTTONS = features.contains(NodeRowFeatures.ACTION_BUTTONS)
             }
@@ -70,28 +72,32 @@ fun NodeInteractions(
                 }
 
             Box(
-                Modifier.combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = indication,
-                    onClick = {
-                        onClearSelectedNode()
+                Modifier.conditional(hasFeature.ACTIVATE) {
+                    combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = indication,
+                        onClick = {
+                            onClearSelectedNode()
 
-                        if (!requireDoubleTapToActivate) onActivatePayload()
-                        else
-                            sendNotice(
-                                "double-tap-to-activate-node",
-                                requireDoubleTapToActivateMessage
-                                    ?: throw Exception("requireDoubleTapToActivateMessage is null")
-                            )
-                    },
-                    onDoubleClick = if (requireDoubleTapToActivate) onActivatePayload else null,
-                    onLongClick = onSelectNode
-                )
+                            if (!requireDoubleTapToActivate) onActivatePayload()
+                            else
+                                sendNotice(
+                                    "double-tap-to-activate-node",
+                                    requireDoubleTapToActivateMessage
+                                        ?: throw Exception(
+                                            "requireDoubleTapToActivateMessage is null"
+                                        )
+                                )
+                        },
+                        onDoubleClick = if (requireDoubleTapToActivate) onActivatePayload else null,
+                        onLongClick = onSelectNode
+                    )
+                }
             ) {
                 content()
             }
 
-            if (hasFeature.ACTION_BUTTONS)
+            if (hasFeature.ACTION_BUTTONS && nodeActions != null)
                 AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
                     NodeActionButtonRow(nodeActions, treeNodeState)
                 }
