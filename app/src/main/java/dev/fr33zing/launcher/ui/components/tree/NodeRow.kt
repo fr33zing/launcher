@@ -20,10 +20,10 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun NodeRow(
-    simple: Boolean,
+    simple: Boolean = false,
     treeState: TreeState? = null,
     treeNodeState: TreeNodeState,
-    adjacentTreeNodeStates: AdjacentTreeNodeStates,
+    adjacentTreeNodeStates: AdjacentTreeNodeStates? = null,
     nodeActions: NodeActions? = null,
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},

@@ -29,7 +29,7 @@ enum class NodeRowFeatures {
     companion object FeatureSets {
         val All: NodeRowFeatureSet = EnumSet.allOf(NodeRowFeatures::class.java)
         val None: NodeRowFeatureSet = EnumSet.noneOf(NodeRowFeatures::class.java)
-        val Minimal: NodeRowFeatureSet = EnumSet.of(ACTIVATE, RENDER_STATE, FOLLOW_REFERENCES)
+        val Search: NodeRowFeatureSet = EnumSet.of(ACTIVATE, RENDER_STATE, FOLLOW_REFERENCES)
     }
 }
 

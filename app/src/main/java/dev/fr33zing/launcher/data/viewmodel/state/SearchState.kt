@@ -32,7 +32,7 @@ data class SearchState(
         get() = rawQuery.trim()
 
     fun filterPredicate(nodeKind: NodeKind): Boolean =
-        nodeKindFilter[nodeKind] ?: nodeKindFilter.all { !it.value }
+        nodeKindFilter.getOrDefault(nodeKind, false) || nodeKindFilter.all { !it.value }
 }
 
 class SearchStateHolder(private val db: AppDatabase) {

@@ -34,7 +34,7 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 fun NodeInteractions(
     treeState: TreeState?,
     treeNodeState: TreeNodeState,
-    adjacentTreeNodeStates: AdjacentTreeNodeStates,
+    adjacentTreeNodeStates: AdjacentTreeNodeStates?,
     features: NodeRowFeatureSet,
     nodeActions: NodeActions,
     onSelectNode: () -> Unit = {},
@@ -98,7 +98,8 @@ fun NodeInteractions(
         }
     }
 
-    if (!hasFeature.CREATE_ADJACENT || treeState == null) nodeRow()
+    if (!hasFeature.CREATE_ADJACENT || treeState == null || adjacentTreeNodeStates == null)
+        nodeRow()
     else {
         Column {
             val nodeKindPickerDialogVisible = remember { mutableStateOf(false) }
