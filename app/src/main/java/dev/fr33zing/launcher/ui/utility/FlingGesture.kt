@@ -20,6 +20,8 @@ suspend fun PointerInputScope.detectFling(
         awaitFirstDown(requireUnconsumed = false)
         if (onFirstDown != null) onFirstDown()
 
+        val touchSlop = viewConfiguration.touchSlop
+
         val flingDragAmountThreshold = 75.dp
         val flingDragVelocityThreshold = 2.5.dp // per millisecond
 
@@ -45,7 +47,10 @@ suspend fun PointerInputScope.detectFling(
             cumulativeDragAmount += dragAmount
             maxDragVelocity = max(maxDragVelocity, dragVelocity)
 
+            if (abs(dragAmountPx) < touchSlop) continue
             if (flingGestureComplete) continue
+
+            change.consume()
 
             if (maxDragVelocity >= flingDragVelocityThreshold) {
                 if (onFlingDown != null && cumulativeDragAmount >= flingDragAmountThreshold) {
@@ -56,8 +61,6 @@ suspend fun PointerInputScope.detectFling(
                     onFlingUp()
                 }
             }
-
-            change.consume()
         } while (event.changes.any { it.pressed })
     }
 }
