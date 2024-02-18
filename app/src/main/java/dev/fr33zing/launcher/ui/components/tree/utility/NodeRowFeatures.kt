@@ -23,9 +23,6 @@ enum class NodeRowFeatures {
     /** If true, the NodeRow will consider the state when rendering. */
     RENDER_STATE,
 
-    // TODO document this
-    FOLLOW_REFERENCES,
-
     /** If true, long pressing the NodeRow will show buttons to create new nodes adjacent to it. */
     CREATE_ADJACENT,
 
@@ -36,7 +33,7 @@ enum class NodeRowFeatures {
     companion object FeatureSets {
         val All: NodeRowFeatureSet = EnumSet.allOf(NodeRowFeatures::class.java)
         val None: NodeRowFeatureSet = EnumSet.noneOf(NodeRowFeatures::class.java)
-        val Search: NodeRowFeatureSet = EnumSet.of(ACTIVATE, RENDER_STATE, FOLLOW_REFERENCES)
+        val Search: NodeRowFeatureSet = EnumSet.of(ACTIVATE, RENDER_STATE)
     }
 }
 
