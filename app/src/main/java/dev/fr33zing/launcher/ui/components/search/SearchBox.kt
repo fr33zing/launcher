@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.search
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -11,12 +12,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,21 +105,22 @@ fun SearchBox(
             modifier = Modifier.focusRequester(focusRequester).weight(1f)
         )
 
-        val actionButtonClearsQuery = query.isNotEmpty()
-        val actionButtonColor = Catppuccin.Current.red
+        val clearQueryButtonAlpha by
+            animateFloatAsState(if (query.isEmpty()) 0f else 1f, label = "clear query button alpha")
+        val clearQueryButtonColor = Catppuccin.Current.red.copy(alpha = clearQueryButtonAlpha)
         val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color = actionButtonColor, circular = true)
+        val indication = rememberCustomIndication(color = clearQueryButtonColor, circular = true)
 
         Icon(
-            if (actionButtonClearsQuery) Icons.Filled.Close else Icons.Filled.ArrowUpward,
-            contentDescription = "query action button",
-            tint = actionButtonColor,
+            Icons.Filled.Close,
+            contentDescription = "clear query button",
+            tint = clearQueryButtonColor,
             modifier =
                 Modifier.clickable(
                     interactionSource,
                     indication,
                 ) {
-                    if (actionButtonClearsQuery) updateQuery("") else closePanelFn()
+                    updateQuery("")
                 }
         )
     }
