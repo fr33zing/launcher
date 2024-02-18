@@ -16,8 +16,11 @@ import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.utility.notNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +34,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @Immutable
 data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
@@ -89,6 +93,23 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
     fun onSelectNode(key: TreeNodeKey) = _stateFlow.update { it.copy(selectedKey = key) }
 
     fun onClearSelectedNode() = _stateFlow.update { it.copy(selectedKey = null) }
+
+    private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
+        var key = TreeNodeKey(emptyList())
+        targetKey.nodeLineage.forEachIndexed { index, it ->
+            if (index == targetKey.nodeLineage.lastIndex) return
+            key = key.childKey(it)
+            showChildren[key] = true
+        }
+    }
+
+    fun ensureNodeIsShown(nodeId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val nodeLineage = db.nodeLineage(nodeId)
+            val key = TreeNodeKey(nodeLineage.map { it.nodeId })
+            ensureKeyIsShown(key)
+        }
+    }
 
     val listFlow: Flow<List<TreeNodeState>> = flow {
         fun traverse(

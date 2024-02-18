@@ -23,6 +23,7 @@ import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun Search(
+    navigateToTree: () -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -44,6 +45,12 @@ fun Search(
         viewModel.activatePayload(context, treeNodeState)
         viewModel.addCurrentQueryToSearchHistory()
         clearFocus()
+    }
+
+    fun activateDirectory(treeNodeState: TreeNodeState) {
+        viewModel.activateDirectory(treeNodeState)
+        clearFocus()
+        navigateToTree()
     }
 
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
@@ -73,10 +80,8 @@ fun Search(
                     viewModel.updateQuery(it)
                     clearFocus()
                 },
-                onActivateSearchResult = {
-                    activatePayload(it)
-                    clearFocus()
-                }
+                onActivateSearchResult = ::activatePayload,
+                onActivateDirectorySearchResult = ::activateDirectory
             )
         }
     }

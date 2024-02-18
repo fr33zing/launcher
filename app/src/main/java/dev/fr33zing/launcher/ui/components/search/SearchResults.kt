@@ -50,6 +50,7 @@ fun SearchResults(
     showHistory: Boolean,
     onTapHistoricalQuery: (String) -> Unit = {},
     onActivateSearchResult: (TreeNodeState) -> Unit = {},
+    onActivateDirectorySearchResult: (TreeNodeState) -> Unit = {},
     shadowHeight: Dp = LocalNodeDimensions.current.spacing / 2,
     lazyListState: LazyListState = rememberLazyListState(),
 ) {
@@ -58,7 +59,7 @@ fun SearchResults(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
         ) {
             if (showHistory) historyItems(history, onTapHistoricalQuery)
-            else resultItems(results, onActivateSearchResult)
+            else resultItems(results, onActivateSearchResult, onActivateDirectorySearchResult)
         }
     }
 }
@@ -87,7 +88,8 @@ private fun LazyListScope.historyItems(
 
 private fun LazyListScope.resultItems(
     results: List<SearchResult>,
-    onActivateSearchResult: (TreeNodeState) -> Unit
+    onActivateSearchResult: (TreeNodeState) -> Unit,
+    onActivateDirectorySearchResult: (TreeNodeState) -> Unit,
 ) {
     if (results.isEmpty())
         item {
@@ -109,6 +111,7 @@ private fun LazyListScope.resultItems(
                 treeNodeState = result.element,
                 features = NodeRowFeatures.Search,
                 onActivatePayload = { onActivateSearchResult(result.element) },
+                onActivateDirectory = { onActivateDirectorySearchResult(result.element) },
                 buildLabelString = {
                     result.substrings.forEach {
                         withStyle(

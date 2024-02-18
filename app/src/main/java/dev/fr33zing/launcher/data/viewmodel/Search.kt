@@ -50,4 +50,9 @@ constructor(private val db: AppDatabase, private val searchHistory: SearchHistor
         addCurrentQueryToSearchHistory()
         treeNodeState.value.payload.activate(db, context)
     }
+
+    fun activateDirectory(treeNodeState: TreeNodeState) {
+        addCurrentQueryToSearchHistory()
+        sendJumpToNode(treeNodeState.underlyingNodeId)
+    }
 }

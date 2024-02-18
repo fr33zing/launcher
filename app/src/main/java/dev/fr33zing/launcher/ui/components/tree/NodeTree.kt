@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,11 +43,15 @@ import dev.fr33zing.launcher.ui.utility.detectFling
 import dev.fr33zing.launcher.ui.utility.rememberPaddingAndShadowHeight
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
+private const val HIGHLIGHT_ANIMATION_DURATION_MS = 2000
+private const val UNHIGHLIGHT_ANIMATION_DURATION_MS = 4000
+private const val HIGHLIGHT_ANIMATION_MAX_ALPHA = 0.4f
 private const val USE_LAZY_COLUMN = true
 
 private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVector1D>?>
@@ -58,7 +63,8 @@ fun NodeTree(
     // Flows
     treeStateFlow: Flow<TreeState>,
     treeNodeListFlow: Flow<List<TreeNodeState>>,
-    scrollToKeyFlow: Flow<TreeNodeKey?>,
+    scrollToKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
+    highlightKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
     // Events
     onFlingDown: () -> Unit = {},
     onScrolledToKey: () -> Unit = {},
@@ -66,6 +72,7 @@ fun NodeTree(
     onActivatePayload: (TreeNodeState) -> Unit = {},
     onSelectNode: (TreeNodeKey) -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
+    onClearHighlightedNode: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     // Other
     paddingAndShadowHeight: PaddingAndShadowHeight = rememberPaddingAndShadowHeight(),
@@ -79,7 +86,6 @@ fun NodeTree(
         remember(features) {
             object {
                 val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
-                val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
             }
         }
     val animation =
@@ -120,9 +126,26 @@ fun NodeTree(
         val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == scrollToKey }
         if (index == -1) return
         val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == scrollToKey }
-        if (!visible) coroutineScope.launch { lazyListState.scrollToItem(index) }
+        if (!visible) coroutineScope.launch { lazyListState.animateScrollToItem(index) }
         onScrolledToKey()
     }
+
+    val highlightAlpha = remember { Animatable(0f) }
+    val highlightKey by
+        highlightKeyFlow
+            .onEach {
+                coroutineScope.launch {
+                    onDisableFlowStagger()
+                    highlightAlpha.snapTo(0f)
+                    highlightAlpha.animateTo(
+                        HIGHLIGHT_ANIMATION_MAX_ALPHA,
+                        tween(HIGHLIGHT_ANIMATION_DURATION_MS)
+                    )
+                    highlightAlpha.animateTo(0f, tween(UNHIGHLIGHT_ANIMATION_DURATION_MS))
+                    onClearHighlightedNode()
+                }
+            }
+            .collectAsStateWithLifecycle(null)
 
     /** Used to check for scrollable content overflow */
     var containerHeight by remember { mutableStateOf<Int?>(null) }
@@ -161,27 +184,42 @@ fun NodeTree(
                         )
                     }
                 }
-
             val treeNodeState by
                 initialTreeNodeState.flow.value.collectAsStateWithLifecycle(initialTreeNodeState)
-
             val simpleMode by
                 remember(appearAnimationProgress) {
                     derivedStateOf { (appearAnimationProgress?.value ?: 1f) < 1f }
                 }
 
-            NodeRow(
-                simple = simpleMode,
-                treeState = treeState,
-                treeNodeState = treeNodeState,
-                adjacentTreeNodeStates = adjacentTreeNodeStates,
-                nodeActions = nodeActions,
-                onSelectNode = { onSelectNode(treeNodeState.key) },
-                onClearSelectedNode = onClearSelectedNode,
-                onActivatePayload = { onActivatePayload(treeNodeState) },
-                onCreateNode = onCreateNode,
-                appearAnimationProgress = appearAnimationProgress,
-            )
+            @Composable
+            fun nodeRow() {
+                NodeRow(
+                    simple = simpleMode,
+                    treeState = treeState,
+                    treeNodeState = treeNodeState,
+                    adjacentTreeNodeStates = adjacentTreeNodeStates,
+                    nodeActions = nodeActions,
+                    onSelectNode = { onSelectNode(treeNodeState.key) },
+                    onClearSelectedNode = onClearSelectedNode,
+                    onActivatePayload = { onActivatePayload(treeNodeState) },
+                    onCreateNode = onCreateNode,
+                    appearAnimationProgress = appearAnimationProgress,
+                )
+            }
+
+            if (highlightKey != treeNodeState.key) nodeRow()
+            else {
+                Box(
+                    Modifier.drawWithCache {
+                        val highlightColor = treeNodeState.value.node.kind.color
+                        onDrawBehind {
+                            drawRect(color = highlightColor, alpha = highlightAlpha.value)
+                        }
+                    }
+                ) {
+                    nodeRow()
+                }
+            }
         }
 
         fun Modifier.disableFlowStaggerOnOverflow() =

@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -141,7 +140,7 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             popEnterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
             popExitTransition = { fadeOut() + slideOutVertically(searchAnimSpec, searchOffsetY) },
         ) {
-            Search()
+            Search(navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID)))
         }
 
         composable(
@@ -169,13 +168,3 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
 // TODO move this
 fun SavedStateHandle.nodeId(): Int =
     get<String>("nodeId")?.toInt() ?: throw Exception("nodeId is null")
-
-// TODO delete these
-private fun NavBackStackEntry.hasTreeRoute() = destination.route?.startsWith("home/tree/") == true
-
-private fun NavBackStackEntry.nodeIdOrNull() = arguments?.getString("nodeId")?.toInt()
-
-private fun NavBackStackEntry.nodeId() = nodeIdOrNull() ?: throw Exception("nodeId is null")
-
-private fun NavBackStackEntry.nodeKind() =
-    arguments?.getString("nodeKind") ?: throw Exception("nodeKind is null")

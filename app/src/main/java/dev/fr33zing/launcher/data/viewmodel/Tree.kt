@@ -19,26 +19,49 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeStateHolder
+import dev.fr33zing.launcher.nodeId
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private val jumpToNodeFlow = MutableSharedFlow<Int?>(1)
+
+fun sendJumpToNode(nodeId: Int) = jumpToNodeFlow.tryEmit(nodeId)
+
 @HiltViewModel
 class TreeViewModel
 @Inject
-constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
-    private val nodeId =
-        savedStateHandle.get<String>("nodeId")?.toInt()
-            ?: throw Exception("Invalid SavedStateHandle value for key: nodeId")
-    private val stateHolder = TreeStateHolder(db, nodeId)
+constructor(
+    private val db: AppDatabase,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+    private val rootNodeId = savedStateHandle.nodeId()
+
+    val highlightKeyFlow: StateFlow<TreeNodeKey?> =
+        jumpToNodeFlow
+            .onEach { it?.let { nodeId -> stateHolder.ensureNodeIsShown(nodeId) } }
+            .map {
+                it?.let { nodeId ->
+                    val lineage = db.nodeLineage(nodeId)
+                    TreeNodeKey(lineage.map { node -> node.nodeId })
+                }
+            }
+            .onEach { _scrollToKeyFlow.emit(it) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+
+    private val stateHolder = TreeStateHolder(db, rootNodeId)
     private var shouldStaggerFlow = mutableStateOf(true)
 
     private val _scrollToKeyFlow = MutableStateFlow<TreeNodeKey?>(null)
@@ -60,13 +83,9 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
         treeNodeState.value.payload.activate(db, context)
     }
 
-    fun selectNode(key: TreeNodeKey) {
-        stateHolder.onSelectNode(key)
-    }
+    fun selectNode(key: TreeNodeKey) = stateHolder.onSelectNode(key)
 
-    fun clearSelectedNode() {
-        stateHolder.onClearSelectedNode()
-    }
+    fun clearSelectedNode() = stateHolder.onClearSelectedNode()
 
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
@@ -97,5 +116,9 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
 
     fun disableFlowStagger() {
         shouldStaggerFlow.value = false
+    }
+
+    fun clearHighlightedNode() {
+        viewModelScope.launch { jumpToNodeFlow.emit(null) }
     }
 }
