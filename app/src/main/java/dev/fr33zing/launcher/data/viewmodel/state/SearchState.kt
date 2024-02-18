@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -56,15 +57,17 @@ class SearchStateHolder(private val db: AppDatabase) {
                     .onEach(::removeTreeNodeStateFlowsIfMissingFromResults)
             }
             .flatMapLatest { results ->
-                combine(
-                    results.map { result ->
-                        getTreeNodeStateFlow(result.element).map { treeNodeState ->
-                            result.transform { treeNodeState }
+                if (results.isEmpty()) flowOf(emptyList())
+                else
+                    combine(
+                        results.map { result ->
+                            getTreeNodeStateFlow(result.element).map { treeNodeState ->
+                                result.transform { treeNodeState }
+                            }
                         }
+                    ) {
+                        it.toList()
                     }
-                ) {
-                    it.toList()
-                }
             }
 
     fun updateQuery(query: String) = _stateFlow.update { state -> state.copy(rawQuery = query) }
