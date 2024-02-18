@@ -44,7 +44,7 @@ fun SearchFilters(
                         circular = true,
                         circularSizeFactor = 1.45f,
                     )
-                val enabled = nodeKindFilter.contains(nodeKind)
+                val enabled = nodeKindFilter.getOrDefault(nodeKind, false)
 
                 Box(
                     Modifier.clickable(interactionSource, indication) {
