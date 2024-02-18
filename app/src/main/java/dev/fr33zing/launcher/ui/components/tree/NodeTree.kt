@@ -134,8 +134,9 @@ fun NodeTree(
     val highlightKey by
         highlightKeyFlow
             .onEach {
+                if (it == null) return@onEach
+                onDisableFlowStagger()
                 coroutineScope.launch {
-                    onDisableFlowStagger()
                     highlightAlpha.snapTo(0f)
                     highlightAlpha.animateTo(
                         HIGHLIGHT_ANIMATION_MAX_ALPHA,
