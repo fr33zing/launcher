@@ -140,7 +140,10 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             popEnterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
             popExitTransition = { fadeOut() + slideOutVertically(searchAnimSpec, searchOffsetY) },
         ) {
-            Search(navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID)))
+            Search(
+                navigateBack = navigateBack,
+                navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID))
+            )
         }
 
         composable(

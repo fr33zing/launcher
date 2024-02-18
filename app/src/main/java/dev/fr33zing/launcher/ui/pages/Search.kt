@@ -1,9 +1,13 @@
 package dev.fr33zing.launcher.ui.pages
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +27,7 @@ import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun Search(
+    navigateBack: () -> Unit,
     navigateToTree: () -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
@@ -34,6 +39,17 @@ fun Search(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    var showRequestFocusButton by remember { mutableStateOf(false) }
+
+    fun onNavigateBack() {
+        showRequestFocusButton = false
+        navigateBack()
+    }
+
+    fun onNavigateToTree() {
+        showRequestFocusButton = false
+        navigateToTree()
+    }
 
     fun clearFocus() {
         focusRequester.freeFocus()
@@ -55,12 +71,17 @@ fun Search(
     fun activateDirectory(treeNodeState: TreeNodeState) {
         viewModel.activateDirectory(treeNodeState)
         clearFocus()
-        navigateToTree()
+        onNavigateToTree()
     }
+
+    LaunchedEffect(Unit) { showRequestFocusButton = true }
+
+    BackHandler(onBack = ::onNavigateBack)
 
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         SearchContainer(
-            ::requestFocus,
+            requestFocus = ::requestFocus,
+            showRequestFocusButton = showRequestFocusButton,
             controls = {
                 SearchBox(
                     query = state.query,
