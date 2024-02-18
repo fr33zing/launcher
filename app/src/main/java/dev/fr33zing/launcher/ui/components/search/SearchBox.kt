@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -98,6 +99,8 @@ fun SearchBox(
             modifier = Modifier.focusRequester(focusRequester).weight(1f)
         )
 
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
         val clearQueryButtonAlpha by
             animateFloatAsState(if (query.isEmpty()) 0f else 1f, label = "clear query button alpha")
         val clearQueryButtonColor = Catppuccin.Current.red.copy(alpha = clearQueryButtonAlpha)
@@ -114,6 +117,7 @@ fun SearchBox(
                     indication,
                 ) {
                     updateQuery("")
+                    focusRequester.requestFocus()
                 }
         )
     }
