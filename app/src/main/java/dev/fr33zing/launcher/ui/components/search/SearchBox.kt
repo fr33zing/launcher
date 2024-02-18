@@ -43,7 +43,6 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
 fun SearchBox(
-    _saveHistory: () -> Unit,
     query: String,
     updateQuery: (query: String) -> Unit,
     focusRequester: FocusRequester,
@@ -51,6 +50,7 @@ fun SearchBox(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
     lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
+    onGo: () -> Unit = {}
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -69,14 +69,7 @@ fun SearchBox(
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Password // Disable auto-suggestions
                 ),
-            keyboardActions =
-                KeyboardActions(
-                    onGo = {
-                        focusRequester.freeFocus()
-                        focusManager.clearFocus(true)
-                        // activateBestMatchSubject.onNext(Unit)
-                    }
-                ),
+            keyboardActions = KeyboardActions(onGo = { onGo() }),
             textStyle =
                 TextStyle(
                     color = Foreground,
@@ -120,7 +113,6 @@ fun SearchBox(
                     interactionSource,
                     indication,
                 ) {
-                    _saveHistory()
                     updateQuery("")
                 }
         )

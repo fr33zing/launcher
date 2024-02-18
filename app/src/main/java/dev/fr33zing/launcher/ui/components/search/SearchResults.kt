@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import dev.fr33zing.launcher.data.viewmodel.state.SearchResult
+import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.tree.NodeDetail
 import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
 import dev.fr33zing.launcher.ui.components.tree.NodeRow
@@ -38,6 +39,7 @@ fun SearchResults(
     results: List<SearchResult>,
     showHistory: Boolean,
     onTapHistoricalQuery: (String) -> Unit = {},
+    onActivateSearchResult: (TreeNodeState) -> Unit = {},
     shadowHeight: Dp = LocalNodeDimensions.current.spacing / 2,
     lazyListState: LazyListState = rememberLazyListState(),
 ) {
@@ -45,7 +47,8 @@ fun SearchResults(
         LazyColumn(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
         ) {
-            if (showHistory) historyItems(history, onTapHistoricalQuery) else resultItems(results)
+            if (showHistory) historyItems(history, onTapHistoricalQuery)
+            else resultItems(results, onActivateSearchResult)
         }
     }
 }
@@ -72,7 +75,10 @@ private fun LazyListScope.historyItems(
     }
 }
 
-private fun LazyListScope.resultItems(results: List<SearchResult>) {
+private fun LazyListScope.resultItems(
+    results: List<SearchResult>,
+    onActivateSearchResult: (TreeNodeState) -> Unit
+) {
     if (results.isEmpty())
         item {
             Text(
@@ -84,6 +90,10 @@ private fun LazyListScope.resultItems(results: List<SearchResult>) {
         }
     else
         items(results) { result ->
-            NodeRow(treeNodeState = result.element, features = NodeRowFeatures.Search)
+            NodeRow(
+                treeNodeState = result.element,
+                features = NodeRowFeatures.Search,
+                onActivatePayload = { onActivateSearchResult(result.element) }
+            )
         }
 }
