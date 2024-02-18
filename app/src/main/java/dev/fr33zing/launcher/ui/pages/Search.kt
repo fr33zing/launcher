@@ -41,6 +41,11 @@ fun Search(
         keyboardController?.hide()
     }
 
+    fun requestFocus() {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     fun activatePayload(treeNodeState: TreeNodeState) {
         viewModel.activatePayload(context, treeNodeState)
         viewModel.addCurrentQueryToSearchHistory()
@@ -55,6 +60,7 @@ fun Search(
 
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         SearchContainer(
+            ::requestFocus,
             controls = {
                 SearchBox(
                     query = state.query,
