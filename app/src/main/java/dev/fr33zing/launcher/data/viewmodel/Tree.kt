@@ -1,8 +1,6 @@
 package dev.fr33zing.launcher.data.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -42,7 +40,6 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
             ?: throw Exception("Invalid SavedStateHandle value for key: nodeId")
     private val stateHolder = TreeStateHolder(db, nodeId)
     private var shouldStaggerFlow = mutableStateOf(true)
-    val flowStaggered by derivedStateOf { shouldStaggerFlow.value }
 
     private val _scrollToKeyFlow = MutableStateFlow<TreeNodeKey?>(null)
     val scrollToKeyFlow =
