@@ -29,6 +29,8 @@ fun NodeRow(
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
+    /** Only called when [NodeRowFeatures.RECURSIVE] is not present. */
+    onActivateDirectory: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
@@ -38,6 +40,8 @@ fun NodeRow(
         remember(features) {
             derivedStateOf {
                 object {
+                    val RENDER_STATE = features.contains(NodeRowFeatures.RENDER_STATE)
+                    val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
                     val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
                     val interactive = features.interactive()
                 }
@@ -47,7 +51,14 @@ fun NodeRow(
     @Composable
     fun Providers(content: @Composable () -> Unit) =
         CompositionLocalProvider(
-            LocalNodeAppearance provides rememberNodeAppearance(treeNodeState),
+            LocalNodeAppearance provides
+                rememberNodeAppearance(
+                    treeNodeState,
+                    ignoreState =
+                        !hasFeature.RENDER_STATE ||
+                            (!hasFeature.EXPAND_DIRECTORIES &&
+                                treeNodeState.value.node.kind == NodeKind.Directory)
+                ),
             LocalNodeRowFeatures provides features,
             content = content
         )
@@ -83,6 +94,7 @@ fun NodeRow(
                 onSelectNode,
                 onClearSelectedNode,
                 onActivatePayload,
+                onActivateDirectory,
                 onCreateNode,
                 content = content
             )

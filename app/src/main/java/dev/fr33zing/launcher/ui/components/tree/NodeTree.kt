@@ -79,6 +79,7 @@ fun NodeTree(
         remember(features) {
             object {
                 val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
+                val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
             }
         }
     val animation =

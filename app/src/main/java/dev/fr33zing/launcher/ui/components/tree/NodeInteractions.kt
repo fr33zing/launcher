@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,7 @@ fun NodeInteractions(
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
+    onActivateDirectory: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     color: Color = LocalNodeAppearance.current.color,
     content: @Composable () -> Unit,
@@ -51,11 +53,18 @@ fun NodeInteractions(
         remember(features) {
             object {
                 val ACTIVATE = features.contains(NodeRowFeatures.ACTIVATE)
+                val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
                 val CREATE_ADJACENT = features.contains(NodeRowFeatures.CREATE_ADJACENT)
                 val ACTION_BUTTONS = features.contains(NodeRowFeatures.ACTION_BUTTONS)
             }
         }
     val selected = treeNodeState.key == treeState?.selectedKey
+
+    val activatePayload by rememberUpdatedState {
+        if (treeNodeState.value.node.kind == NodeKind.Directory) {
+            if (hasFeature.EXPAND_DIRECTORIES) onActivatePayload() else onActivateDirectory()
+        } else onActivatePayload()
+    }
 
     BackHandler(enabled = selected) { onClearSelectedNode() }
 
@@ -79,7 +88,7 @@ fun NodeInteractions(
                         onClick = {
                             onClearSelectedNode()
 
-                            if (!requireDoubleTapToActivate) onActivatePayload()
+                            if (!requireDoubleTapToActivate) activatePayload()
                             else
                                 sendNotice(
                                     "double-tap-to-activate-node",
@@ -89,7 +98,7 @@ fun NodeInteractions(
                                         )
                                 )
                         },
-                        onDoubleClick = if (requireDoubleTapToActivate) onActivatePayload else null,
+                        onDoubleClick = if (requireDoubleTapToActivate) activatePayload else null,
                         onLongClick = onSelectNode
                     )
                 }

@@ -13,6 +13,13 @@ enum class NodeRowFeatures {
     /** If true, tapping the NodeRow will call its state's activate function. */
     ACTIVATE,
 
+    /**
+     * If false, directories cannot be expanded and their state will be ignored. If [RECURSIVE] is
+     * false and [ACTIVATE] is true, activating a directory will call `onActivateDirectory` instead
+     * of `onActivatePayload`.
+     */
+    RECURSIVE,
+
     /** If true, the NodeRow will consider the state when rendering. */
     RENDER_STATE,
 
