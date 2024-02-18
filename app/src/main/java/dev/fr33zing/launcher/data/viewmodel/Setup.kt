@@ -62,11 +62,11 @@ class SetupViewModel @Inject constructor(private val db: AppDatabase) : ViewMode
                 )
             }
 
-            homeNote("Swipe up to enter tree view.")
+            homeNote("Fling up to view your tree.")
+            homeNote("Fling down to search.")
             homeNote("Long press in empty space to edit preferences.")
 
-            rootNote("Pull down to search.")
-            rootNote("Pinch to zoom out.")
+            // rootNote("Pinch to zoom out.") TODO: reimplement zoom
             rootNote("Tap directories to expand or collapse them.")
             rootNote("Long press items to modify them or add new items adjacent to them.")
             rootNote("Items in the Home directory show up on the home screen.")
