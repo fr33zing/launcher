@@ -54,12 +54,10 @@ fun Search(
                     updateQuery = viewModel.updateQuery,
                     focusRequester = focusRequester,
                     focusManager = focusManager,
-                    onGo = {
-                        results.getOrNull(0)?.let { topResult ->
-                            activatePayload(topResult.element)
-                        }
-                    }
-                )
+                    keyboardController = keyboardController
+                ) {
+                    results.getOrNull(0)?.let { topResult -> activatePayload(topResult.element) }
+                }
 
                 SearchFilters(
                     nodeKindFilter = state.nodeKindFilter,
