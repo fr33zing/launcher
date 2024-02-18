@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -68,6 +69,7 @@ fun NodeDetail(
     lineThrough: Boolean = LocalNodeAppearance.current.lineThrough,
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
+    buildLabelString: (AnnotatedString.Builder.() -> Unit)? = null,
     @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
 ) {
     val inlineContentMap =
@@ -83,7 +85,7 @@ fun NodeDetail(
     val text =
         remember(label) {
             buildAnnotatedString {
-                if (label.isNotBlank()) append(label)
+                if (label.isNotBlank()) buildLabelString?.let { it() } ?: append(label)
                 else withStyle(SpanStyle(color = UnlabeledNodeColor)) { append(UnlabeledNodeText) }
 
                 if (isValidReference) {

@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.text.AnnotatedString
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
@@ -31,6 +32,7 @@ fun NodeRow(
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
+    buildLabelString: (AnnotatedString.Builder.() -> Unit)? = null,
 ) {
     val hasFeature by
         remember(features) {
@@ -61,7 +63,11 @@ fun NodeRow(
                         else treeNodeState.value.node.label
                     }
                 }
-            NodeDetail(label, isValidReference = treeNodeState.value.isValidReference)
+            NodeDetail(
+                label,
+                isValidReference = treeNodeState.value.isValidReference,
+                buildLabelString = buildLabelString
+            )
         }
     }
 

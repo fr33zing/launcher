@@ -22,9 +22,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import dev.fr33zing.launcher.data.viewmodel.state.SearchResult
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
@@ -101,10 +104,25 @@ private fun LazyListScope.resultItems(
         }
     else
         items(results) { result ->
+            val color = remember(result) { result.element.value.node.kind.color }
             NodeRow(
                 treeNodeState = result.element,
                 features = NodeRowFeatures.Search,
-                onActivatePayload = { onActivateSearchResult(result.element) }
+                onActivatePayload = { onActivateSearchResult(result.element) },
+                buildLabelString = {
+                    result.substrings.forEach {
+                        withStyle(
+                            SpanStyle(
+                                color = color,
+                                background =
+                                    if (it.matches) color.copy(alpha = 0.25f)
+                                    else Color.Transparent,
+                            )
+                        ) {
+                            append(it.text)
+                        }
+                    }
+                }
             )
         }
 }
