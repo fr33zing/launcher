@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
@@ -42,6 +43,7 @@ import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
 val historyColor = Foreground.mix(Background, 0.5f)
+const val MAX_SEARCH_RESULTS = 50
 
 @Composable
 fun SearchResults(
@@ -108,7 +110,9 @@ private fun LazyListScope.resultItems(
             }
         }
     else
-        items(results) { result ->
+        itemsIndexed(results, key = { _, result -> Pair(result.element, query) }) { index, result ->
+            if (index >= MAX_SEARCH_RESULTS) return@itemsIndexed
+
             val color = remember(result) { result.element.value.node.kind.color }
             NodeRow(
                 treeNodeState = result.element,
