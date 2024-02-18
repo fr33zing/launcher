@@ -12,6 +12,7 @@ import dev.fr33zing.launcher.data.viewmodel.SearchViewModel
 import dev.fr33zing.launcher.ui.components.search.SearchBox
 import dev.fr33zing.launcher.ui.components.search.SearchContainer
 import dev.fr33zing.launcher.ui.components.search.SearchFilters
+import dev.fr33zing.launcher.ui.components.search.SearchResults
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
@@ -21,6 +22,7 @@ fun Search(
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val results by viewModel.resultsFlow.collectAsStateWithLifecycle()
+    val history by viewModel.historyFlow.collectAsStateWithLifecycle()
 
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -29,19 +31,20 @@ fun Search(
         SearchContainer(
             controls = {
                 SearchBox(
+                    _saveHistory = viewModel::addCurrentQueryToSearchHistory,
                     query = state.query,
                     updateQuery = viewModel.updateQuery,
                     focusRequester = focusRequester,
                     focusManager = focusManager,
-                ) {
-                    // closePanelFn
-                }
+                )
 
                 SearchFilters(
                     nodeKindFilter = state.nodeKindFilter,
                     updateFilter = viewModel.updateFilter,
                 )
             }
-        ) {}
+        ) {
+            SearchResults(history, results, onTapHistoricalQuery = viewModel.updateQuery)
+        }
     }
 }

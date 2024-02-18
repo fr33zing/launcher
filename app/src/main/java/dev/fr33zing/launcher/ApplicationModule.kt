@@ -13,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.SearchHistory
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -26,6 +27,10 @@ object ApplicationModule {
     @Provides
     fun provideAppDatabase(@ApplicationContext context: Context) =
         Room.databaseBuilder(context, AppDatabase::class.java, "database").build()
+
+    @Singleton
+    @Provides
+    fun provideSearchHistory(@ApplicationContext context: Context) = SearchHistory(context)
 
     @Singleton
     @Provides
