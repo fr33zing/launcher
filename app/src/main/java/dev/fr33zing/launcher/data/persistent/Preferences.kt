@@ -93,7 +93,7 @@ class NoticePreferences(context: Context) {
 }
 
 class DebugPreferences(context: Context) {
-    val useNewTree = Preference(context, booleanPreferencesKey("useNewTree"), false, ::noMap)
+    val useNewTree = Preference(context, booleanPreferencesKey("useNewTree"), true, ::noMap)
 }
 
 private fun <T> noMap(value: T): T = value
