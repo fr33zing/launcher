@@ -73,8 +73,9 @@ fun Search(
             }
         ) {
             SearchResults(
-                history,
-                results,
+                query = state.query,
+                history = history,
+                results = results,
                 showHistory = state.query.isBlank(),
                 onTapHistoricalQuery = {
                     viewModel.updateQuery(it)

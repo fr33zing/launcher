@@ -45,6 +45,7 @@ val historyColor = Foreground.mix(Background, 0.5f)
 
 @Composable
 fun SearchResults(
+    query: String,
     history: List<String>,
     results: List<SearchResult>,
     showHistory: Boolean,
@@ -59,7 +60,8 @@ fun SearchResults(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
         ) {
             if (showHistory) historyItems(history, onTapHistoricalQuery)
-            else resultItems(results, onActivateSearchResult, onActivateDirectorySearchResult)
+            else
+                resultItems(query, results, onActivateSearchResult, onActivateDirectorySearchResult)
         }
     }
 }
@@ -87,6 +89,7 @@ private fun LazyListScope.historyItems(
 }
 
 private fun LazyListScope.resultItems(
+    query: String,
     results: List<SearchResult>,
     onActivateSearchResult: (TreeNodeState) -> Unit,
     onActivateDirectorySearchResult: (TreeNodeState) -> Unit,
