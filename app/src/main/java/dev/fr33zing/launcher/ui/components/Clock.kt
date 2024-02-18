@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -79,9 +80,9 @@ private val spacerStyle = SpanStyle(fontSize = 42.sp, fontFamily = makeFontFamil
 
 val nextAlarmColor = Catppuccin.Current.red
 private val nextAlarmSpanStyle =
-    SpanStyle(fontSize = 16.sp, fontFamily = makeFontFamily(300), color = nextAlarmColor)
+    SpanStyle(fontSize = 16.sp, fontFamily = makeFontFamily(350), color = nextAlarmColor)
 private val nextAlarmAmPmSpanStyle =
-    SpanStyle(fontSize = 12.sp, fontFamily = makeFontFamily(300), color = nextAlarmColor)
+    SpanStyle(fontSize = 12.sp, fontFamily = makeFontFamily(500), color = nextAlarmColor)
 
 private fun AnnotatedString.Builder.spacer() {
     withStyle(spacerStyle) { append(" ") }
@@ -124,7 +125,6 @@ fun Clock(nextAlarmFlow: NextAlarmFlow, horizontalPadding: Dp) {
                 spacer()
                 withStyle(nextAlarmSpanStyle) {
                     appendInlineContent("alarm")
-                    append(" ")
                     append(
                         (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
                             .format(nextAlarm)
@@ -164,7 +164,6 @@ fun Clock(nextAlarmFlow: NextAlarmFlow, horizontalPadding: Dp) {
     }
 
     Column {
-        // TODO add setting to choose default clock and calendar app
         Element(currentTime, horizontalPadding, verticalPadding = 0.dp) {
             launchClockApplication(context, clockPackage)
         }
@@ -183,13 +182,12 @@ private fun Element(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication()
-
     val inlineContents = remember {
         mapOf(
             "alarm" to
                 InlineTextContent(
                     Placeholder(
-                        width = 1.em,
+                        width = 0.925.em,
                         height = 1.em,
                         placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
                     )
@@ -197,8 +195,11 @@ private fun Element(
                     Icon(
                         Icons.Outlined.Alarm,
                         contentDescription = "alarm",
-                        modifier = Modifier.fillMaxSize(),
                         tint = nextAlarmColor,
+                        modifier =
+                            Modifier.fillMaxSize()
+                                // HACK to align icon
+                                .offset(x = (-1).dp, y = (-0.55).dp),
                     )
                 }
         )
