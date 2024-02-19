@@ -47,7 +47,7 @@ fun Tree(
             treeNodeListFlow = viewModel.treeNodeListFlow,
             scrollToKeyFlow = viewModel.scrollToKeyFlow,
             highlightKeyFlow = viewModel.highlightKeyFlow,
-            onFlingDown = navigateTo.search,
+            onSearch = navigateTo.search,
             onScrolledToKey = viewModel::onScrolledToKey,
             onDisableFlowStagger = viewModel::disableFlowStagger,
             onActivatePayload = ::activatePayload,

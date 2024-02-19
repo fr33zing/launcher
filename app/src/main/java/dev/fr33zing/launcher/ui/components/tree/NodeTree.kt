@@ -1,12 +1,18 @@
 package dev.fr33zing.launcher.ui.components.tree
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -14,6 +20,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,6 +45,9 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.ui.components.ActionButton
+import dev.fr33zing.launcher.ui.components.ActionButtonSpacing
+import dev.fr33zing.launcher.ui.components.ActionButtonVerticalPadding
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.PaddingAndShadowHeight
@@ -66,7 +79,7 @@ fun NodeTree(
     scrollToKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
     highlightKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
     // Events
-    onFlingDown: () -> Unit = {},
+    onSearch: () -> Unit = {},
     onScrolledToKey: () -> Unit = {},
     onDisableFlowStagger: () -> Unit = {},
     onActivatePayload: (TreeNodeState) -> Unit = {},
@@ -163,7 +176,7 @@ fun NodeTree(
                 .pointerInput(Unit) {
                     detectFling(
                         onFirstDown = onDisableFlowStagger,
-                        onFlingDown = onFlingDown,
+                        onFlingDown = onSearch,
                         flingUpEnabled = { false },
                         flingDownEnabled = { !lazyListState.canScrollBackward }
                     )
@@ -174,7 +187,7 @@ fun NodeTree(
             listItems: List<ListItem>,
             index: Int,
             initialTreeNodeState: TreeNodeState,
-            appearAnimationProgress: Animatable<Float, AnimationVector1D>?
+            appearAnimationProgress: Animatable<Float, AnimationVector1D>?,
         ) {
             val adjacentTreeNodeStates by
                 remember(listItems, index) {
@@ -234,18 +247,51 @@ fun NodeTree(
             }
 
         if (USE_LAZY_COLUMN) {
+            val canScroll by
+                snapshotFlow { lazyListState.canScrollForward || lazyListState.canScrollBackward }
+                    .onEach { canScroll -> if (canScroll) onDisableFlowStagger() }
+                    .collectAsStateWithLifecycle(false)
+
             LazyColumn(
                 state = lazyListState,
                 contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-                modifier = Modifier.fillMaxSize().disableFlowStaggerOnOverflow()
+                modifier = Modifier.fillMaxSize()
             ) {
                 item(treeNodeList) { LaunchedEffect(Unit) { scrollToItemByKey() } }
+
                 itemsIndexed(
                     items = treeNodeList,
                     key = { _, item -> item.first.key },
                     contentType = { _, item -> item.first.underlyingNodeKind }
                 ) { index, (initialTreeNodeState, appearAnimationProgress) ->
                     listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
+                }
+
+                item("actions") {
+                    AnimatedVisibility(visible = canScroll, enter = fadeIn(), exit = fadeOut()) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(vertical = ActionButtonVerticalPadding)
+                        ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(ActionButtonSpacing)) {
+                                ActionButton(
+                                    icon = Icons.Outlined.ArrowUpward,
+                                    contentDescription = "scroll to top"
+                                ) {
+                                    coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+                                }
+
+                                ActionButton(
+                                    icon = Icons.Outlined.Search,
+                                    contentDescription = "scroll to top"
+                                ) {
+                                    onSearch()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -254,7 +300,9 @@ fun NodeTree(
                     .verticalScroll(rememberScrollState())
                     .disableFlowStaggerOnOverflow()
             ) {
-                treeNodeList.forEachIndexed { index, (initialTreeNodeState, appearAnimationProgress)
+                treeNodeList.forEachIndexed {
+                    index,
+                    (initialTreeNodeState, appearAnimationProgress),
                     ->
                     key(initialTreeNodeState.key) {
                         listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
