@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.transformLatest
 
-private const val STAGGER_MS: Long = 25
+private const val STAGGER_MS: Long = 16
 
 /** Makes a list of items appear to load one at a time. */
 @OptIn(ExperimentalCoroutinesApi::class)
