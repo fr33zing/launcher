@@ -55,7 +55,7 @@ fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
 fun generateExportFilename(context: Context, date: Date): String {
     val packageName = context.packageName.replace('.', '-')
     val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(date)
-    return listOf("backup", packageName, timestamp, "zip").joinToString(".")
+    return listOf(timestamp, "backup", packageName, "zip").joinToString(".")
 }
 
 fun exportBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, date: Date) {
