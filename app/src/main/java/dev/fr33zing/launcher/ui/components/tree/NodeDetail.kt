@@ -77,7 +77,7 @@ fun NodeDetail(
             "reference" to
                 inlineLabelContent(
                     icon = NodeKind.Reference.icon,
-                    color = NodeKind.Reference.color,
+                    color = NodeKind.Reference.color.copy(alpha = color.alpha),
                     contentDescription = "reference indicator",
                     fontSize = fontSize
                 )
