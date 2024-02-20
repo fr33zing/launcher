@@ -1,5 +1,7 @@
 package dev.fr33zing.launcher.ui.pages
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,6 +18,7 @@ import dev.fr33zing.launcher.ui.components.tree.NodeTree
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Tree(
     navigateBack: () -> Unit,
@@ -41,7 +44,10 @@ fun Tree(
     fun createNode(position: RelativeNodePosition, kind: NodeKind) =
         viewModel.createNode(position, kind) { nodeId -> nodeActions.create(nodeId) }
 
-    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
+    CompositionLocalProvider(
+        LocalNodeDimensions provides rememberNodeDimensions(),
+        LocalOverscrollConfiguration provides null
+    ) {
         NodeTree(
             treeStateFlow = viewModel.treeStateFlow,
             treeNodeListFlow = viewModel.treeNodeListFlow,
