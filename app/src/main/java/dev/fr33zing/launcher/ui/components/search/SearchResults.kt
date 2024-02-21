@@ -123,7 +123,6 @@ private fun LazyListScope.resultItems(
                     result.substrings.forEach {
                         withStyle(
                             SpanStyle(
-                                color = color,
                                 background =
                                     if (it.matches) color.copy(alpha = 0.25f)
                                     else Color.Transparent,
