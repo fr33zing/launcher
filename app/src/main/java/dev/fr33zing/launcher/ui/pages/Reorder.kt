@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.viewmodel.ReorderViewModel
+import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.form.CancelButton
@@ -151,7 +151,7 @@ fun Reorder(
 @Composable
 private fun ReorderableList(
     parentNode: Node,
-    reorderableNodes: List<Pair<Node, Payload>>,
+    reorderableNodes: List<ReferenceFollowingNodePayloadState>,
     onMove: (from: Int, to: Int) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -167,25 +167,29 @@ private fun ReorderableList(
             state = reorderableState.listState,
             modifier = Modifier.reorderable(reorderableState).fillMaxSize()
         ) {
-            items(reorderableNodes, { it.first.nodeId }) { (node, payload) ->
+            items(reorderableNodes, { state -> state.underlyingState.node.nodeId }) { state ->
                 ReorderableItem(
                     reorderableState,
-                    key = node.nodeId,
+                    key = state.underlyingState.node.nodeId,
                 ) { isDragging ->
-                    val draggable = remember { node.nodeId != parentNode.nodeId }
+                    val draggable = remember {
+                        state.underlyingState.node.nodeId != parentNode.nodeId
+                    }
 
                     CompositionLocalProvider(
-                        LocalNodeAppearance provides rememberNodeAppearance(node, payload)
+                        LocalNodeAppearance provides
+                            rememberNodeAppearance(state.node, state.payload)
                     ) {
                         NodeDetailContainer(
                             depth = if (draggable) 1 else 0,
                             modifier = Modifier.alpha(if (isDragging) 0.65f else 1f)
                         ) {
                             NodeDetail(
-                                label = node.label,
+                                label = state.underlyingState.node.label,
                                 color =
                                     if (!draggable) Foreground.mix(Background, 0.5f)
                                     else LocalNodeAppearance.current.color,
+                                isValidReference = state.isValidReference,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis,
                                 textModifier = Modifier.weight(1f),
