@@ -32,8 +32,8 @@ import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 private val directoryColor = Catppuccin.Current.sapphire
-private val rootDirectoryColor = Foreground.mix(Background, 0.5f)
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
+val RootDirectoryColor = Foreground.mix(Background, 0.5f)
 
 val UnlabeledNodeColor = Foreground.mix(Background, 0.5f)
 const val UnlabeledNodeText = "<Blank>"
@@ -94,7 +94,7 @@ enum class NodeKind {
                     val collapsed =
                         showChildren?.let { !it } ?: payload.collapsed ?: payload.initiallyCollapsed
 
-                    if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
+                    if (payload.nodeId == ROOT_NODE_ID) RootDirectoryColor
                     else if (collapsed && !ignoreState) collapsedDirectoryColor else directoryColor
                 } else directoryColor
             }

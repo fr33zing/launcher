@@ -60,7 +60,7 @@ class Directory(
         val isValid: ((children: List<NodePayloadState>) -> Boolean)? = null,
     ) {
         Root(
-            defaultDirectoryName = "Root",
+            defaultDirectoryName = "<Root>",
             icon = Icons.Rounded.DeviceHub,
             permissions = AllPermissions
         ),

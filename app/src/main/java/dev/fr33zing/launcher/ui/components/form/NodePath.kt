@@ -16,6 +16,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
+import dev.fr33zing.launcher.data.RootDirectoryColor
 import dev.fr33zing.launcher.data.UnlabeledNodeColor
 import dev.fr33zing.launcher.data.UnlabeledNodeText
 import dev.fr33zing.launcher.data.persistent.Node
@@ -47,10 +48,12 @@ fun NodePath(
     }
     val annotatedString = buildAnnotatedString {
         nodeLineage.forEachIndexed { index, node ->
-            // Don't show root node
-            if (node.nodeId == ROOT_NODE_ID) return@forEachIndexed
+            // Don't show root node unless it's the only node in the lineage
+            if (node.nodeId == ROOT_NODE_ID && nodeLineage.size > 1) return@forEachIndexed
 
-            val color = if (node.label.isBlank()) UnlabeledNodeColor else node.kind.color
+            val color =
+                if (node.label.isBlank()) UnlabeledNodeColor
+                else if (node.nodeId == ROOT_NODE_ID) RootDirectoryColor else node.kind.color
             val label = node.label.ifBlank { UnlabeledNodeText }
 
             withStyle(SpanStyle(color = color)) { append(label.replace(' ', nbsp)) }
