@@ -124,7 +124,7 @@ fun NodeCreateButton(
                         {
                             onClick(
                                 RelativeNodePosition(
-                                    treeNodeState.value.node.nodeId,
+                                    treeNodeState.underlyingNodeId,
                                     RelativeNodeOffset.Above
                                 )
                             )
@@ -134,7 +134,7 @@ fun NodeCreateButton(
                         {
                             onClick(
                                 RelativeNodePosition(
-                                    treeNodeState.value.node.nodeId,
+                                    treeNodeState.underlyingNodeId,
                                     if (showChildren) RelativeNodeOffset.Within
                                     else RelativeNodeOffset.Below
                                 )
@@ -145,7 +145,7 @@ fun NodeCreateButton(
                         {
                             onClick(
                                 RelativeNodePosition(
-                                    treeNodeState.value.node.parentId
+                                    treeNodeState.underlyingNodeParentId
                                         ?: throw Exception("Cannot create outside root node"),
                                     RelativeNodeOffset.Below
                                 )

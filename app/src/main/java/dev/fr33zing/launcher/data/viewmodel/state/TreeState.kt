@@ -76,6 +76,9 @@ data class TreeNodeState(
 
     val underlyingNodeKind
         get() = value.underlyingState.node.kind
+
+    val underlyingNodeParentId
+        get() = value.underlyingState.node.parentId
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
