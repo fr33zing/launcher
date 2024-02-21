@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -24,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.createNewApplications
-import dev.fr33zing.launcher.data.persistent.deleteNewApplicationsDirectoryIfEmpty
 import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.data.persistent.payloads.userManager
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        checkForNewApplications()
+        checkForNewApplications(false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +76,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            BroadcastReceiver(Intent.ACTION_PACKAGE_ADDED) { checkForNewApplications() }
+            LaunchedEffect(Unit) { checkForNewApplications(true) }
+            BroadcastReceiver(Intent.ACTION_PACKAGE_ADDED) { checkForNewApplications(false) }
 
             LauncherTheme {
                 Surface(
@@ -92,17 +93,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkForNewApplications() {
+    private fun checkForNewApplications(includePackagesInstalledAtLaunch: Boolean) {
         CoroutineScope(Dispatchers.IO).launch {
             val activityInfos =
-                getActivityInfos(applicationContext).filter { activityInfo ->
-                    packagesInstalledAtLaunch.none { alreadyInstalled ->
-                        activityInfo.componentName.packageName == alreadyInstalled.first &&
-                            activityInfo.user == alreadyInstalled.second
-                    }
+                getActivityInfos(applicationContext).let { activityInfos ->
+                    if (includePackagesInstalledAtLaunch) activityInfos
+                    else
+                        activityInfos.filter { activityInfo ->
+                            packagesInstalledAtLaunch.none { alreadyInstalled ->
+                                activityInfo.componentName.packageName == alreadyInstalled.first &&
+                                    activityInfo.user == alreadyInstalled.second
+                            }
+                        }
                 }
             db.createNewApplications(activityInfos)
-            db.deleteNewApplicationsDirectoryIfEmpty()
         }
     }
 

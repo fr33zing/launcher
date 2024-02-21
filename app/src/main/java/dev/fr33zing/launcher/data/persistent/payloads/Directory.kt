@@ -19,6 +19,8 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.utility.castOrNull
+import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,6 +48,16 @@ class Directory(
         val collapsedIcon: ImageVector? = null,
         val initiallyCollapsed: Boolean = false,
         val permissions: PermissionMap = mapOf(),
+        /**
+         * Check if the contents of a special directory are valid. If it returns false, the child is
+         * deleted.
+         */
+        val isChildValid: ((child: NodePayloadState) -> Boolean)? = null,
+        /**
+         * Check if the special directory is valid. If it returns false, the directory is delete.
+         * This runs **after** [isChildValid].
+         */
+        val isValid: ((children: List<NodePayloadState>) -> Boolean)? = null,
     ) {
         Root(
             defaultDirectoryName = "Root",
@@ -77,6 +89,12 @@ class Directory(
                         mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
                     PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
                 ),
+            isChildValid = { child ->
+                child.payload.castOrNull<Application>()?.let { application ->
+                    application.status == Application.Status.Valid
+                } ?: false
+            },
+            isValid = { children -> children.isNotEmpty() },
         ),
         Trash(
             defaultDirectoryName = "Trash",

@@ -10,7 +10,6 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.autoCategorizeNewApplications
 import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.data.persistent.createNodeWithPayload
-import dev.fr33zing.launcher.data.persistent.deleteNewApplicationsDirectoryIfEmpty
 import dev.fr33zing.launcher.data.persistent.getOrCreateSingletonDirectory
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Note
@@ -40,7 +39,6 @@ class SetupViewModel @Inject constructor(private val db: AppDatabase) : ViewMode
                 val progress = applicationsCategorized.toFloat() / applicationCount
                 val state = SetupState(remainingAppsToCategorize, progress)
 
-                if (applicationsCategorized == 0) db.deleteNewApplicationsDirectoryIfEmpty()
                 _flow.emit(state)
             }
         }

@@ -16,8 +16,10 @@ import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
+import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.utility.castOrNull
 import dev.fr33zing.launcher.data.utility.notNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -175,9 +178,38 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow = traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
+        val flow =
+            traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
+                .onEach(::ensureSpecialDirectoryValidity)
 
         emitAll(flow)
+    }
+
+    private suspend fun ensureSpecialDirectoryValidity(treeNodeStateList: List<TreeNodeState>) {
+        treeNodeStateList.forEach { treeNodeState ->
+            treeNodeState.value.underlyingState.payload.castOrNull<Directory>()?.specialMode?.let {
+                specialMode ->
+                val children =
+                    db.nodeDao().getChildNodes(treeNodeState.underlyingNodeId).map { node ->
+                        val payload = db.getPayloadByNodeId(node.kind, node.nodeId)
+                        NodePayloadState(node, payload.notNull(node))
+                    }
+                val validChildren =
+                    specialMode.isChildValid?.let { isChildValid ->
+                        children
+                            .associateWith { child -> isChildValid(child) }
+                            .run {
+                                forEach { (nodePayload, valid) ->
+                                    if (!valid) db.deleteRecursively(nodePayload.node)
+                                }
+                                filter { (_, valid) -> valid }.map { (nodePayload) -> nodePayload }
+                            }
+                    } ?: children
+                val valid = specialMode.isValid?.invoke(validChildren) ?: true
+
+                if (!valid) db.deleteRecursively(treeNodeState.value.underlyingState.node)
+            }
+        }
     }
 
     private fun getTreeNodeStateFlow(

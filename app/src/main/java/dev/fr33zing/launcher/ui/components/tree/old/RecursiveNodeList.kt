@@ -105,7 +105,6 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
-import dev.fr33zing.launcher.data.persistent.deleteNewApplicationsDirectoryIfEmpty
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
 import dev.fr33zing.launcher.data.persistent.moveToTrash
 import dev.fr33zing.launcher.data.persistent.payloads.Application
@@ -340,11 +339,6 @@ fun RecursiveNodeListSetup(
 
     fun showNodeOptions(nodeId: Int?) {
         optionsVisibleNodeId = nodeId
-    }
-
-    LaunchedEffect(Unit) {
-        // TODO: determine if this needs to be called anywhere else
-        db.deleteNewApplicationsDirectoryIfEmpty()
     }
 
     DisposableEffect(Unit) {

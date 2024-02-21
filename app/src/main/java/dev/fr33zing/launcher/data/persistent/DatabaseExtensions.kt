@@ -2,9 +2,7 @@ package dev.fr33zing.launcher.data.persistent
 
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
-import android.util.Log
 import androidx.room.withTransaction
-import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
@@ -295,18 +293,6 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
             node.parentId ?: throw Exception("Node has no parent (cannot delete root node)")
         )
     )
-}
-
-suspend fun AppDatabase.deleteNewApplicationsDirectoryIfEmpty() {
-    val newApplicationsDir = directoryDao().getBySpecialMode(Directory.SpecialMode.NewApplications)
-    if (newApplicationsDir != null) {
-        Log.d(TAG, "Deleting empty New Applications directory")
-        val children = nodeDao().getChildNodes(newApplicationsDir.nodeId)
-        val node =
-            nodeDao().getNodeById(newApplicationsDir.nodeId)
-                ?: throw Exception("New Applications directory node is null")
-        if (children.isEmpty()) deleteRecursively(node)
-    }
 }
 
 suspend fun AppDatabase.traverseUpward(
