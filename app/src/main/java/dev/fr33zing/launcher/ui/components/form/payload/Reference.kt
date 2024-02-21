@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,16 @@ fun ReferenceEditForm(
     val (padding, node, payload, disableSaving, enableSaving) = arguments
     val reference = payload as Reference
 
+    val labelState = remember { mutableStateOf(node.label) }
+
+    LaunchedEffect(Unit) {
+        viewModel.nodeSelectedCallback = {
+            viewModel.selectedNode?.label?.let { label ->
+                node.label = label
+                labelState.value = label
+            }
+        }
+    }
     LaunchedEffect(viewModel.selectedNode) { reference.targetId = viewModel.selectedNode?.nodeId }
     LaunchedEffect(viewModel.cyclic) {
         if (!viewModel.cyclic) enableSaving()
@@ -50,7 +61,12 @@ fun ReferenceEditForm(
         verticalArrangement = Arrangement.spacedBy(EditFormSpacing),
         modifier = Modifier.padding(padding).padding(EditFormExtraPadding).fillMaxHeight(),
     ) {
-        NodePropertyTextField(node::label)
+        NodePropertyTextField(
+            node::label,
+            state = labelState,
+            defaultValue = viewModel.selectedNode?.label,
+            userCanRevert = true
+        )
         OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) { padding ->
             NodePath(viewModel.selectedNodePath, modifier = Modifier.padding(padding))
         }

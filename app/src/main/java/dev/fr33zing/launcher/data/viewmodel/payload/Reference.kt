@@ -27,6 +27,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
     var selectedNode by mutableStateOf<Node?>(null)
     var selectedNodePath by mutableStateOf<List<Node>>(emptyList())
     var cyclic by mutableStateOf(true)
+    var nodeSelectedCallback: () -> Unit = {}
 
     private val editingNodeId = savedStateHandle.nodeId()
 
@@ -62,6 +63,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
         selectedNode = node
         selectedNodePath = db.nodeLineage(node)
         cyclic = detectCycle()
+        nodeSelectedCallback()
     }
 
     private suspend fun detectCycle(): Boolean {
