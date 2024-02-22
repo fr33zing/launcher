@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,6 +57,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.Timer
 import java.util.UUID
 import kotlin.concurrent.timerTask
+import kotlin.math.max
 
 private const val ANIMATION_DURATION_MS = 300
 
@@ -105,7 +107,15 @@ fun Notices() {
     val statusBarPadding =
         with(density) {
             if (positionAtTop) PaddingValues(top = WindowInsets.systemBars.getTop(density).toDp())
-            else PaddingValues(bottom = WindowInsets.systemBars.getBottom(density).toDp())
+            else
+                PaddingValues(
+                    bottom =
+                        max(
+                                WindowInsets.systemBars.getBottom(density),
+                                WindowInsets.ime.getBottom(density)
+                            )
+                            .toDp()
+                )
         }
 
     DisposableEffect(Unit) {
