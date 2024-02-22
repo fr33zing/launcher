@@ -232,7 +232,7 @@ fun NodeTree(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
             modifier = Modifier.fillMaxSize()
         ) {
-            item(treeNodeList) { LaunchedEffect(Unit) { scrollToItemByKey() } }
+            item(treeNodeList) { LaunchedEffect(scrollToKey) { scrollToItemByKey() } }
 
             itemsIndexed(
                 items = treeNodeList,

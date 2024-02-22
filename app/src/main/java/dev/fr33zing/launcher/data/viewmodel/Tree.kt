@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 
 private val jumpToNodeFlow = MutableSharedFlow<Int?>(1)
 
-fun sendJumpToNode(nodeId: Int) = jumpToNodeFlow.tryEmit(nodeId)
+fun sendJumpToNode(nodeId: Int) = jumpToNodeFlow.tryEmit(null) && jumpToNodeFlow.tryEmit(nodeId)
 
 @HiltViewModel
 class TreeViewModel
