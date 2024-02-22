@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.DriveFileMove
+import androidx.compose.material.icons.outlined.East
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.SwapVert
@@ -37,8 +38,10 @@ import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.hasPermission
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
+import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.utility.cast
 import dev.fr33zing.launcher.data.utility.castOrNull
+import dev.fr33zing.launcher.data.viewmodel.sendJumpToNode
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
@@ -157,6 +160,23 @@ class NodeActionButtonKind(
                     },
                 ) { (state, actions) ->
                     ActionButton { actions.edit(state.underlyingNodeId) }
+                },
+
+                // Jump to reference target
+                NodeActionButtonKind(
+                    label = "Jump",
+                    icon = Icons.Outlined.East,
+                    color = NodeKind.Reference.color,
+                    visible = {
+                        it.underlyingNodeKind == NodeKind.Reference &&
+                            it.value.underlyingState.payload.cast<Reference>().targetId != null
+                    },
+                ) { (state) ->
+                    ActionButton {
+                        sendJumpToNode(
+                            state.value.underlyingState.payload.cast<Reference>().targetId!!
+                        )
+                    }
                 },
 
                 // View application info
