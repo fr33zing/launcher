@@ -20,7 +20,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
@@ -46,7 +45,7 @@ fun Edit(
     navigateBack: () -> Unit,
     viewModel: EditViewModel = hiltViewModel(),
 ) {
-    val nodePayload by viewModel.flow.collectAsStateWithLifecycle()
+    val nodePayload = viewModel.nodePayload
 
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }

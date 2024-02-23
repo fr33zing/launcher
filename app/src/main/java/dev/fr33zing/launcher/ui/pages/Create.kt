@@ -19,7 +19,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.CreateViewModel
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
@@ -32,7 +31,7 @@ import dev.fr33zing.launcher.ui.theme.Catppuccin
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel()) {
-    val nodePayload by viewModel.flow.collectAsStateWithLifecycle()
+    val nodePayload = viewModel.nodePayload
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
