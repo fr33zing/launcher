@@ -2,8 +2,6 @@ package dev.fr33zing.launcher.ui.components.form.payload
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,9 +10,12 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
+import dev.fr33zing.launcher.ui.components.GiantPickerButton
+import dev.fr33zing.launcher.ui.components.GiantPickerButtonContainer
 import dev.fr33zing.launcher.ui.components.dialog.FuzzyPickerDialog
 import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.form.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import kotlin.reflect.full.staticProperties
 
@@ -260,9 +261,37 @@ fun SettingEditForm(arguments: EditFormArguments) {
 
     val labelState = remember { mutableStateOf(node.label) }
     val settingState = remember { mutableStateOf(setting.setting) }
-    val settingPickerVisible = remember { mutableStateOf(false) }
 
     EditFormColumn(padding) {
+        GiantPickerButtonContainer {
+            GiantPickerButton(
+                text = "Pick setting",
+                onPicked = {
+                    settingState.value = it
+                    setting.setting = settingState.value
+                    labelState.value = aliases[it] ?: it
+                    node.label = labelState.value
+                    refreshNodePropertyTextFields()
+                },
+                dialog = { dialogVisible, onPicked ->
+                    FuzzyPickerDialog(
+                        visible = dialogVisible,
+                        items = allSettings,
+                        itemToString = ::formatSettingName,
+                        itemToAnnotatedString = { settingName, fontSize, color ->
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(color = color, fontSize = fontSize)) {
+                                    append(formatSettingName(settingName))
+                                }
+                            }
+                        },
+                        showAnnotatedString = { _, distinct -> !distinct },
+                        onItemPicked = onPicked,
+                    )
+                }
+            )
+        }
+
         val defaultLabel = remember(settingState.value) { aliases[settingState.value] }
         NodePropertyTextField(
             node::label,
@@ -271,27 +300,5 @@ fun SettingEditForm(arguments: EditFormArguments) {
             userCanRevert = true,
         )
         NodePropertyTextField(setting::setting, state = settingState)
-
-        Button(onClick = { settingPickerVisible.value = true }) { Text("Pick setting") }
     }
-
-    FuzzyPickerDialog(
-        visible = settingPickerVisible,
-        items = allSettings,
-        itemToString = ::formatSettingName,
-        itemToAnnotatedString = { settingName, fontSize, color ->
-            buildAnnotatedString {
-                withStyle(SpanStyle(color = color, fontSize = fontSize)) {
-                    append(formatSettingName(settingName))
-                }
-            }
-        },
-        showAnnotatedString = { _, distinct -> !distinct },
-        onItemPicked = {
-            settingState.value = it
-            setting.setting = settingState.value
-            labelState.value = aliases[it] ?: it
-            node.label = labelState.value
-        },
-    )
 }
