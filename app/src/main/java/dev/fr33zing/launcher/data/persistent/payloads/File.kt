@@ -14,6 +14,6 @@ class File(
     @UserEditable("File path", locked = true)
     var filePath: String = "",
     @ColumnInfo(defaultValue = "")
-    @UserEditable("Open with package", locked = true)
+    @UserEditable("Open with package", locked = true, userCanUnlock = true)
     var openWithPackageName: String = "",
 ) : Payload(payloadId, nodeId)

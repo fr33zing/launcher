@@ -21,6 +21,7 @@ import dev.fr33zing.launcher.ui.components.form.payload.ApplicationEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.CheckboxEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.DefaultEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.DirectoryEditForm
+import dev.fr33zing.launcher.ui.components.form.payload.FileEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.LocationEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.NoteEditForm
 import dev.fr33zing.launcher.ui.components.form.payload.ReferenceEditForm
@@ -37,6 +38,7 @@ fun NodeEditForm(arguments: EditFormArguments) {
         NodeKind.Application -> ApplicationEditForm(arguments)
         NodeKind.Checkbox -> CheckboxEditForm(arguments)
         NodeKind.Directory -> DirectoryEditForm(arguments)
+        NodeKind.File -> FileEditForm(arguments)
         NodeKind.Reference -> ReferenceEditForm(arguments)
         NodeKind.Website -> WebsiteEditForm(arguments)
         NodeKind.Location -> LocationEditForm(arguments)
