@@ -84,6 +84,16 @@ class NodePayloadStateHolder(
     private val payloadFlow: Flow<Payload> =
         db.getPayloadFlowByNodeId(node.kind, node.nodeId).filterNotNull()
 
+    //    private val payloadFlow: Flow<Payload> = flow {
+    //        var first = true
+    //        val flow =
+    //            db.getPayloadFlowByNodeId(node.kind, node.nodeId).filterNotNull().onEach {
+    //                if (first) CoroutineScope(Dispatchers.IO).launch { it.postLoad(db) }
+    //                first = false
+    //            }
+    //        emitAll(flow)
+    //    }
+
     val flow = nodeFlow.combine(payloadFlow) { node, payload -> NodePayloadState(node, payload) }
 
     val flowWithReferenceTarget: Flow<ReferenceFollowingNodePayloadState> =

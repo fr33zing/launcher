@@ -4,7 +4,10 @@ import android.content.pm.LauncherActivityInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -17,11 +20,16 @@ import dev.fr33zing.launcher.ui.utility.mix
 @Composable
 fun ApplicationPickerDialog(
     visible: MutableState<Boolean>,
-    onAppPicked: (LauncherActivityInfo) -> Unit
+    onAppPicked: (LauncherActivityInfo) -> Unit,
+    overrideActivityInfos: List<LauncherActivityInfo>? = null,
 ) {
     val context = LocalContext.current
-    val activityInfos = remember { mutableListOf<LauncherActivityInfo>() }
-    LaunchedEffect(Unit) { getActivityInfos(context).forEach { activityInfos.add(it) } }
+    var activityInfos by
+        remember(overrideActivityInfos) { mutableStateOf<List<LauncherActivityInfo>>(emptyList()) }
+
+    LaunchedEffect(overrideActivityInfos) {
+        activityInfos = overrideActivityInfos ?: getActivityInfos(context)
+    }
 
     FuzzyPickerDialog(
         visible = visible,

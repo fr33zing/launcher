@@ -22,6 +22,7 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Application as ApplicationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox as CheckboxPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Directory as DirectoryPayload
+import dev.fr33zing.launcher.data.persistent.payloads.File as FilePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Note as NotePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
@@ -79,6 +80,7 @@ enum class NodeKind {
             Setting -> true
             Checkbox -> true
             Note -> true
+            File -> true
             else -> false
         }
 
@@ -100,25 +102,33 @@ enum class NodeKind {
             }
             Application -> {
                 if (
-                    payload is ApplicationPayload &&
+                    !ignoreState &&
+                        payload is ApplicationPayload &&
                         payload.status != ApplicationPayload.Status.Valid
                 ) {
                     Foreground.mix(Background, 0.5f)
                 } else Foreground
             }
+            File ->
+                if (
+                    !ignoreState &&
+                        payload is FilePayload &&
+                        payload.status != FilePayload.Status.Valid
+                ) {
+                    Catppuccin.Current.peach.mix(Background, 0.5f)
+                } else Catppuccin.Current.peach
             Checkbox -> {
                 if (!ignoreState && payload is CheckboxPayload && payload.checked)
                     Catppuccin.Current.green.mix(Background, 0.5f)
                 else Catppuccin.Current.green
             }
             Website -> {
-                if (payload is WebsitePayload && !payload.validUrl) {
+                if (!ignoreState && payload is WebsitePayload && !payload.validUrl) {
                     Catppuccin.Current.yellow.mix(Background, 0.5f)
                 } else Catppuccin.Current.yellow
             }
-            File -> Catppuccin.Current.peach
             Location -> {
-                if (payload is LocationPayload && !payload.status.valid) {
+                if (!ignoreState && payload is LocationPayload && !payload.status.valid) {
                     Catppuccin.Current.lavender.mix(Background, 0.5f)
                 } else Catppuccin.Current.lavender
             }
@@ -133,6 +143,9 @@ enum class NodeKind {
                 !ignoreState &&
                     payload is ApplicationPayload &&
                     payload.status != ApplicationPayload.Status.Valid
+            }
+            File -> {
+                !ignoreState && payload is FilePayload && payload.status != FilePayload.Status.Valid
             }
             Checkbox -> {
                 !ignoreState && payload is CheckboxPayload && payload.checked

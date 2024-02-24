@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.createNewApplications
 import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
+import dev.fr33zing.launcher.data.persistent.payloads.mainContentResolver
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
 import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.data.utility.getActivityInfos
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
         mainPackageManager = packageManager
         launcherApps = getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
         userManager = getSystemService(Context.USER_SERVICE) as UserManager
+        mainContentResolver = applicationContext.contentResolver
 
         window.setDecorFitsSystemWindows(false)
         window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
