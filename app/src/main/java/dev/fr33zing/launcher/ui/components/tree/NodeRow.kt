@@ -2,11 +2,13 @@ package dev.fr33zing.launcher.ui.components.tree
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
@@ -35,6 +37,8 @@ fun NodeRow(
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     appearAnimationProgress: Animatable<Float, AnimationVector1D>? = null,
     buildLabelString: (AnnotatedString.Builder.() -> Unit)? = null,
+    textModifier: RowScope.() -> Modifier = { Modifier },
+    textEndContent: (@Composable () -> Unit)? = null,
 ) {
     val hasFeature by
         remember(features) {
@@ -77,8 +81,10 @@ fun NodeRow(
             NodeDetail(
                 label,
                 isValidReference = treeNodeState.value.isValidReference,
-                buildLabelString = buildLabelString
+                buildLabelString = buildLabelString,
+                textModifier = textModifier(),
             )
+            textEndContent?.invoke()
         }
     }
 

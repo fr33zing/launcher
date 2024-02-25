@@ -1,5 +1,7 @@
 package dev.fr33zing.launcher.ui.components.search
 
+import android.app.SearchManager
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -14,7 +16,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -61,9 +66,12 @@ fun SearchResults(
         LazyColumn(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
         ) {
-            if (showHistory) historyItems(history, onTapHistoricalQuery)
-            else
+            if (showHistory) {
+                historyItems(history, onTapHistoricalQuery)
+            } else {
+                webSearchItem(query)
                 resultItems(query, results, onActivateSearchResult, onActivateDirectorySearchResult)
+            }
         }
     }
 }
@@ -82,6 +90,28 @@ private fun LazyListScope.historyItems(
         ) {
             NodeDetail(
                 label = recentSearch,
+                color = historyColor,
+                icon = Icons.Outlined.Search,
+                lineThrough = false
+            )
+        }
+    }
+}
+
+private fun LazyListScope.webSearchItem(query: String) {
+    item {
+        val haptics = LocalHapticFeedback.current
+        val context = LocalContext.current
+        NodeDetailContainer(
+            Modifier.clickable {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, query).also {
+                    context.startActivity(it)
+                }
+            }
+        ) {
+            NodeDetail(
+                label = "Search the web...",
                 color = historyColor,
                 icon = Icons.Outlined.Search,
                 lineThrough = false
@@ -131,7 +161,19 @@ private fun LazyListScope.resultItems(
                             append(it.text)
                         }
                     }
-                }
+                },
+                textModifier = { Modifier.weight(1f) },
+                textEndContent =
+                    if (index > 0) null
+                    else {
+                        {
+                            Icon(
+                                Icons.Outlined.KeyboardReturn,
+                                "keyboard return symbol",
+                                tint = historyColor
+                            )
+                        }
+                    }
             )
         }
 }
