@@ -1,37 +1,68 @@
 package dev.fr33zing.launcher.ui.pages
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalOverscrollConfiguration
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalDensity
-import androidx.navigation.NavController
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.ui.components.node.NodeSearchContainer
-import dev.fr33zing.launcher.ui.components.node.RecursiveNodeListSetup
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import dev.fr33zing.launcher.TreeNavigator
+import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
+import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
+import dev.fr33zing.launcher.ui.components.tree.NodeActions
+import dev.fr33zing.launcher.ui.components.tree.NodeTree
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Tree(db: AppDatabase, navController: NavController, rootNodeId: Int?) {
-    val density = LocalDensity.current
-    val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
-    val navigationBarsBottom =
-        with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
-    val verticalPadding =
-        remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
-            listOf(statusBarsTop, navigationBarsBottom).max()
-        }
-    val hiddenRatio = 0.666f
-    val shadowRatio = 1f - hiddenRatio
-    val hiddenHeight = verticalPadding * hiddenRatio
-    val shadowHeight = verticalPadding * shadowRatio
+fun Tree(
+    navigateBack: () -> Unit,
+    navigateTo: TreeNavigator,
+    viewModel: TreeViewModel = hiltViewModel(),
+) {
+    val context = LocalContext.current
+    val lazyListState = rememberLazyListState()
+    val nodeActions = remember {
+        NodeActions(
+            trash = viewModel::moveNodeToTrash,
+            delete = viewModel::deleteNode,
+            move = navigateTo.move,
+            reorder = navigateTo.reorder,
+            edit = navigateTo.edit,
+            create = navigateTo.create,
+        )
+    }
 
-    NodeSearchContainer(
-        db,
-        containerVerticalPadding = hiddenHeight,
-        panelVerticalPadding = shadowHeight,
-        shadowHeight = shadowHeight,
-    ) { scrollState ->
-        RecursiveNodeListSetup(db, navController, rootNodeId, scrollState, shadowHeight)
+    fun activatePayload(treeNodeState: TreeNodeState) =
+        viewModel.activatePayload(context, treeNodeState)
+
+    fun createNode(position: RelativeNodePosition, kind: NodeKind) =
+        viewModel.createNode(position, kind) { nodeId -> nodeActions.create(nodeId) }
+
+    CompositionLocalProvider(
+        LocalNodeDimensions provides rememberNodeDimensions(),
+        LocalOverscrollConfiguration provides null
+    ) {
+        NodeTree(
+            treeStateFlow = viewModel.treeStateFlow,
+            treeNodeListFlow = viewModel.treeNodeListFlow,
+            scrollToKeyFlow = viewModel.scrollToKeyFlow,
+            highlightKeyFlow = viewModel.highlightKeyFlow,
+            onSearch = navigateTo.search,
+            onScrolledToKey = viewModel::onScrolledToKey,
+            onDisableFlowStagger = viewModel::disableFlowStagger,
+            onActivatePayload = ::activatePayload,
+            onSelectNode = viewModel::selectNode,
+            onClearSelectedNode = viewModel::clearSelectedNode,
+            onClearHighlightedNode = viewModel::clearHighlightedNode,
+            onCreateNode = ::createNode,
+            nodeActions = nodeActions,
+            lazyListState = lazyListState,
+        )
     }
 }

@@ -11,6 +11,7 @@ tasks {
         val thisFile = "buildSrc/build.gradle.kts"
         val module = "app"
         val domain = "dev.fr33zing.launcher"
+        val migrationsPackage = "$domain.data.persistent.migrations"
         val nodeKindPackage = "$domain.data"
         val payloadsPackage = "$domain.data.persistent.payloads"
         val convertersPackage = "$domain.data.utility"
@@ -18,7 +19,7 @@ tasks {
         val targetFileName = "Database.kt"
 
         // Update these variables to add support for new NodeKind variants and payload classes.
-        val databaseVersion = "3"
+        val databaseVersion = "5"
         val payloadClasses =
             listOf(
                 "Application",
@@ -29,13 +30,20 @@ tasks {
                 "Note",
                 "Reference",
                 "Reminder",
-                "WebLink",
+                "Website",
                 "Setting",
             )
+        val migrationClasses = mutableListOf<String>()
+        fun migration(className: String): String {
+            migrationClasses.add(className)
+            return "$className::class"
+        }
         val autoMigrations =
             """
                 AutoMigration(from = 1, to = 2),
                 AutoMigration(from = 2, to = 3),
+                AutoMigration(from = 3, to = 4, ${migration("RenameWebLinkToWebsite")}),
+                AutoMigration(from = 4, to = 5),
             """
         val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap = payloadClasses.associateWith { it }
@@ -53,7 +61,14 @@ tasks {
             listOf(
                 headerComment(thisFile),
                 packageDeclaration(targetPackage),
-                imports(nodeKindPackage, payloadsPackage, payloadClasses, convertersPackage),
+                imports(
+                    migrationsPackage,
+                    migrationClasses,
+                    nodeKindPackage,
+                    payloadsPackage,
+                    payloadClasses,
+                    convertersPackage
+                ),
                 database(
                     databaseVersion,
                     autoMigrations,
@@ -87,6 +102,8 @@ fun headerComment(thisFile: String) =
         .trimIndent()
 
 fun imports(
+    migrationsPackage: String,
+    migrationClasses: List<String>,
     nodeKindPackage: String,
     payloadsPackage: String,
     payloadClasses: List<String>,
@@ -104,11 +121,12 @@ fun imports(
     import androidx.room.TypeConverters
     import androidx.room.Update
     import $nodeKindPackage.NodeKind
+    ${(migrationClasses).sorted().joinToString("\n${indent(1)}") { "import $migrationsPackage.$it" }}
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     import $convertersPackage.Converters
-    import kotlinx.coroutines.flow.Flow
     import kotlin.reflect.KParameter
     import kotlin.reflect.typeOf
+    import kotlinx.coroutines.flow.Flow
     """
         .trimIndent()
 

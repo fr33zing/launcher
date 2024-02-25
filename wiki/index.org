@@ -2,5 +2,4 @@
 
 * Pages
 
-- [[file:known_issues.org][Known issues]]
 - [[file:common_tasks.org][Common tasks]]

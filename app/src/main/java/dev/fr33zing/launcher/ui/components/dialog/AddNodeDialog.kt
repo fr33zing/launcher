@@ -22,11 +22,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.ui.components.node.NodeIconAndText
+import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
-fun AddNodeDialog(
+fun NodeKindPickerDialog(
     visible: MutableState<Boolean>,
     onDismissRequest: () -> Unit,
     onKindChosen: (NodeKind) -> Unit
@@ -35,7 +35,7 @@ fun AddNodeDialog(
     val localDensity = LocalDensity.current
     val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
     val lineHeight = with(localDensity) { fontSize.toDp() }
-    val kinds = remember { NodeKind.values() }
+    val kinds = remember { NodeKind.entries }
 
     BaseDialog(
         visible,

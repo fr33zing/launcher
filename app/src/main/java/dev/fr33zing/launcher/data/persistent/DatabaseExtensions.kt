@@ -2,9 +2,7 @@ package dev.fr33zing.launcher.data.persistent
 
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
-import android.util.Log
 import androidx.room.withTransaction
-import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.PermissionKind
 import dev.fr33zing.launcher.data.PermissionScope
@@ -14,6 +12,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.DEFAULT_CATEGORY_NAME
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
+import dev.fr33zing.launcher.data.utility.notNull
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.io.File
 import kotlinx.coroutines.runBlocking
@@ -39,11 +38,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
     var newApps = 0
 
     withTransaction {
-        Log.d(
-            TAG,
-            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in createNewApplications(...)"
-        )
-
         val filteredActivityInfos =
             activityInfos.filter { activityInfo ->
                 applicationDao().getAllPayloads().find { app ->
@@ -85,10 +79,6 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 // TODO make this handle interruption gracefully
 suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
     withTransaction {
-        Log.d(
-            TAG,
-            "Calling getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications) in autoCategorizeNewApplications(...)"
-        )
         val newApplicationsDirectory =
             getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
         val nodesWithPayloads =
@@ -139,10 +129,7 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
     }
 }
 
-/**
- * Create a new node (and its payload, if applicable) relative to another node. Returns the new
- * node's id.
- */
+/** Create a new node relative to another node. Returns the new node's id. */
 suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: NodeKind): Int {
     val relativeToNode =
         nodeDao().getNodeById(position.relativeToNodeId) ?: throw Exception("Node does not exist")
@@ -218,14 +205,12 @@ suspend fun AppDatabase.getOrCreateDirectoryByPath(
     return current
 }
 
-suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node {
-    val directories = directoryDao().getAllPayloads().filter { it.specialMode == specialMode }
-    val nodeId =
-        when (directories.size) {
-            1 -> directories[0].nodeId
-            0 -> {
-                var event: Pair<Int, Int>? = null
-                val createdNodeId = withTransaction {
+suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.SpecialMode): Node =
+    withTransaction {
+        val directory = directoryDao().getBySpecialMode(specialMode)
+        val nodeId =
+            directory?.nodeId
+                ?: run {
                     val isRoot = specialMode == Directory.SpecialMode.Root
                     val nodeId = if (isRoot) ROOT_NODE_ID else 0
                     val parentId = if (isRoot) null else getRootNode().nodeId
@@ -234,7 +219,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             nodeId = nodeId,
                             parentId = parentId,
                             kind = NodeKind.Directory,
-                            order = 0,
+                            order = -1,
                             label = specialMode.defaultDirectoryName,
                         )
                     )
@@ -248,19 +233,13 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                         )
                     )
 
-                    if (parentId != null) event = Pair(lastNodeId, parentId)
+                    nodeDao().getChildNodes(parentId).fixOrder().let { updateMany(it) }
+
+                    if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
                     lastNodeId
                 }
-                event?.let {
-                    Log.d(TAG, "Calling NodeCreatedSubject for $specialMode. Event: $event")
-                    NodeCreatedSubject.onNext(it)
-                }
-                createdNodeId
-            }
-            else -> throw Exception("Multiple directories exist with special mode: $specialMode")
-        }
-    return nodeDao().getNodeById(nodeId)!!
-}
+        nodeDao().getNodeById(nodeId).notNull()
+    }
 
 /** Convenience function to get or create the root node. */
 suspend fun AppDatabase.getRootNode(): Node =
@@ -306,6 +285,7 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
     withTransaction {
         deleteMany(nodes)
         payloads.forEach { delete(it) }
+        nodeDao().getChildNodes(node.parentId ?: ROOT_NODE_ID).fixOrder().let { updateMany(it) }
     }
     NodeDeletedSubject.onNext(
         Pair(
@@ -313,18 +293,6 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
             node.parentId ?: throw Exception("Node has no parent (cannot delete root node)")
         )
     )
-}
-
-suspend fun AppDatabase.deleteNewApplicationsDirectoryIfEmpty() {
-    val newApplicationsDir = directoryDao().getBySpecialMode(Directory.SpecialMode.NewApplications)
-    if (newApplicationsDir != null) {
-        Log.d(TAG, "Deleting empty New Applications directory")
-        val children = nodeDao().getChildNodes(newApplicationsDir.nodeId)
-        val node =
-            nodeDao().getNodeById(newApplicationsDir.nodeId)
-                ?: throw Exception("New Applications directory node is null")
-        if (children.isEmpty()) deleteRecursively(node)
-    }
 }
 
 suspend fun AppDatabase.traverseUpward(
@@ -384,8 +352,20 @@ suspend fun AppDatabase.checkPermission(
     return parentsAllow
 }
 
-fun AppDatabase.checkpoint() {
+suspend fun AppDatabase.nodeLineage(node: Node): ArrayDeque<Node> =
+    ArrayDeque<Node>().also { stack ->
+        stack.add(node)
+        while (stack.first().nodeId != ROOT_NODE_ID) {
+            val parentId = stack.first().parentId ?: break
+            val parentNode = nodeDao().getNodeById(parentId) ?: throw Exception("Node is null")
+            stack.addFirst(parentNode)
+        }
+    }
 
+suspend fun AppDatabase.nodeLineage(nodeId: Int): ArrayDeque<Node> =
+    nodeDao().getNodeById(nodeId).notNull().let { nodeLineage(it) }
+
+fun AppDatabase.checkpoint() {
     if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
         throw Exception("Database checkpoint failed")
 }

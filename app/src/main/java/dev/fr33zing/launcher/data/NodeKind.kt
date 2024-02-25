@@ -22,18 +22,22 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Application as ApplicationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox as CheckboxPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Directory as DirectoryPayload
+import dev.fr33zing.launcher.data.persistent.payloads.File as FilePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayload
 import dev.fr33zing.launcher.data.persistent.payloads.Note as NotePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.data.persistent.payloads.WebLink as WebLinkPayload
+import dev.fr33zing.launcher.data.persistent.payloads.Website as WebsitePayload
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 private val directoryColor = Catppuccin.Current.sapphire
-private val rootDirectoryColor = Foreground.mix(Background, 0.5f)
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
+val RootDirectoryColor = Foreground.mix(Background, 0.5f)
+
+val UnlabeledNodeColor = Foreground.mix(Background, 0.5f)
+const val UnlabeledNodeText = "<Blank>"
 
 enum class NodeKind {
     /** Like a symbolic link */
@@ -46,7 +50,7 @@ enum class NodeKind {
     Application,
 
     /** Opens the browser */
-    WebLink,
+    Website,
 
     /** Opens a specific file */
     File,
@@ -71,45 +75,60 @@ enum class NodeKind {
             Reference -> true
             Directory -> true
             Application -> true
-            WebLink -> true
+            Website -> true
             Location -> true
             Setting -> true
             Checkbox -> true
             Note -> true
+            File -> true
             else -> false
         }
 
-    fun color(payload: Payload? = null, ignoreState: Boolean = false): Color =
+    fun color(
+        payload: Payload? = null,
+        ignoreState: Boolean = false,
+        showChildren: Boolean? = null,
+    ): Color =
         when (this) {
             Reference -> Catppuccin.Current.mauve
             Directory -> {
                 if (payload is DirectoryPayload) {
-                    if (payload.nodeId == ROOT_NODE_ID) rootDirectoryColor
-                    else if (payload.collapsed == true && !ignoreState) collapsedDirectoryColor
-                    else directoryColor
+                    val collapsed =
+                        showChildren?.let { !it } ?: payload.collapsed ?: payload.initiallyCollapsed
+
+                    if (payload.nodeId == ROOT_NODE_ID) RootDirectoryColor
+                    else if (collapsed && !ignoreState) collapsedDirectoryColor else directoryColor
                 } else directoryColor
             }
             Application -> {
                 if (
-                    payload is ApplicationPayload &&
+                    !ignoreState &&
+                        payload is ApplicationPayload &&
                         payload.status != ApplicationPayload.Status.Valid
                 ) {
                     Foreground.mix(Background, 0.5f)
                 } else Foreground
             }
+            File ->
+                if (
+                    !ignoreState &&
+                        payload is FilePayload &&
+                        payload.status != FilePayload.Status.Valid
+                ) {
+                    Catppuccin.Current.peach.mix(Background, 0.5f)
+                } else Catppuccin.Current.peach
             Checkbox -> {
                 if (!ignoreState && payload is CheckboxPayload && payload.checked)
                     Catppuccin.Current.green.mix(Background, 0.5f)
                 else Catppuccin.Current.green
             }
-            WebLink -> {
-                if (payload is WebLinkPayload && !payload.validUrl) {
+            Website -> {
+                if (!ignoreState && payload is WebsitePayload && !payload.validUrl) {
                     Catppuccin.Current.yellow.mix(Background, 0.5f)
                 } else Catppuccin.Current.yellow
             }
-            File -> Catppuccin.Current.peach
             Location -> {
-                if (payload is LocationPayload && !payload.status.valid) {
+                if (!ignoreState && payload is LocationPayload && !payload.status.valid) {
                     Catppuccin.Current.lavender.mix(Background, 0.5f)
                 } else Catppuccin.Current.lavender
             }
@@ -125,11 +144,14 @@ enum class NodeKind {
                     payload is ApplicationPayload &&
                     payload.status != ApplicationPayload.Status.Valid
             }
+            File -> {
+                !ignoreState && payload is FilePayload && payload.status != FilePayload.Status.Valid
+            }
             Checkbox -> {
                 !ignoreState && payload is CheckboxPayload && payload.checked
             }
-            WebLink -> {
-                !ignoreState && payload is WebLinkPayload && !payload.validUrl
+            Website -> {
+                !ignoreState && payload is WebsitePayload && !payload.validUrl
             }
             Location -> {
                 !ignoreState && payload is LocationPayload && !payload.status.valid
@@ -137,23 +159,30 @@ enum class NodeKind {
             else -> false
         }
 
-    fun icon(payload: Payload? = null, ignoreState: Boolean = false): ImageVector =
+    fun icon(
+        payload: Payload? = null,
+        ignoreState: Boolean = false,
+        showChildren: Boolean? = null
+    ): ImageVector =
         when (this) {
             Reference -> Icons.Filled.East
             Directory -> {
                 if (payload is DirectoryPayload) {
+                    val collapsed =
+                        showChildren?.let { !it } ?: payload.collapsed ?: payload.initiallyCollapsed
+
                     if (payload.specialMode != null) {
-                        if (payload.collapsed == true && !ignoreState) {
+                        if (collapsed && !ignoreState) {
                             payload.specialMode!!.collapsedIcon ?: payload.specialMode!!.icon
                         } else payload.specialMode!!.icon
                     } else {
-                        if (payload.collapsed == true && !ignoreState) Icons.Outlined.Folder
+                        if (collapsed && !ignoreState) Icons.Outlined.Folder
                         else Icons.Filled.Folder
                     }
                 } else Icons.Filled.Folder
             }
             Application -> Icons.Filled.Launch
-            WebLink -> Icons.Filled.Link
+            Website -> Icons.Filled.Link
             File -> Icons.Filled.Description
             Location -> Icons.Filled.LocationOn
             Note ->
@@ -173,13 +202,23 @@ enum class NodeKind {
             Reference -> "Reference"
             Directory -> "Directory"
             Application -> "Application"
-            WebLink -> "Web link"
-            File -> "File opener"
+            Website -> "Website"
+            File -> "File"
             Location -> "Location"
-            Note -> "Text note"
+            Note -> "Note"
             Checkbox -> "Checkbox"
             Reminder -> "Reminder"
             Setting -> "Setting"
+        }
+
+    /**
+     * Determines if a NodeKind requires a double tap to activate. The return value is used as a
+     * message to the user. If null, the NodeKind does not require a double tap.
+     */
+    fun requiresDoubleTapToActivate(): String? =
+        when (this) {
+            Checkbox -> "Double tap to toggle this checkbox."
+            else -> null
         }
 
     val color

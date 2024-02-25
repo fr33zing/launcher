@@ -10,7 +10,9 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.ui.utility.UserEditable
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Ensure that all node order values are unique and sequential. Mutates this List and returns itself
@@ -31,6 +33,8 @@ data class Node(
     @UserEditable(label = "Label") var label: String,
 )
 
+@Keep data class NodeMinimal(val nodeId: Int, val kind: NodeKind, val label: String)
+
 @Dao
 interface NodeDao {
     @Insert suspend fun insert(node: Node)
@@ -47,10 +51,22 @@ interface NodeDao {
 
     @Query("SELECT * FROM Node") suspend fun getAll(): List<Node>
 
+    @Query("SELECT nodeId, kind, label FROM Node") suspend fun getAllMinimal(): List<NodeMinimal>
+
+    @Query("SELECT * FROM Node") fun getAllFlow(): Flow<List<Node>>
+
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
+
+    @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
+    fun getNodeFlowById(nodeId: Int): Flow<Node?>
 
     @Query("SELECT * FROM Node WHERE label == :label")
     suspend fun getNodeByLabel(label: String): Node?
+
+    suspend fun getParentByChildId(childNodeId: Int): Node? =
+        getNodeById(childNodeId).notNull().let { childNode ->
+            childNode.parentId?.let { parentId -> getNodeById(parentId) }
+        }
 
     @Query("SELECT * FROM Node WHERE parentId == :parentId AND label == :label")
     suspend fun getChildNodeByLabel(parentId: Int?, label: String): Node?
@@ -61,6 +77,9 @@ interface NodeDao {
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
+
+    @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
+    fun getChildNodesFlow(nodeId: Int): Flow<List<Node>>
 
     @Query(
         "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1"

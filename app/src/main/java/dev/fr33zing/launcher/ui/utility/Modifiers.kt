@@ -1,9 +1,12 @@
 package dev.fr33zing.launcher.ui.utility
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -23,18 +26,21 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 
 // https://stackoverflow.com/a/72554087
-fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
-    return if (condition) {
-        then(modifier(Modifier))
-    } else {
-        this
-    }
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier =
+    if (condition) then(modifier(Modifier)) else this
+
+fun Modifier.blockPointerEvents() = composed {
+    this.clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = {}
+    )
 }
 
 fun Modifier.longPressable(tapNotice: (() -> Notice)? = null, onLongPressed: () -> Unit) =
     composed {
         val haptics = LocalHapticFeedback.current
-        pointerInput(onLongPressed) {
+        this.pointerInput(onLongPressed) {
             detectTapGestures(
                 onTap = {
                     tapNotice?.let {
@@ -78,7 +84,10 @@ fun Modifier.verticalScrollShadows(height: Dp) = drawWithContent {
     )
 }
 
-fun Modifier.wholeScreenVerticalScrollShadows() = composed {
+data class PaddingAndShadowHeight(val paddingHeight: Dp, val shadowHeight: Dp)
+
+@Composable
+fun rememberPaddingAndShadowHeight(): PaddingAndShadowHeight {
     val density = LocalDensity.current
     val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
     val navigationBarsBottom =
@@ -87,9 +96,12 @@ fun Modifier.wholeScreenVerticalScrollShadows() = composed {
         remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
             listOf(statusBarsTop, navigationBarsBottom).max()
         }
-    val hiddenRatio = 0.666f
+    val hiddenRatio = 0.75f
     val shadowRatio = 1f - hiddenRatio
+    val paddingHeight = verticalPadding * hiddenRatio
     val shadowHeight = verticalPadding * shadowRatio
 
-    verticalScrollShadows(shadowHeight)
+    return remember(paddingHeight, shadowHeight) {
+        PaddingAndShadowHeight(paddingHeight, shadowHeight)
+    }
 }

@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
+import android.content.Context
 import androidx.annotation.Keep
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -17,6 +18,12 @@ import dev.fr33zing.launcher.data.PermissionMap
 import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.clone
 import dev.fr33zing.launcher.data.hasPermission
+import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.utility.castOrNull
+import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // TODO rename "collapsed" to "childrenVisible", invert conditionals, search entire project for
 // "collapsed" so comments are fixed too
@@ -36,21 +43,28 @@ class Directory(
     //
 
     enum class SpecialMode(
-        val modeName: String,
         val defaultDirectoryName: String,
         val icon: ImageVector,
         val collapsedIcon: ImageVector? = null,
         val initiallyCollapsed: Boolean = false,
-        val permissions: PermissionMap = mapOf()
+        val permissions: PermissionMap = mapOf(),
+        /**
+         * Check if the contents of a special directory are valid. If it returns false, the child is
+         * deleted.
+         */
+        val isChildValid: ((child: NodePayloadState) -> Boolean)? = null,
+        /**
+         * Check if the special directory is valid. If it returns false, the directory is delete.
+         * This runs **after** [isChildValid].
+         */
+        val isValid: ((children: List<NodePayloadState>) -> Boolean)? = null,
     ) {
         Root(
-            modeName = "Root",
-            defaultDirectoryName = "~",
+            defaultDirectoryName = "<Root>",
             icon = Icons.Rounded.DeviceHub,
             permissions = AllPermissions
         ),
         Home(
-            modeName = "Home",
             defaultDirectoryName = "Home",
             icon = Icons.Rounded.Home,
             collapsedIcon = Icons.Outlined.Home,
@@ -58,30 +72,37 @@ class Directory(
             permissions =
                 run {
                     val permissions = AllPermissions.clone().toMutableMap()
-                    permissions[PermissionKind.Create] = mutableSetOf(PermissionScope.Recursive)
+                    permissions[PermissionKind.Create] =
+                        mutableSetOf(PermissionScope.Self, PermissionScope.Recursive)
                     permissions[PermissionKind.Delete] = mutableSetOf(PermissionScope.Recursive)
                     permissions
                 }
         ),
         NewApplications(
-            modeName = "New Applications",
             defaultDirectoryName = "New Applications",
             icon = Icons.Filled.NewReleases,
             collapsedIcon = Icons.Outlined.NewReleases,
             permissions =
                 mapOf(
+                    PermissionKind.Create to mutableSetOf(PermissionScope.Self),
                     PermissionKind.Edit to
                         mutableSetOf(PermissionScope.Self, PermissionScope.Recursive),
                     PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
                 ),
+            isChildValid = { child ->
+                child.payload.castOrNull<Application>()?.let { application ->
+                    application.status == Application.Status.Valid
+                } ?: false
+            },
+            isValid = { children -> children.isNotEmpty() },
         ),
         Trash(
-            modeName = "Trash",
             defaultDirectoryName = "Trash",
             icon = Icons.Filled.Delete,
             collapsedIcon = Icons.Outlined.Delete,
             permissions =
                 mapOf(
+                    PermissionKind.Create to mutableSetOf(PermissionScope.Self),
                     PermissionKind.Edit to mutableSetOf(PermissionScope.Self),
                     PermissionKind.MoveIn to mutableSetOf(PermissionScope.Recursive),
                     PermissionKind.MoveOut to mutableSetOf(PermissionScope.Recursive),
@@ -126,5 +147,10 @@ class Directory(
     override fun preUpdate() {
         collapsed =
             if (initialVisibility == InitialVisibility.Remember) collapsed else initiallyCollapsed
+    }
+
+    override fun activate(db: AppDatabase, context: Context) {
+        collapsed = collapsed != true
+        let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }
     }
 }

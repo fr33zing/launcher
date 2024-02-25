@@ -21,6 +21,7 @@ import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Update
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.persistent.migrations.RenameWebLinkToWebsite
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
@@ -31,20 +32,22 @@ import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Reference
 import dev.fr33zing.launcher.data.persistent.payloads.Reminder
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
-import dev.fr33zing.launcher.data.persistent.payloads.WebLink
+import dev.fr33zing.launcher.data.persistent.payloads.Website
 import dev.fr33zing.launcher.data.utility.Converters
-import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("UNCHECKED_CAST")
 @TypeConverters(Converters::class)
 @Database(
-    version = 3,
+    version = 5,
     autoMigrations =
         [
             AutoMigration(from = 1, to = 2),
             AutoMigration(from = 2, to = 3),
+            AutoMigration(from = 3, to = 4, RenameWebLinkToWebsite::class),
+            AutoMigration(from = 4, to = 5),
         ],
     entities =
         [
@@ -57,7 +60,7 @@ import kotlin.reflect.typeOf
             Note::class,
             Reference::class,
             Reminder::class,
-            WebLink::class,
+            Website::class,
             Setting::class
         ]
 )
@@ -80,7 +83,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun reminderDao(): ReminderDao
 
-    abstract fun webLinkDao(): WebLinkDao
+    abstract fun websiteDao(): WebsiteDao
 
     abstract fun settingDao(): SettingDao
 
@@ -94,7 +97,7 @@ abstract class AppDatabase : RoomDatabase() {
             Note::class -> NodeKind.Note
             Reference::class -> NodeKind.Reference
             Reminder::class -> NodeKind.Reminder
-            WebLink::class -> NodeKind.WebLink
+            Website::class -> NodeKind.Website
             Setting::class -> NodeKind.Setting
             else -> throw Exception("Invalid payload class: ${T::class}")
         }
@@ -110,7 +113,7 @@ abstract class AppDatabase : RoomDatabase() {
                 NodeKind.Note -> Note::class
                 NodeKind.Reference -> Reference::class
                 NodeKind.Reminder -> Reminder::class
-                NodeKind.WebLink -> WebLink::class
+                NodeKind.Website -> Website::class
                 NodeKind.Setting -> Setting::class
             }
         val constructor =
@@ -132,7 +135,7 @@ abstract class AppDatabase : RoomDatabase() {
             NodeKind.Note -> noteDao().getPayloadByNodeId(nodeId)
             NodeKind.Reference -> referenceDao().getPayloadByNodeId(nodeId)
             NodeKind.Reminder -> reminderDao().getPayloadByNodeId(nodeId)
-            NodeKind.WebLink -> webLinkDao().getPayloadByNodeId(nodeId)
+            NodeKind.Website -> websiteDao().getPayloadByNodeId(nodeId)
             NodeKind.Setting -> settingDao().getPayloadByNodeId(nodeId)
         }
 
@@ -146,7 +149,7 @@ abstract class AppDatabase : RoomDatabase() {
             NodeKind.Note -> noteDao().getPayloadFlowByNodeId(nodeId)
             NodeKind.Reference -> referenceDao().getPayloadFlowByNodeId(nodeId)
             NodeKind.Reminder -> reminderDao().getPayloadFlowByNodeId(nodeId)
-            NodeKind.WebLink -> webLinkDao().getPayloadFlowByNodeId(nodeId)
+            NodeKind.Website -> websiteDao().getPayloadFlowByNodeId(nodeId)
             NodeKind.Setting -> settingDao().getPayloadFlowByNodeId(nodeId)
         }
 
@@ -162,7 +165,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().insert(entity)
             is Reference -> referenceDao().insert(entity)
             is Reminder -> reminderDao().insert(entity)
-            is WebLink -> webLinkDao().insert(entity)
+            is Website -> websiteDao().insert(entity)
             is Setting -> settingDao().insert(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
@@ -180,7 +183,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().insertMany(entities as List<Note>)
             is Reference -> referenceDao().insertMany(entities as List<Reference>)
             is Reminder -> reminderDao().insertMany(entities as List<Reminder>)
-            is WebLink -> webLinkDao().insertMany(entities as List<WebLink>)
+            is Website -> websiteDao().insertMany(entities as List<Website>)
             is Setting -> settingDao().insertMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
@@ -198,7 +201,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().update(entity)
             is Reference -> referenceDao().update(entity)
             is Reminder -> reminderDao().update(entity)
-            is WebLink -> webLinkDao().update(entity)
+            is Website -> websiteDao().update(entity)
             is Setting -> settingDao().update(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
@@ -216,7 +219,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().updateMany(entities as List<Note>)
             is Reference -> referenceDao().updateMany(entities as List<Reference>)
             is Reminder -> reminderDao().updateMany(entities as List<Reminder>)
-            is WebLink -> webLinkDao().updateMany(entities as List<WebLink>)
+            is Website -> websiteDao().updateMany(entities as List<Website>)
             is Setting -> settingDao().updateMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
@@ -234,7 +237,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().delete(entity)
             is Reference -> referenceDao().delete(entity)
             is Reminder -> reminderDao().delete(entity)
-            is WebLink -> webLinkDao().delete(entity)
+            is Website -> websiteDao().delete(entity)
             is Setting -> settingDao().delete(entity)
             else -> throw Exception("Invalid entity type: ${entity::class.qualifiedName}")
         }
@@ -252,7 +255,7 @@ abstract class AppDatabase : RoomDatabase() {
             is Note -> noteDao().deleteMany(entities as List<Note>)
             is Reference -> referenceDao().deleteMany(entities as List<Reference>)
             is Reminder -> reminderDao().deleteMany(entities as List<Reminder>)
-            is WebLink -> webLinkDao().deleteMany(entities as List<WebLink>)
+            is Website -> websiteDao().deleteMany(entities as List<Website>)
             is Setting -> settingDao().deleteMany(entities as List<Setting>)
             else -> throw Exception("Invalid entity type: ${entities[0]::class.qualifiedName}")
         }
@@ -456,26 +459,26 @@ interface ReminderDao {
 }
 
 @Dao
-interface WebLinkDao {
-    @Insert suspend fun insert(entity: WebLink)
+interface WebsiteDao {
+    @Insert suspend fun insert(entity: Website)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<WebLink>)
+    @Transaction @Insert suspend fun insertMany(entities: List<Website>)
 
-    @Update suspend fun update(entity: WebLink)
+    @Update suspend fun update(entity: Website)
 
-    @Transaction @Update suspend fun updateMany(entities: List<WebLink>)
+    @Transaction @Update suspend fun updateMany(entities: List<Website>)
 
-    @Delete suspend fun delete(entity: WebLink)
+    @Delete suspend fun delete(entity: Website)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<WebLink>)
+    @Transaction @Delete suspend fun deleteMany(entities: List<Website>)
 
-    @Query("SELECT * FROM WebLink") suspend fun getAllPayloads(): List<WebLink>
+    @Query("SELECT * FROM Website") suspend fun getAllPayloads(): List<Website>
 
-    @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
-    suspend fun getPayloadByNodeId(nodeId: Int): WebLink?
+    @Query("SELECT * FROM Website WHERE nodeId = :nodeId")
+    suspend fun getPayloadByNodeId(nodeId: Int): Website?
 
-    @Query("SELECT * FROM WebLink WHERE nodeId = :nodeId")
-    fun getPayloadFlowByNodeId(nodeId: Int): Flow<WebLink?>
+    @Query("SELECT * FROM Website WHERE nodeId = :nodeId")
+    fun getPayloadFlowByNodeId(nodeId: Int): Flow<Website?>
 }
 
 @Dao

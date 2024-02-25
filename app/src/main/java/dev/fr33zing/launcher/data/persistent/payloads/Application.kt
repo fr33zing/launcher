@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
 import android.content.ComponentName
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
@@ -14,9 +15,11 @@ import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.utility.UserEditable
 
+// TODO replace these with DI
 lateinit var mainPackageManager: PackageManager
 lateinit var launcherApps: LauncherApps
 lateinit var userManager: UserManager
+lateinit var mainContentResolver: ContentResolver
 
 @Keep
 @Entity
@@ -80,6 +83,8 @@ class Application(
     override fun activate(db: AppDatabase, context: Context) = launch()
 
     fun launch() {
+        _status = computeStatus()
+
         if (status == Status.Valid) {
             try {
                 val foundUserHandle =

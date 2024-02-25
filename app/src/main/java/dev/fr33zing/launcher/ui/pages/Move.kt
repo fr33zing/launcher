@@ -4,9 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -16,64 +19,53 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import dev.fr33zing.launcher.data.NodeKind
-import dev.fr33zing.launcher.data.PermissionKind
-import dev.fr33zing.launcher.data.PermissionScope
-import dev.fr33zing.launcher.data.persistent.AppDatabase
-import dev.fr33zing.launcher.data.persistent.Node
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
-import dev.fr33zing.launcher.data.persistent.checkPermission
-import dev.fr33zing.launcher.data.persistent.moveNode
-import dev.fr33zing.launcher.ui.components.CancelButton
-import dev.fr33zing.launcher.ui.components.FinishButton
-import dev.fr33zing.launcher.ui.components.OutlinedValue
+import dev.fr33zing.launcher.data.utility.notNull
+import dev.fr33zing.launcher.data.viewmodel.MoveViewModel
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
-import dev.fr33zing.launcher.ui.components.node.NodePath
-import dev.fr33zing.launcher.ui.components.node.NodePicker
+import dev.fr33zing.launcher.ui.components.form.CancelButton
+import dev.fr33zing.launcher.ui.components.form.FinishButton
+import dev.fr33zing.launcher.ui.components.form.NodePath
+import dev.fr33zing.launcher.ui.components.form.OutlinedValue
+import dev.fr33zing.launcher.ui.components.tree.TreeBrowser
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-
-private val extraPadding = 6.dp
+import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
-    var initialRootNodeId by remember { mutableStateOf<Int?>(null) }
-    val selectedNode = remember { mutableStateOf<Node?>(null) }
-    var movingNode by remember { mutableStateOf<Node?>(null) }
-    var movingNodeCurrentParent by remember { mutableStateOf<Node?>(null) }
+fun Move(
+    navigateBack: () -> Unit,
+    viewModel: MoveViewModel = hiltViewModel(),
+) {
+    val treeBrowserState by viewModel.treeBrowser.flow.collectAsStateWithLifecycle()
+    val selectedNode by remember { derivedStateOf { treeBrowserState?.stack?.last() } }
 
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
 
     val preferences = Preferences(LocalContext.current)
+    val spacing by preferences.nodeAppearance.spacing.state
     val askOnAccept by preferences.confirmationDialogs.moveNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
-    LaunchedEffect(nodeId) {
-        movingNode = db.nodeDao().getNodeById(nodeId) ?: throw Exception("node is null")
-        val parentId = movingNode!!.parentId ?: throw Exception("parentId is null")
-        movingNodeCurrentParent =
-            db.nodeDao().getNodeById(parentId) ?: throw Exception("parent is null")
-        initialRootNodeId = movingNodeCurrentParent!!.parentId ?: ROOT_NODE_ID
-        selectedNode.value = db.nodeDao().getNodeById(initialRootNodeId!!)
+    fun commitMove() {
+        viewModel.commitMove()
+        navigateBack()
     }
 
     YesNoDialog(
@@ -85,7 +77,7 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = { onCancelChanges(navController) },
+        onYes = navigateBack,
     )
 
     YesNoDialog(
@@ -96,11 +88,11 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
         yesIcon = Icons.Filled.Check,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = { onSaveChanges(navController, db, movingNode!!, selectedNode.value?.nodeId!!) },
+        onYes = ::commitMove,
     )
 
-    BackHandler(enabled = selectedNode.value?.nodeId == ROOT_NODE_ID) {
-        if (askOnReject) cancelDialogVisible.value = true else onCancelChanges(navController)
+    BackHandler(enabled = selectedNode?.nodeId == ROOT_NODE_ID) {
+        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
     }
 
     Scaffold(
@@ -111,9 +103,11 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                     Text(
                         buildAnnotatedString {
                             append("Moving ")
-                            if (movingNode != null) {
-                                withStyle(SpanStyle(color = movingNode!!.kind.color)) {
-                                    append(movingNode!!.kind.label)
+                            if (viewModel.nodeToMove != null) {
+                                withStyle(
+                                    SpanStyle(color = viewModel.nodeToMove.notNull().kind.color)
+                                ) {
+                                    append(viewModel.nodeToMove!!.kind.label)
                                 }
                             }
                         }
@@ -121,87 +115,53 @@ fun Move(db: AppDatabase, navController: NavController, nodeId: Int) {
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true
-                        else onCancelChanges(navController)
+                        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
                     }
                     FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true
-                        else
-                            onSaveChanges(
-                                navController,
-                                db,
-                                movingNode!!,
-                                selectedNode.value?.nodeId!!
-                            )
+                        if (askOnAccept) saveDialogVisible.value = true else commitMove()
                     }
                 },
             )
         },
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(extraPadding)) {
-            if (movingNode != null && initialRootNodeId != null) {
-                Column(
-                    verticalArrangement =
-                        Arrangement.spacedBy(preferences.nodeAppearance.spacing.mappedDefault),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                ) {
-                    OutlinedValue(
-                        label = "${movingNode!!.kind.label} to move",
-                        modifier = Modifier.fillMaxWidth()
-                    ) { padding ->
-                        NodePath(db, movingNode!!, modifier = Modifier.padding(padding))
-                    }
+        Box(modifier = Modifier.fillMaxSize()) {
+            val topPadding = remember(innerPadding) { innerPadding.calculateTopPadding() }
+            val bottomPadding = remember(innerPadding) { innerPadding.calculateBottomPadding() }
 
-                    OutlinedValue(label = "Destination", modifier = Modifier.fillMaxWidth()) {
-                        padding ->
-                        if (selectedNode.value != null)
-                            NodePath(db, selectedNode.value!!, modifier = Modifier.padding(padding))
-                    }
+            Column(
+                verticalArrangement =
+                    Arrangement.spacedBy(preferences.nodeAppearance.spacing.mappedDefault),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.absolutePadding(top = topPadding, bottom = bottomPadding)
+            ) {
+                val valueModifier = remember {
+                    Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxWidth()
+                }
 
-                    NodePicker(
-                        db,
-                        initialRootNodeId,
-                        selectedNode,
-                        nodeVisiblePredicate = {
-                            it.kind == NodeKind.Directory && it != movingNode
-                        },
-                        nodeBlockedReason = { node ->
-                            if (
-                                !(db.checkPermission(
-                                    PermissionKind.Move,
-                                    PermissionScope.Recursive,
-                                    node
-                                ) ||
-                                    db.checkPermission(
-                                        PermissionKind.MoveIn,
-                                        PermissionScope.Recursive,
-                                        node
-                                    ))
-                            ) {
-                                val kind = movingNode!!.kind.label.lowercase()
-                                "Cannot move $kind '${movingNode!!.label}' into directory '${node.label}'"
-                            } else null
-                        }
-                    )
+                OutlinedValue(label = "Current path", modifier = valueModifier) { padding ->
+                    NodePath(viewModel.nodeToMoveLineage, modifier = Modifier.padding(padding))
+                }
+
+                OutlinedValue(label = "Destination path", modifier = valueModifier) { padding ->
+                    if (selectedNode != null && treeBrowserState != null)
+                        NodePath(treeBrowserState!!.stack, modifier = Modifier.padding(padding))
+                }
+
+                val verticalPadding = spacing / 2
+                Box(Modifier.fillMaxSize().verticalScrollShadows(verticalPadding)) {
+                    Box(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                                .padding(vertical = verticalPadding)
+                    ) {
+                        TreeBrowser(
+                            viewModel.treeBrowser,
+                            horizontalPadding = ScreenHorizontalPadding
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-private fun onCancelChanges(navController: NavController) {
-    navController.popBackStack()
-}
-
-private fun onSaveChanges(
-    navController: NavController,
-    db: AppDatabase,
-    node: Node,
-    newParentNodeId: Int,
-) {
-    CoroutineScope(Dispatchers.Main).launch {
-        db.moveNode(node, newParentNodeId)
-        navController.popBackStack()
     }
 }

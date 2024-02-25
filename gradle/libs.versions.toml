@@ -6,7 +6,6 @@ kaml = "0.55.0"
 lifecycle-runtime-compose = "2.6.2"
 material-icons-extended = "1.5.4"
 navigation-compose = "2.7.6"
-org-jetbrains-kotlin-android = "1.9.21"
 core-ktx = "1.12.0"
 activity-compose = "1.8.2"
 compose-bom = "2023.10.01"
@@ -14,9 +13,25 @@ reorderable = "0.9.6"
 room-runtime = "2.6.1"
 rxkotlin = "3.0.1"
 
+# Hilt
+androidx-hilt-compiler = "1.1.0"
+androidx-hilt-navigation-compose = "1.1.0"
+com-google-dagger-hilt-android = "2.48.1"
+hilt-android = "2.48.1"
+hilt-compiler = "2.48.1"
+
+# Careful updating these
+org-jetbrains-kotlin-android = "1.9.21"
+com-google-devtools-ksp = "1.9.21-1.0.16"
+org-jetbrains-kotlin-plugin-serialization = "1.9.21"
+org-jetbrains-kotlin-reflect = "1.9.21"
+
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidx-hilt-compiler" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "androidx-hilt-navigation-compose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle-runtime-compose" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle-runtime-compose" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "material-icons-extended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room-runtime" }
@@ -24,17 +39,23 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room-runtime" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzywuzzy" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt-android" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt-compiler" }
 kaml = { module = "com.charleskorn.kaml:kaml", version.ref = "kaml" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "reorderable" }
 rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlin" }
+reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "org-jetbrains-kotlin-reflect" }
 ui = { group = "androidx.compose.ui", name = "ui" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
 
 [plugins]
 com-android-application = { id = "com.android.application", version.ref = "agp" }
 org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "org-jetbrains-kotlin-android" }
+com-google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "com-google-devtools-ksp" }
+com-google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "com-google-dagger-hilt-android" }
+org-jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "org-jetbrains-kotlin-plugin-serialization" }
 
 [bundles]
 
