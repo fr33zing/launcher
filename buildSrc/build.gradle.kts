@@ -18,8 +18,22 @@ tasks {
         val targetPackage = "$domain.data.persistent"
         val targetFileName = "Database.kt"
 
-        // Update these variables to add support for new NodeKind variants and payload classes.
+        // Update these variables when the database schema changes.
+        val migrationClasses = mutableListOf<String>()
+        fun migration(className: String): String {
+            migrationClasses.add(className)
+            return "$className::class"
+        }
         val databaseVersion = "5"
+        val autoMigrations =
+            """
+                AutoMigration(from = 1, to = 2),
+                AutoMigration(from = 2, to = 3),
+                AutoMigration(from = 3, to = 4, ${migration("RenameWebLinkToWebsite")}),
+                AutoMigration(from = 4, to = 5),
+            """
+
+        // Update these variables to add support for new NodeKind variants and payload classes.
         val payloadClasses =
             listOf(
                 "Application",
@@ -33,18 +47,6 @@ tasks {
                 "Website",
                 "Setting",
             )
-        val migrationClasses = mutableListOf<String>()
-        fun migration(className: String): String {
-            migrationClasses.add(className)
-            return "$className::class"
-        }
-        val autoMigrations =
-            """
-                AutoMigration(from = 1, to = 2),
-                AutoMigration(from = 2, to = 3),
-                AutoMigration(from = 3, to = 4, ${migration("RenameWebLinkToWebsite")}),
-                AutoMigration(from = 4, to = 5),
-            """
         val entityClasses = listOf("Node") + payloadClasses
         val nodeKindToPayloadClassMap = payloadClasses.associateWith { it }
         val extraDaoFunctions =
