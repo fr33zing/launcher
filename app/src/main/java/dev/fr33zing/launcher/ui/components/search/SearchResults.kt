@@ -1,7 +1,5 @@
 package dev.fr33zing.launcher.ui.components.search
 
-import android.app.SearchManager
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -29,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -57,6 +54,7 @@ fun SearchResults(
     results: List<SearchResult>,
     showHistory: Boolean,
     onTapHistoricalQuery: (String) -> Unit = {},
+    onWebSearch: () -> Unit = {},
     onActivateSearchResult: (TreeNodeState) -> Unit = {},
     onActivateDirectorySearchResult: (TreeNodeState) -> Unit = {},
     shadowHeight: Dp = LocalNodeDimensions.current.spacing / 2,
@@ -69,7 +67,7 @@ fun SearchResults(
             if (showHistory) {
                 historyItems(history, onTapHistoricalQuery)
             } else {
-                webSearchItem(query)
+                webSearchItem(onWebSearch)
                 resultItems(query, results, onActivateSearchResult, onActivateDirectorySearchResult)
             }
         }
@@ -98,16 +96,13 @@ private fun LazyListScope.historyItems(
     }
 }
 
-private fun LazyListScope.webSearchItem(query: String) {
+private fun LazyListScope.webSearchItem(onWebSearch: () -> Unit) {
     item {
         val haptics = LocalHapticFeedback.current
-        val context = LocalContext.current
         NodeDetailContainer(
             Modifier.clickable {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, query).also {
-                    context.startActivity(it)
-                }
+                onWebSearch()
             }
         ) {
             NodeDetail(

@@ -1,5 +1,7 @@
 package dev.fr33zing.launcher.ui.pages
 
+import android.app.SearchManager
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -107,6 +109,12 @@ fun Search(
                 onTapHistoricalQuery = {
                     viewModel.updateQuery(it)
                     clearFocus()
+                },
+                onWebSearch = {
+                    viewModel.addCurrentQueryToSearchHistory()
+                    Intent(Intent.ACTION_WEB_SEARCH)
+                        .putExtra(SearchManager.QUERY, state.query)
+                        .also { context.startActivity(it) }
                 },
                 onActivateSearchResult = ::activatePayload,
                 onActivateDirectorySearchResult = ::activateDirectory
