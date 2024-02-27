@@ -46,6 +46,10 @@ constructor(private val db: AppDatabase, private val searchHistory: SearchHistor
         searchHistory.add(query, viewModelScope)
     }
 
+    fun removeQueryFromSearchHistory(historicalQuery: String) {
+        searchHistory.remove(historicalQuery, viewModelScope)
+    }
+
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
         addCurrentQueryToSearchHistory()
         treeNodeState.value.payload.activate(db, context)

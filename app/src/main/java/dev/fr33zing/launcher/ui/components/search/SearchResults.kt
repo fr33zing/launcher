@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,11 +41,13 @@ import dev.fr33zing.launcher.ui.components.tree.NodeRow
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
 val historyColor = Foreground.mix(Background, 0.5f)
+val removeHistoryColor = Catppuccin.Current.red.mix(Background, 0.25f)
 const val MAX_SEARCH_RESULTS = 50
 
 @Composable
@@ -54,6 +57,7 @@ fun SearchResults(
     results: List<SearchResult>,
     showHistory: Boolean,
     onTapHistoricalQuery: (String) -> Unit = {},
+    onRemoveHistoricalQuery: (String) -> Unit = {},
     onWebSearch: () -> Unit = {},
     onActivateSearchResult: (TreeNodeState) -> Unit = {},
     onActivateDirectorySearchResult: (TreeNodeState) -> Unit = {},
@@ -65,7 +69,7 @@ fun SearchResults(
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
         ) {
             if (showHistory) {
-                historyItems(history, onTapHistoricalQuery)
+                historyItems(history, onTapHistoricalQuery, onRemoveHistoricalQuery)
             } else {
                 webSearchItem(onWebSearch)
                 resultItems(query, results, onActivateSearchResult, onActivateDirectorySearchResult)
@@ -76,7 +80,8 @@ fun SearchResults(
 
 private fun LazyListScope.historyItems(
     history: List<String>,
-    onTapHistoricalQuery: (String) -> Unit
+    onTapHistoricalQuery: (String) -> Unit,
+    onRemoveHistoricalQuery: (String) -> Unit,
 ) {
     items(history) { recentSearch ->
         val haptics = LocalHapticFeedback.current
@@ -90,7 +95,15 @@ private fun LazyListScope.historyItems(
                 label = recentSearch,
                 color = historyColor,
                 icon = Icons.Outlined.Search,
-                lineThrough = false
+                lineThrough = false,
+                textModifier = Modifier.weight(1f)
+            )
+
+            Icon(
+                Icons.Rounded.Close,
+                contentDescription = "remove from search history",
+                tint = removeHistoryColor,
+                modifier = Modifier.clickable { onRemoveHistoricalQuery(recentSearch) },
             )
         }
     }

@@ -32,6 +32,14 @@ class SearchHistory(context: Context) {
         file.writeText(lines.joinToString(newLine))
     }
 
+    fun remove(query: String, scope: CoroutineScope) {
+        ensureFileExists()
+        val lines = ArrayDeque(file.readLines())
+        if (query in lines) lines.remove(query)
+        scope.launch { _flow.emit(lines) }
+        file.writeText(lines.joinToString(newLine))
+    }
+
     private fun ensureFileExists() {
         if (!file.exists()) file.createNewFile()
     }

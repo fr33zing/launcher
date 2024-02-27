@@ -110,6 +110,7 @@ fun Search(
                     viewModel.updateQuery(it)
                     clearFocus()
                 },
+                onRemoveHistoricalQuery = viewModel::removeQueryFromSearchHistory,
                 onWebSearch = {
                     viewModel.addCurrentQueryToSearchHistory()
                     Intent(Intent.ACTION_WEB_SEARCH)
