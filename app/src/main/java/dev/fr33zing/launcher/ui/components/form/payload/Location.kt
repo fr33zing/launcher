@@ -65,7 +65,7 @@ private fun clipboardLocation(clipboard: ClipboardManager): String? {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LocationEditForm(arguments: EditFormArguments) {
-    val (padding, node, payload) = arguments
+    val (padding, node, payload, creatingNewNode) = arguments
     val location = payload as Location
 
     val focusManager = LocalFocusManager.current
@@ -87,7 +87,7 @@ fun LocationEditForm(arguments: EditFormArguments) {
     }
 
     EditFormColumn(padding) {
-        NodePropertyTextField(node::label)
+        NodePropertyTextField(node::label, autoFocus = creatingNewNode)
         NodePropertyTextField(location::geoUri, state = geoUriState)
 
         // TODO get consent to check clipboard first

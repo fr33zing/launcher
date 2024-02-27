@@ -110,7 +110,9 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
         }
     ) { padding ->
         nodePayload?.let { (node, payload) ->
-            NodeEditForm(EditFormArguments(padding, node, payload, ::disableSaving, ::enableSaving))
+            NodeEditForm(
+                EditFormArguments(padding, node, payload, true, ::disableSaving, ::enableSaving)
+            )
         }
     }
 }

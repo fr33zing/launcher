@@ -36,7 +36,7 @@ fun DirectoryEditForm(
     arguments: EditFormArguments,
     viewModel: EditDirectoryViewModel = hiltViewModel(),
 ) {
-    val (padding, node, payload) = arguments
+    val (padding, node, payload, creatingNewNode) = arguments
     val directory = payload as Directory
 
     EditFormColumn(padding) {
@@ -45,7 +45,7 @@ fun DirectoryEditForm(
             val nodeLineage = remember(labelState.value) { viewModel.nodePath + listOf(node) }
             NodePath(nodeLineage, modifier = Modifier.padding(padding))
         }
-        NodePropertyTextField(node::label, state = labelState)
+        NodePropertyTextField(node::label, state = labelState, autoFocus = creatingNewNode)
         InitialState(directory)
     }
 }

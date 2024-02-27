@@ -14,19 +14,22 @@ import androidx.core.os.ConfigurationCompat
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Checkbox
 import dev.fr33zing.launcher.ui.components.form.EditFormColumn
-import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
+import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import java.text.SimpleDateFormat
 import java.util.Date
 
 @Composable
 fun CheckboxEditForm(arguments: EditFormArguments) {
-    val (padding, node, payload) = arguments
+    val (padding, node, payload, creatingNewNode) = arguments
     val checkbox = payload as Checkbox
 
     EditFormColumn(padding) {
-        NodePropertyTextField(node::label)
+        NodePropertyTextField(
+            node::label,
+            autoFocus = creatingNewNode,
+        )
         LabeledDateText("Last checked", checkbox.checkedOn)
         LabeledDateText("Last unchecked", checkbox.uncheckedOn)
     }

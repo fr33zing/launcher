@@ -35,6 +35,7 @@ data class EditFormArguments(
     val padding: PaddingValues,
     val node: Node,
     val payload: Payload,
+    val creatingNewNode: Boolean,
     val disableSaving: (message: String) -> Unit,
     val enableSaving: () -> Unit,
 )
@@ -121,7 +122,9 @@ fun Edit(
         }
     ) { padding ->
         nodePayload?.let { (node, payload) ->
-            NodeEditForm(EditFormArguments(padding, node, payload, ::disableSaving, ::enableSaving))
+            NodeEditForm(
+                EditFormArguments(padding, node, payload, false, ::disableSaving, ::enableSaving)
+            )
         }
     }
 }

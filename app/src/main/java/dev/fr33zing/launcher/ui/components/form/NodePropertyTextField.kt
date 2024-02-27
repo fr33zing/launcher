@@ -13,6 +13,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -53,10 +56,13 @@ fun NodePropertyTextField(
     defaultValue: String? = null,
     userCanRevert: Boolean = false,
     imeAction: ImeAction = ImeAction.Done,
-    minLines: Int = 1
+    minLines: Int = 1,
+    autoFocus: Boolean = false,
 ) {
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+
     val annotation = remember { property.getUserEditableAnnotation() }
     val input = remember { state ?: mutableStateOf(property.get()) }
     var initialValue by remember(defaultValue) { mutableStateOf(defaultValue ?: input.value) }
@@ -66,6 +72,11 @@ fun NodePropertyTextField(
     fun setValue(value: String) {
         input.value = value
         property.set(value)
+    }
+
+    fun requestFocus() {
+        focusRequester.requestFocus()
+        keyboardController?.show()
     }
 
     fun clearFocus() {
@@ -79,6 +90,8 @@ fun NodePropertyTextField(
             enabled = true
         }
     }
+
+    LaunchedEffect(Unit) { if (autoFocus) requestFocus() }
 
     DisposableEffect(Unit) {
         val subscription =
@@ -127,7 +140,7 @@ fun NodePropertyTextField(
                 }
             }
         },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
     )
 }
 

@@ -9,11 +9,11 @@ import dev.fr33zing.launcher.ui.pages.EditFormArguments
 
 @Composable
 fun NoteEditForm(arguments: EditFormArguments) {
-    val (padding, node, payload) = arguments
+    val (padding, node, payload, creatingNewNode) = arguments
     val notePayload = payload as Note
 
     EditFormColumn(padding) {
-        NodePropertyTextField(node::label)
+        NodePropertyTextField(node::label, autoFocus = creatingNewNode)
         NodePropertyTextField(notePayload::body, imeAction = ImeAction.Default, minLines = 3)
     }
 }

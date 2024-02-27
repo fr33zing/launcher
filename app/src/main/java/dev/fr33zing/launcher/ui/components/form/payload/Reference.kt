@@ -38,7 +38,7 @@ fun ReferenceEditForm(
     arguments: EditFormArguments,
     viewModel: EditReferenceViewModel = hiltViewModel()
 ) {
-    val (padding, node, payload, disableSaving, enableSaving) = arguments
+    val (padding, node, payload, _, disableSaving, enableSaving) = arguments
     val reference = payload as Reference
 
     val labelState = remember { mutableStateOf(node.label) }

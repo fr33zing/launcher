@@ -145,15 +145,7 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
         val siblings = nodeDao().getChildNodes(parentId).fixOrder()
         siblings.filter { it.order >= order }.forEach { it.order++ }
         updateMany(siblings)
-        insert(
-            Node(
-                nodeId = 0,
-                parentId = parentId,
-                kind = newNodeKind,
-                order = order,
-                label = "New ${newNodeKind.label}"
-            )
-        )
+        insert(Node(nodeId = 0, parentId = parentId, kind = newNodeKind, order = order, label = ""))
         val lastNodeId = nodeDao().getLastNodeId()
         insert(createDefaultPayloadForNode(newNodeKind, lastNodeId))
         if (parentId != null) event = Pair(lastNodeId, parentId)

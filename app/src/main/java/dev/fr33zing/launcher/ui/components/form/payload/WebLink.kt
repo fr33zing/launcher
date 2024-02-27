@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun WebsiteEditForm(arguments: EditFormArguments) {
-    val (padding, node, payload) = arguments
+    val (padding, node, payload, creatingNewNode) = arguments
     val website = payload as Website
 
     val labelState = remember { mutableStateOf(node.label) }
@@ -39,7 +39,7 @@ fun WebsiteEditForm(arguments: EditFormArguments) {
     var pendingHttpResponse by remember { mutableStateOf(false) }
 
     EditFormColumn(padding) {
-        NodePropertyTextField(node::label, state = labelState)
+        NodePropertyTextField(node::label, state = labelState, autoFocus = creatingNewNode)
         NodePropertyTextField(website::url, state = urlState)
 
         val isValidUrl = remember(urlState.value) { UrlRegex.matches(urlState.value) }
