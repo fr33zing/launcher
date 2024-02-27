@@ -86,7 +86,7 @@ fun Search(
             showRequestFocusButton = showRequestFocusButton,
             controls = {
                 SearchBox(
-                    query = state.query,
+                    query = state.rawQuery,
                     updateQuery = viewModel.updateQuery,
                     focusRequester = focusRequester,
                     focusManager = focusManager,
