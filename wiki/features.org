@@ -1,0 +1,183 @@
+#+TITLE: Features
+
+* About this page
+
+This page serves as a *non-exhaustive* record of this launcher's
+*user-facing* features.
+
+* Setup
+
+** Instructions
+
+Adds instructions for new users on first run.
+
+** Application categorization
+
+Automatically categorizes all installed applications on first run. Due
+to the fact that there is no singular category listing per app,
+multiple sources are used:
+
+- Hardcoded overrides
+- Intent activities query
+- F-Droid metadata
+- Application info
+
+* Home
+
+** Clock
+
+Displays time and date, including the current week number.
+
+*** Shortcuts
+
+Tap the time or date to open the clock or calendar application,
+configurable in preferences.
+
+*** Next alarm
+
+If set, the time of the next alarm will be displayed near the time.
+
+** Home directory
+
+Contents of the special Home directory will be displayed on the Home
+page.
+
+*** Flat browser
+
+Rather than displaying the contents recursively, they are displayed
+using a flat browser. This is similar to a standard graphical file
+browser.
+
+* Tree
+
+Swipe up from Home to navigate to the Tree.
+
+** Node actions
+
+Long press a node to view actions related to it. All nodes have the
+following actions available:
+
+- Trash
+- Move
+- Reorder
+- Edit
+
+Some nodes have actions specific to their kind.
+
+* Node kinds
+
+** Directory
+
+Directories are a special kind of node that can have children. Tap
+directories to expand/collapse them, showing or hiding their children.
+
+** Reference
+
+References are a special kind of node that points to another node,
+like a symbolic link. The node that it points to is refered to as the
+/target/.
+
+*** Indicator
+
+When the target is set, it appears and behaves exactly like its
+target, with a symbol to indicate that it's still a reference.
+
+*** Jump to target
+
+Provides a node action button to jump to the target node.
+
+*** Cycle detection
+
+Cycle detection safeguards against creating an infinite loop with
+references.
+
+** Application
+
+On activate: Opens an application.
+
+** Website
+
+On activate: Opens a website.
+
+** File
+
+On activate: Opens a file with an application of the user's choosing.
+
+** Location
+
+On activate: Sends coordinates to the user's navigation application.
+
+*** Derive from clipboard
+
+If the user has coordinates copied to their clipboard, a button will
+appear to copy them.
+
+Currently only supports the default format ~DDD.DDDDDD~ for the 'Share
+> Copy coordinates' function in OsmAnd.
+
+** Checkbox
+
+On activate: Toggles the checkbox.
+
+*** Accidental toggle prevention
+
+Requires the user to double tap checkboxes.
+
+** Note
+
+On activate: Opens a dialog displaying the title and body.
+
+* Search
+
+Swipe down to search. 
+
+** Algorithm
+
+Sorts results by longest matching substring, then by the position of
+the match.
+
+** History
+
+Search history is saved to the cache. Each entry can be removed by
+clicking the X.
+
+** Filter
+
+Search results can be filtered by node kind.
+
+** Actions
+
+Depending on the search query, some dynamic actions may be available.
+
+*** Web search
+
+Available for all queries.
+
+*** Set timer
+
+Examples:
+
+- 2:00
+- 120
+- 1:20:00 check oven
+
+* Preferences
+
+Long press on empty space in the home page to navigate to the
+preferences page.
+
+* Backup & restore
+
+In the preferences page, the user can backup and restore their
+data/preferences.
+
+** Size
+
+Each backup is tiny. For example, a backup with 270 nodes is
+14.5 kB. This allows the users to take as many backups as they need
+without worrying about running out of storage.
+
+** Format
+
+The database and preferences store are added to an archive along with
+a metadata file.

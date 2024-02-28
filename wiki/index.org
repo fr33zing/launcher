@@ -2,4 +2,5 @@
 
 * Pages
 
+- [[file:features.org][Features]]
 - [[file:common_tasks.org][Common tasks]]
