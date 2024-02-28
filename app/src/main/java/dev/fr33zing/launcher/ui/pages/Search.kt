@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.SearchViewModel
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.search.SearchBox
@@ -42,6 +43,9 @@ fun Search(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var showRequestFocusButton by remember { mutableStateOf(false) }
+
+    val preferences = Preferences(context)
+    val webSearchApplication by preferences.search.webSearchApplication.state
 
     fun onNavigateBack() {
         showRequestFocusButton = false
@@ -74,6 +78,17 @@ fun Search(
         viewModel.activateDirectory(treeNodeState)
         clearFocus()
         onNavigateToTree()
+    }
+
+    fun onWebSearch() {
+        viewModel.addCurrentQueryToSearchHistory()
+        Intent()
+            .apply {
+                action = Intent.ACTION_WEB_SEARCH
+                putExtra(SearchManager.QUERY, state.query)
+                if (webSearchApplication.isNotBlank()) `package` = webSearchApplication
+            }
+            .also { context.startActivity(it) }
     }
 
     LaunchedEffect(Unit) { showRequestFocusButton = true }
@@ -111,12 +126,7 @@ fun Search(
                     clearFocus()
                 },
                 onRemoveHistoricalQuery = viewModel::removeQueryFromSearchHistory,
-                onWebSearch = {
-                    viewModel.addCurrentQueryToSearchHistory()
-                    Intent(Intent.ACTION_WEB_SEARCH)
-                        .putExtra(SearchManager.QUERY, state.query)
-                        .also { context.startActivity(it) }
-                },
+                onWebSearch = ::onWebSearch,
                 onActivateSearchResult = ::activatePayload,
                 onActivateDirectorySearchResult = ::activateDirectory
             )

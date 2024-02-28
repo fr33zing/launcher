@@ -47,6 +47,7 @@ class Preferences(context: Context) {
     val nodeAppearance = NodeAppearancePreferences(context)
     val confirmationDialogs = ConfirmationDialogPreferences(context)
     val home = HomePreferences(context)
+    val search = SearchPreferences(context)
     val notices = NoticePreferences(context)
     val debug = DebugPreferences(context)
 }
@@ -83,6 +84,11 @@ class ConfirmationDialogPreferences(context: Context) {
     val editNode = PreferenceGroup(context, "editNode")
     val moveNode = PreferenceGroup(context, "moveNode")
     val reorderNodes = PreferenceGroup(context, "reorderNodes")
+}
+
+class SearchPreferences(context: Context) {
+    val webSearchApplication =
+        Preference(context, stringPreferencesKey("search.webSearchApplication"), "", ::noMap)
 }
 
 class NoticePreferences(context: Context) {

@@ -14,10 +14,10 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.utility.UserEditable
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Keep
 @Entity

@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.pages
 
+import android.content.pm.LauncherActivityInfo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -58,6 +59,8 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.exportBackupArchive
 import dev.fr33zing.launcher.data.persistent.generateExportFilename
 import dev.fr33zing.launcher.data.persistent.importBackupArchive
+import dev.fr33zing.launcher.data.utility.queryWebSearchActivities
+import dev.fr33zing.launcher.data.utility.toLauncherActivityInfos
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
@@ -103,6 +106,7 @@ fun Preferences(db: AppDatabase) {
             itemAppearanceSection(preferences)
             homeSection(preferences)
             confirmationDialogsSection(preferences)
+            searchSection(preferences)
             noticesSection(preferences)
             debugSection(preferences)
             backupSection(db)
@@ -376,7 +380,11 @@ private fun LazyListScope.homeSection(preferences: Preferences) {
 }
 
 @Composable
-private fun ApplicationPreference(property: KProperty0<Preference<String, String>>, label: String) {
+private fun ApplicationPreference(
+    property: KProperty0<Preference<String, String>>,
+    label: String,
+    overrideActivityInfos: List<LauncherActivityInfo>? = null
+) {
     val preference = remember { property.get() }
     val default = remember { preference.default }
     val state by preference.flow.collectAsState(default)
@@ -386,7 +394,8 @@ private fun ApplicationPreference(property: KProperty0<Preference<String, String
         visible = appPickerVisible,
         onAppPicked = {
             CoroutineScope(Dispatchers.IO).launch { preference.set(it.componentName.packageName) }
-        }
+        },
+        overrideActivityInfos = overrideActivityInfos
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
@@ -441,6 +450,24 @@ private fun LazyListScope.confirmationDialogsSection(preferences: Preferences) {
                 PreferenceCheckbox(reorderNodes::askOnReject, "Reject")
             }
         }
+    }
+}
+
+//
+// Section: Search
+//
+
+private fun LazyListScope.searchSection(preferences: Preferences) {
+    section("Search", "Adjust functionality related to the search page.") {
+        val context = LocalContext.current
+        val webSearchApplications = remember {
+            context.queryWebSearchActivities().toLauncherActivityInfos(context)
+        }
+        ApplicationPreference(
+            preferences.search::webSearchApplication,
+            "Web search application",
+            webSearchApplications
+        )
     }
 }
 
