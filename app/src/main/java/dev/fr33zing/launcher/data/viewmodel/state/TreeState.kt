@@ -88,6 +88,7 @@ data class TreeNodeState(
 class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_ID) {
     private val treeNodeStateFlows = mutableStateMapOf<TreeNodeKey, Flow<TreeNodeState>>()
     private val showChildren = mutableStateMapOf<TreeNodeKey, Boolean>()
+    private val ensureKeyIsShownFlow = MutableStateFlow<TreeNodeKey?>(null)
 
     private val _stateFlow = MutableStateFlow(TreeState())
     val stateFlow = _stateFlow.asStateFlow()
@@ -102,10 +103,11 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
 
     private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
         var key = TreeNodeKey(emptyList())
-        targetKey.nodeLineage.forEachIndexed { index, it ->
+        targetKey.nodeLineage.forEachIndexed { index, nodeId ->
             if (index == targetKey.nodeLineage.lastIndex) return
-            key = key.childKey(it)
+            key = key.childKey(nodeId)
             showChildren[key] = true
+            if (index == targetKey.nodeLineage.lastIndex - 1) ensureKeyIsShownFlow.update { key }
         }
     }
 
@@ -132,6 +134,7 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
                 val childrenFlow =
                     parentFlow
                         .distinctUntilChangedBy { it.value.node.nodeId }
+                        .combine(ensureKeyIsShownFlow) { treeNode, _ -> treeNode }
                         .transformLatest { treeNode: TreeNodeState ->
                             db.nodeDao()
                                 .getChildNodesFlow(treeNode.value.node.nodeId)
@@ -178,11 +181,9 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         }
 
         val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-        val flow =
-            traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
-                .onEach(::ensureSpecialDirectoryValidity)
-
-        emitAll(flow)
+        traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
+            .onEach(::ensureSpecialDirectoryValidity)
+            .also { emitAll(it) }
     }
 
     private suspend fun ensureSpecialDirectoryValidity(treeNodeStateList: List<TreeNodeState>) {
