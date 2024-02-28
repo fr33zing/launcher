@@ -76,10 +76,12 @@ dependencies {
 
     // Miscellaneous
     implementation(libs.reflect)
-    implementation(libs.rxkotlin)
-    implementation(libs.fuzzywuzzy)
     implementation(libs.reorderable)
     implementation(libs.kaml)
+
+    // TODO remove eventually
+    implementation(libs.rxkotlin)
+    implementation(libs.fuzzywuzzy)
 
     // AndroidX
     implementation(libs.androidx.datastore.preferences)
