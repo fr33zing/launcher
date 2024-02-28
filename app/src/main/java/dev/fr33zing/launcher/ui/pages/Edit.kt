@@ -24,6 +24,7 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.viewmodel.EditViewModel
+import dev.fr33zing.launcher.data.viewmodel.sendJumpToNode
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.form.CancelButton
@@ -66,8 +67,21 @@ fun Edit(
         disableSavingReason = null
     }
 
+    fun jumpToNode() {
+        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) }
+            ?: throw Exception("nodePayload is null")
+    }
+
+    fun cancelChanges() {
+        navigateBack()
+        jumpToNode()
+    }
+
     fun commitChanges() {
-        viewModel.commitChanges(navigateBack)
+        viewModel.commitChanges {
+            navigateBack()
+            jumpToNode()
+        }
     }
 
     YesNoDialog(
@@ -79,7 +93,7 @@ fun Edit(
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = navigateBack,
+        onYes = ::cancelChanges,
     )
 
     YesNoDialog(
@@ -93,7 +107,7 @@ fun Edit(
         onYes = ::commitChanges,
     )
 
-    BackHandler { if (askOnReject) cancelDialogVisible.value = true else navigateBack() }
+    BackHandler { if (askOnReject) cancelDialogVisible.value = true else cancelChanges() }
 
     Scaffold(
         topBar = {
@@ -112,7 +126,7 @@ fun Edit(
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
+                        if (askOnReject) cancelDialogVisible.value = true else cancelChanges()
                     }
                     FinishButton(disableSavingReason) {
                         if (askOnAccept) saveDialogVisible.value = true else commitChanges()

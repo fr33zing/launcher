@@ -24,12 +24,13 @@ import kotlinx.coroutines.launch
 class ReorderViewModel
 @Inject
 constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
+    val childNodeId = savedStateHandle.nodeId()
     var parentNode by mutableStateOf<Node?>(null)
     var reorderableNodes by mutableStateOf<List<ReferenceFollowingNodePayloadState>?>(null)
 
     init {
         viewModelScope.launch {
-            parentNode = db.nodeDao().getParentByChildId(savedStateHandle.nodeId()).notNull()
+            parentNode = db.nodeDao().getParentByChildId(childNodeId).notNull()
             val parentPayload =
                 db.getPayloadByNodeId(parentNode!!.kind, parentNode!!.nodeId).notNull(parentNode)
 

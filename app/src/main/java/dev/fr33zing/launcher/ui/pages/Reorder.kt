@@ -36,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.ReorderViewModel
+import dev.fr33zing.launcher.data.viewmodel.sendJumpToNode
 import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
@@ -67,11 +68,13 @@ fun Reorder(
 ) {
     fun onCancelChanges() {
         navigateBack()
+        sendJumpToNode(viewModel.childNodeId)
     }
 
     fun onSaveChanges() {
         viewModel.saveChanges()
         navigateBack()
+        sendJumpToNode(viewModel.childNodeId)
     }
 
     val cancelDialogVisible = remember { mutableStateOf(false) }

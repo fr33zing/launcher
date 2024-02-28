@@ -21,6 +21,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.CreateViewModel
+import dev.fr33zing.launcher.data.viewmodel.sendJumpToNode
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.form.CancelButton
@@ -50,12 +51,20 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
         disableSavingReason = null
     }
 
+    fun jumpToNode() {
+        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) }
+            ?: throw Exception("nodePayload is null")
+    }
+
     fun cancelChanges() {
         viewModel.cancelChanges(navigateBack)
     }
 
     fun commitChanges() {
-        viewModel.commitChanges(navigateBack)
+        viewModel.commitChanges {
+            navigateBack()
+            jumpToNode()
+        }
     }
 
     YesNoDialog(
