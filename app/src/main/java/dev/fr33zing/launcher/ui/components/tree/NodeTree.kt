@@ -35,6 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.viewmodel.ScrollToKeyEvent
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
@@ -67,7 +68,7 @@ fun NodeTree(
     // Flows
     treeStateFlow: Flow<TreeState>,
     treeNodeListFlow: Flow<List<TreeNodeState>>,
-    scrollToKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
+    scrollToKeyFlow: Flow<ScrollToKeyEvent?> = flowOf(null),
     highlightKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
     // Events
     onSearch: () -> Unit = {},
@@ -126,12 +127,17 @@ fun NodeTree(
 
     val scrollToKey by scrollToKeyFlow.collectAsStateWithLifecycle(null)
     fun scrollToItemByKey() {
-        if (scrollToKey == null) return
-        val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == scrollToKey }
-        if (index == -1) return
-        val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == scrollToKey }
-        if (!visible) coroutineScope.launch { lazyListState.animateScrollToItem(index) }
-        onScrolledToKey()
+        scrollToKey?.let { event ->
+            val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
+            if (index == -1) return
+            val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == event }
+            if (!visible)
+                coroutineScope.launch {
+                    if (event.snap) lazyListState.scrollToItem(index)
+                    else lazyListState.animateScrollToItem(index)
+                }
+            onScrolledToKey()
+        }
     }
 
     val highlightAlpha = remember { Animatable(0f) }

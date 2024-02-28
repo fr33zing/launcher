@@ -57,6 +57,6 @@ constructor(private val db: AppDatabase, private val searchHistory: SearchHistor
 
     fun activateDirectory(treeNodeState: TreeNodeState) {
         addCurrentQueryToSearchHistory()
-        sendJumpToNode(treeNodeState.underlyingNodeId)
+        sendJumpToNode(treeNodeState.underlyingNodeId, snap = true)
     }
 }

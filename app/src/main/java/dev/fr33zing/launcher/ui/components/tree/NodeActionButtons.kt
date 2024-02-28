@@ -174,7 +174,8 @@ class NodeActionButtonKind(
                 ) { (state) ->
                     ActionButton {
                         sendJumpToNode(
-                            state.value.underlyingState.payload.cast<Reference>().targetId!!
+                            state.value.underlyingState.payload.cast<Reference>().targetId!!,
+                            snap = false
                         )
                     }
                 },
