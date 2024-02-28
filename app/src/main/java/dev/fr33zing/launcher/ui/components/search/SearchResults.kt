@@ -237,11 +237,15 @@ private fun LazyListScope.historyItems(
                 textModifier = Modifier.weight(1f)
             )
 
+            val interactionSource = remember { MutableInteractionSource() }
             Icon(
                 Icons.Rounded.Close,
                 contentDescription = "remove from search history",
                 tint = removeHistoryColor,
-                modifier = Modifier.clickable { onRemoveHistoricalQuery(recentSearch) },
+                modifier =
+                    Modifier.clickable(interactionSource, indication = null) {
+                        onRemoveHistoricalQuery(recentSearch)
+                    },
             )
         }
     }
