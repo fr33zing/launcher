@@ -59,6 +59,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.exportBackupArchive
 import dev.fr33zing.launcher.data.persistent.generateExportFilename
 import dev.fr33zing.launcher.data.persistent.importBackupArchive
+import dev.fr33zing.launcher.data.utility.queryTimerActivities
 import dev.fr33zing.launcher.data.utility.queryWebSearchActivities
 import dev.fr33zing.launcher.data.utility.toLauncherActivityInfos
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
@@ -460,6 +461,7 @@ private fun LazyListScope.confirmationDialogsSection(preferences: Preferences) {
 private fun LazyListScope.searchSection(preferences: Preferences) {
     section("Search", "Adjust functionality related to the search page.") {
         val context = LocalContext.current
+
         val webSearchApplications = remember {
             context.queryWebSearchActivities().toLauncherActivityInfos(context)
         }
@@ -467,6 +469,15 @@ private fun LazyListScope.searchSection(preferences: Preferences) {
             preferences.search::webSearchApplication,
             "Web search application",
             webSearchApplications
+        )
+
+        val timerApplications = remember {
+            context.queryTimerActivities().toLauncherActivityInfos(context)
+        }
+        ApplicationPreference(
+            preferences.search::timerApplication,
+            "Timer application",
+            timerApplications
         )
     }
 }

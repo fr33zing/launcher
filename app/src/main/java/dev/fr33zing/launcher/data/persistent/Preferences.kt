@@ -89,6 +89,8 @@ class ConfirmationDialogPreferences(context: Context) {
 class SearchPreferences(context: Context) {
     val webSearchApplication =
         Preference(context, stringPreferencesKey("search.webSearchApplication"), "", ::noMap)
+    val timerApplication =
+        Preference(context, stringPreferencesKey("search.timerApplication"), "", ::noMap)
 }
 
 class NoticePreferences(context: Context) {

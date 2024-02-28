@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Process
+import android.provider.AlarmClock
 import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 
 private fun Intent.queryActivities(context: Context) =
@@ -31,3 +32,9 @@ fun Context.queryContentUriActivities(uri: Uri): List<ActivityInfo> =
 
 fun Context.queryWebSearchActivities(): List<ActivityInfo> =
     Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, "").queryActivities(this)
+
+fun Context.queryTimerActivities(): List<ActivityInfo> =
+    Intent(AlarmClock.ACTION_SET_TIMER)
+        .putExtra(AlarmClock.EXTRA_LENGTH, 0)
+        .putExtra(AlarmClock.EXTRA_MESSAGE, "")
+        .queryActivities(this)

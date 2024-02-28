@@ -121,6 +121,7 @@ fun Search(
                 history = history,
                 results = results,
                 showHistory = state.query.isBlank(),
+                onTapSearchAction = viewModel::addCurrentQueryToSearchHistory,
                 onTapHistoricalQuery = {
                     viewModel.updateQuery(it)
                     clearFocus()
