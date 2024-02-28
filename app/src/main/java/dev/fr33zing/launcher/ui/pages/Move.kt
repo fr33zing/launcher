@@ -35,6 +35,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.viewmodel.MoveViewModel
+import dev.fr33zing.launcher.data.viewmodel.sendJumpToNode
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialogBackAction
 import dev.fr33zing.launcher.ui.components.form.CancelButton
@@ -63,9 +64,19 @@ fun Move(
     val askOnAccept by preferences.confirmationDialogs.moveNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
+    fun jumpToNode() {
+        sendJumpToNode(viewModel.nodeToMove?.nodeId ?: throw Exception("nodeToMove is null"))
+    }
+
+    fun cancelMove() {
+        navigateBack()
+        jumpToNode()
+    }
+
     fun commitMove() {
         viewModel.commitMove()
         navigateBack()
+        jumpToNode()
     }
 
     YesNoDialog(
@@ -77,7 +88,7 @@ fun Move(
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
         backAction = YesNoDialogBackAction.Yes,
-        onYes = navigateBack,
+        onYes = ::cancelMove,
     )
 
     YesNoDialog(
@@ -92,7 +103,7 @@ fun Move(
     )
 
     BackHandler(enabled = selectedNode?.nodeId == ROOT_NODE_ID) {
-        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
+        if (askOnReject) cancelDialogVisible.value = true else cancelMove()
     }
 
     Scaffold(
@@ -115,7 +126,7 @@ fun Move(
                 },
                 actions = {
                     CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true else navigateBack()
+                        if (askOnReject) cancelDialogVisible.value = true else cancelMove()
                     }
                     FinishButton {
                         if (askOnAccept) saveDialogVisible.value = true else commitMove()
