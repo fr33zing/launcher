@@ -55,8 +55,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private const val APPEAR_ANIMATION_DURATION_MS = 350
-private const val HIGHLIGHT_ANIMATION_DURATION_MS = 2000
-private const val UNHIGHLIGHT_ANIMATION_DURATION_MS = 4000
+private const val HIGHLIGHT_ANIMATION_DURATION_MS = 500
+private const val UNHIGHLIGHT_ANIMATION_DURATION_MS = 3000
 private const val HIGHLIGHT_ANIMATION_MAX_ALPHA = 0.4f
 
 private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVector1D>?>
