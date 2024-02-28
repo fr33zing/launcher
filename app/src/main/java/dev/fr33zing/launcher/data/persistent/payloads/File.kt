@@ -1,11 +1,9 @@
 package dev.fr33zing.launcher.data.persistent.payloads
 
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Process
 import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -14,10 +12,10 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.utility.UserEditable
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 @Keep
 @Entity
@@ -96,14 +94,10 @@ class File(
             try {
                 val uri = Uri.parse(filePath)
                 val mimeType = context.contentResolver.getType(uri)
-                val userHandle = Process.myUserHandle()
-                val activityList = launcherApps.getActivityList(openWithPackageName, userHandle)
-                val componentName =
-                    ComponentName(openWithPackageName, activityList[activityList.size - 1].name)
                 val intent =
                     Intent().apply {
                         action = Intent.ACTION_VIEW
-                        component = componentName
+                        `package` = openWithPackageName
                         setDataAndType(uri, mimeType)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }

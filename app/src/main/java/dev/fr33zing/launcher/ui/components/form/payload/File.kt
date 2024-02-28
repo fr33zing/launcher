@@ -3,7 +3,6 @@ package dev.fr33zing.launcher.ui.components.form.payload
 import android.content.Intent
 import android.content.pm.LauncherActivityInfo
 import android.net.Uri
-import android.os.Process
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import dev.fr33zing.launcher.data.persistent.payloads.File
-import dev.fr33zing.launcher.data.persistent.payloads.launcherApps
 import dev.fr33zing.launcher.data.utility.queryContentUriActivities
+import dev.fr33zing.launcher.data.utility.toLauncherActivityInfos
 import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.GiantPickerButton
 import dev.fr33zing.launcher.ui.components.GiantPickerButtonContainer
@@ -62,10 +61,7 @@ fun FileEditForm(arguments: EditFormArguments) {
         val uri = Uri.parse(filePathState.value)
         defaultLabel = uriLabel(uri)
         contentUriActivities =
-            context.queryContentUriActivities(uri).map {
-                val intent = context.packageManager.getLaunchIntentForPackage(it.packageName)
-                launcherApps.resolveActivity(intent, Process.myUserHandle())
-            }
+            context.queryContentUriActivities(uri).toLauncherActivityInfos(context)
     }
     LaunchedEffect(Unit) { onUriChanged() }
 
