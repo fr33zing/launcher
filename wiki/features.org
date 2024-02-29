@@ -123,6 +123,10 @@ On activate: Toggles the checkbox.
 
 Requires the user to double tap checkboxes.
 
+** Setting
+
+On activate: Opens the system settings to a specific setting.
+
 ** Note
 
 On activate: Opens a dialog displaying the title and body.
