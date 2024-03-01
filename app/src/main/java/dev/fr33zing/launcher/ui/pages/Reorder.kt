@@ -68,13 +68,13 @@ fun Reorder(
 ) {
     fun onCancelChanges() {
         navigateBack()
-        sendJumpToNode(viewModel.childNodeId)
+        sendJumpToNode(viewModel.childNodeId, highlight = false)
     }
 
     fun onSaveChanges() {
         viewModel.saveChanges()
         navigateBack()
-        sendJumpToNode(viewModel.childNodeId)
+        sendJumpToNode(viewModel.childNodeId, highlight = false)
     }
 
     val cancelDialogVisible = remember { mutableStateOf(false) }

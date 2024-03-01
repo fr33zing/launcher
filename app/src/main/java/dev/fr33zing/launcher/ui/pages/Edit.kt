@@ -67,20 +67,20 @@ fun Edit(
         disableSavingReason = null
     }
 
-    fun jumpToNode() {
-        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) }
+    fun jumpToNode(highlight: Boolean) {
+        nodePayload?.node?.nodeId?.let { sendJumpToNode(it, highlight = highlight) }
             ?: throw Exception("nodePayload is null")
     }
 
     fun cancelChanges() {
         navigateBack()
-        jumpToNode()
+        jumpToNode(highlight = false)
     }
 
     fun commitChanges() {
         viewModel.commitChanges {
             navigateBack()
-            jumpToNode()
+            jumpToNode(highlight = true)
         }
     }
 
