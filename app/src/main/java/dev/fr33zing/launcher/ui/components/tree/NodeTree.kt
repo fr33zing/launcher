@@ -122,6 +122,7 @@ fun NodeTree(
                     .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
             }
         }
+
     val treeState by treeStateFlow.collectAsStateWithLifecycle(TreeState())
     val treeNodeList by
         treeNodeListFlow
@@ -254,45 +255,47 @@ fun NodeTree(
             }
         }
 
+        @Composable
+        fun bottomActionButtons() {
+            AnimatedVisibility(visible = canScroll, enter = fadeIn(), exit = fadeOut()) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier =
+                        Modifier.fillMaxWidth().padding(vertical = ActionButtonVerticalPadding)
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ActionButtonSpacing)) {
+                        ActionButton(
+                            icon = Icons.Outlined.ArrowUpward,
+                            contentDescription = "scroll to top"
+                        ) {
+                            coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+                        }
+
+                        ActionButton(
+                            icon = Icons.Outlined.Search,
+                            contentDescription = "scroll to top"
+                        ) {
+                            onSearch()
+                        }
+                    }
+                }
+            }
+        }
+
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
             modifier = Modifier.fillMaxSize()
         ) {
-            item(treeNodeList) { LaunchedEffect(scrollToKey) { scrollToItemByKey() } }
-
             itemsIndexed(
                 items = treeNodeList,
                 key = { _, item -> item.first.key },
                 contentType = { _, item -> item.first.underlyingNodeKind }
             ) { index, (initialTreeNodeState, appearAnimationProgress) ->
                 listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
-            }
 
-            item("actions") {
-                AnimatedVisibility(visible = canScroll, enter = fadeIn(), exit = fadeOut()) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier =
-                            Modifier.fillMaxWidth().padding(vertical = ActionButtonVerticalPadding)
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(ActionButtonSpacing)) {
-                            ActionButton(
-                                icon = Icons.Outlined.ArrowUpward,
-                                contentDescription = "scroll to top"
-                            ) {
-                                coroutineScope.launch { lazyListState.animateScrollToItem(0) }
-                            }
-
-                            ActionButton(
-                                icon = Icons.Outlined.Search,
-                                contentDescription = "scroll to top"
-                            ) {
-                                onSearch()
-                            }
-                        }
-                    }
-                }
+                if (index == 0) LaunchedEffect(scrollToKey) { scrollToItemByKey() }
+                if (index == treeNodeList.lastIndex) bottomActionButtons()
             }
         }
     }

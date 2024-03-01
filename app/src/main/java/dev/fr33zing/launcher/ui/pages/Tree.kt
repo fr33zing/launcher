@@ -2,7 +2,6 @@ package dev.fr33zing.launcher.ui.pages
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -26,7 +25,6 @@ fun Tree(
     viewModel: TreeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val lazyListState = rememberLazyListState()
     val nodeActions = remember {
         NodeActions(
             trash = viewModel::moveNodeToTrash,
@@ -62,7 +60,6 @@ fun Tree(
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,
-            lazyListState = lazyListState,
         )
     }
 }

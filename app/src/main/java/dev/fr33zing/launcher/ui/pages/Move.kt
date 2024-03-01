@@ -64,22 +64,18 @@ fun Move(
     val askOnAccept by preferences.confirmationDialogs.moveNode.askOnAccept.state
     val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
-    fun jumpToNode(highlight: Boolean) {
-        sendJumpToNode(
-            viewModel.nodeToMove?.nodeId ?: throw Exception("nodeToMove is null"),
-            highlight = highlight
-        )
+    fun jumpToNode() {
+        sendJumpToNode(viewModel.nodeToMove?.nodeId ?: throw Exception("nodeToMove is null"))
     }
 
     fun cancelMove() {
         navigateBack()
-        jumpToNode(highlight = false)
     }
 
     fun commitMove() {
         viewModel.commitMove()
         navigateBack()
-        jumpToNode(highlight = true)
+        jumpToNode()
     }
 
     YesNoDialog(
