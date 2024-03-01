@@ -32,6 +32,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
@@ -42,6 +45,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.ActionButton
 import dev.fr33zing.launcher.ui.components.ActionButtonSpacing
 import dev.fr33zing.launcher.ui.components.ActionButtonVerticalPadding
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.PaddingAndShadowHeight
@@ -126,6 +130,23 @@ fun NodeTree(
             .collectAsStateWithLifecycle(emptyList())
 
     val scrollToKey by scrollToKeyFlow.collectAsStateWithLifecycle(null)
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val nodeDimensions = LocalNodeDimensions.current
+    val screenHeight =
+        remember(configuration, density) {
+            with(density) { configuration.screenHeightDp.dp.toPx() }
+        }
+    val singleLineItemHeight =
+        remember(nodeDimensions, density) {
+            with(density) { (nodeDimensions.lineHeight + nodeDimensions.spacing).toPx().toInt() }
+        }
+    val scrollOffset =
+        remember(screenHeight, singleLineItemHeight) {
+            // TODO maybe consider window insets?
+            ((-screenHeight / 2) + singleLineItemHeight).toInt()
+        }
+    // TODO make scrollToItemKey work correctly after reorder
     fun scrollToItemByKey() {
         scrollToKey?.let { event ->
             val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
@@ -133,8 +154,8 @@ fun NodeTree(
             val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == event }
             if (!visible)
                 coroutineScope.launch {
-                    if (event.snap) lazyListState.scrollToItem(index)
-                    else lazyListState.animateScrollToItem(index)
+                    if (event.snap) lazyListState.scrollToItem(index, scrollOffset)
+                    else lazyListState.animateScrollToItem(index, scrollOffset)
                 }
             onScrolledToKey()
         }
