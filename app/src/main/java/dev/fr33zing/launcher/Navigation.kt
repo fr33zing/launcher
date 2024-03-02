@@ -71,13 +71,15 @@ object Routes {
     fun viewNote(nodeId: Int? = null) = "viewNote/${nodeId ?: "{nodeId}"}"
 }
 
+private fun NavController.navigateOnce(route: String) = navigate(route) { launchSingleTop = true }
+
 class TreeNavigator(navController: NavController) {
-    val search = { navController.navigate(Routes.search()) }
-    val create = { nodeId: Int -> navController.navigate(Routes.create(nodeId)) }
-    val reorder = { nodeId: Int -> navController.navigate(Routes.reorder(nodeId)) }
-    val move = { nodeId: Int -> navController.navigate(Routes.move(nodeId)) }
-    val edit = { nodeId: Int -> navController.navigate(Routes.edit(nodeId)) }
-    val viewNote = { nodeId: Int -> navController.navigate(Routes.viewNote(nodeId)) }
+    val search = { navController.navigateOnce(Routes.search()) }
+    val create = { nodeId: Int -> navController.navigateOnce(Routes.create(nodeId)) }
+    val reorder = { nodeId: Int -> navController.navigateOnce(Routes.reorder(nodeId)) }
+    val move = { nodeId: Int -> navController.navigateOnce(Routes.move(nodeId)) }
+    val edit = { nodeId: Int -> navController.navigateOnce(Routes.edit(nodeId)) }
+    val viewNote = { nodeId: Int -> navController.navigateOnce(Routes.viewNote(nodeId)) }
 }
 
 @Composable
@@ -88,7 +90,7 @@ fun SetupNavigation(db: AppDatabase) {
         val subscription =
             GoHomeSubject.subscribe {
                 if (navController.currentDestination?.route != "home")
-                    navController.navigate("home")
+                    navController.navigateOnce("home")
             }
         onDispose { subscription.dispose() }
     }
@@ -107,7 +109,7 @@ fun SetupNavigation(db: AppDatabase) {
 private fun createNavGraph(navController: NavController, db: AppDatabase) =
     navController.createGraph(startDestination = Routes.default()) {
         val navigateBack: () -> Unit = { navController.popBackStack() }
-        val navigateTo: (String) -> (() -> Unit) = { { navController.navigate(it) } }
+        val navigateTo: (String) -> (() -> Unit) = { { navController.navigateOnce(it) } }
 
         composable(Routes.settings()) { Preferences(db) }
 
