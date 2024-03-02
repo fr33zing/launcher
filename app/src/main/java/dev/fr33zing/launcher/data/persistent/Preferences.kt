@@ -53,8 +53,8 @@ class Preferences(context: Context) {
 }
 
 class NodeAppearancePreferences(context: Context) {
-    val fontSize = Preference(context, intPreferencesKey("nodeAppearance.fontSize"), 22, Int::sp)
-    val spacing = Preference(context, intPreferencesKey("nodeAppearance.spacing"), 22, Int::dp)
+    val fontSize = Preference(context, intPreferencesKey("nodeAppearance.fontSize"), 18, Int::sp)
+    val spacing = Preference(context, intPreferencesKey("nodeAppearance.spacing"), 20, Int::dp)
     val indent = Preference(context, intPreferencesKey("nodeAppearance.indent"), 22, Int::dp)
 }
 
