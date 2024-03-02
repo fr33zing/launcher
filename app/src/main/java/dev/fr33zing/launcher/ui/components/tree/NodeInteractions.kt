@@ -30,6 +30,9 @@ import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -66,7 +69,9 @@ fun NodeInteractions(
                 if (hasFeature.EXPAND_DIRECTORIES) onActivatePayload() else onActivateDirectory()
             }
             NodeKind.Note -> {
-                nodeActions?.viewNote?.invoke(treeNodeState.value.node.nodeId)
+                CoroutineScope(Dispatchers.Main).launch {
+                    nodeActions?.viewNote?.invoke(treeNodeState.value.node.nodeId)
+                }
             }
             else -> onActivatePayload()
         }
