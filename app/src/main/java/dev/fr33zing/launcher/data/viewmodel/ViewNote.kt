@@ -36,7 +36,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
                 emitAll(stateHolder.flow)
             }
             .mapLatest { (node, payload) ->
-                NoteState(title = node.label, body = payload.cast<Note>().body)
+                NoteState(title = node.label.trim(), body = payload.cast<Note>().body.trim())
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NoteState("", ""))
 }
