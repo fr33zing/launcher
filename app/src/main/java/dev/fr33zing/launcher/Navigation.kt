@@ -171,7 +171,11 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
 
         composable(Routes.edit()) { Edit(navigateBack) }
 
-        composable(Routes.viewNote()) { ViewNote() }
+        composable(Routes.viewNote()) {
+            ViewNote(
+                navigateToEdit = { nodeId: Int -> navController.navigateOnce(Routes.edit(nodeId)) }
+            )
+        }
     }
 
 // TODO move this

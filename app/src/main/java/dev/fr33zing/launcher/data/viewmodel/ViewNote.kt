@@ -24,6 +24,7 @@ class ViewNoteViewModel
 @Inject
 constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
     data class NoteState(
+        val nodeId: Int = -1,
         val title: String = "",
         val body: String = "",
         val created: Date = Date(),
@@ -43,6 +44,7 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
             }
             .mapLatest { (node, payload) ->
                 NoteState(
+                    nodeId = node.nodeId,
                     title = node.label.trim(),
                     body = payload.cast<Note>().body.trim(),
                     created = payload.created,
