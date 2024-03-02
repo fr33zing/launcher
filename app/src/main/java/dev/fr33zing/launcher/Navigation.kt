@@ -36,6 +36,7 @@ import dev.fr33zing.launcher.ui.pages.Search
 import dev.fr33zing.launcher.ui.pages.Setup
 import dev.fr33zing.launcher.ui.pages.Tree
 import dev.fr33zing.launcher.ui.pages.Tree_old
+import dev.fr33zing.launcher.ui.pages.ViewNote
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlin.math.roundToInt
 
@@ -66,6 +67,8 @@ object Routes {
     fun move(nodeId: Int? = null) = "move/${nodeId ?: "{nodeId}"}"
 
     fun edit(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
+
+    fun viewNote(nodeId: Int? = null) = "viewNote/${nodeId ?: "{nodeId}"}"
 }
 
 class TreeNavigator(navController: NavController) {
@@ -74,6 +77,7 @@ class TreeNavigator(navController: NavController) {
     val reorder = { nodeId: Int -> navController.navigate(Routes.reorder(nodeId)) }
     val move = { nodeId: Int -> navController.navigate(Routes.move(nodeId)) }
     val edit = { nodeId: Int -> navController.navigate(Routes.edit(nodeId)) }
+    val viewNote = { nodeId: Int -> navController.navigate(Routes.viewNote(nodeId)) }
 }
 
 @Composable
@@ -164,6 +168,8 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
         composable(Routes.move()) { Move(navigateBack) }
 
         composable(Routes.edit()) { Edit(navigateBack) }
+
+        composable(Routes.viewNote()) { ViewNote() }
     }
 
 // TODO move this

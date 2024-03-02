@@ -61,9 +61,16 @@ fun NodeInteractions(
     val selected = treeNodeState.key == treeState?.selectedKey
 
     val activatePayload by rememberUpdatedState {
-        if (treeNodeState.value.node.kind == NodeKind.Directory) {
-            if (hasFeature.EXPAND_DIRECTORIES) onActivatePayload() else onActivateDirectory()
-        } else onActivatePayload()
+        when (treeNodeState.value.node.kind) {
+            NodeKind.Directory -> {
+                if (hasFeature.EXPAND_DIRECTORIES) onActivatePayload() else onActivateDirectory()
+            }
+            NodeKind.Note -> {
+                nodeActions?.viewNote?.invoke(treeNodeState.value.node.nodeId)
+            }
+            else -> onActivatePayload()
+        }
+        Unit
     }
 
     BackHandler(enabled = selected) { onClearSelectedNode() }

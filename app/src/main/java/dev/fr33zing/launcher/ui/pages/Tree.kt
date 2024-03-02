@@ -34,6 +34,7 @@ fun Tree(
             reorder = navigateTo.reorder,
             edit = navigateTo.edit,
             create = navigateTo.create,
+            viewNote = navigateTo.viewNote,
         )
     }
 

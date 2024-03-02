@@ -60,6 +60,7 @@ class NodeActions(
     val reorder: (Int) -> Unit,
     val edit: (Int) -> Unit,
     val create: (Int) -> Unit,
+    val viewNote: (Int) -> Unit,
 )
 
 @Immutable
