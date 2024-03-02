@@ -82,11 +82,10 @@ import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.utility.rememberFuzzyMatcher
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
-import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import io.reactivex.rxjava3.subjects.PublishSubject
@@ -271,7 +270,7 @@ fun NodeSearchContainer(
             Text(
                 "Reading database...",
                 textAlign = TextAlign.Center,
-                color = Foreground.mix(Background, 0.5f),
+                color = Dim,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -416,7 +415,7 @@ private fun SearchBox(
                             "Begin typing to search...",
                             style =
                                 TextStyle(
-                                    color = Foreground.mix(Background, 0.5f),
+                                    color = Dim,
                                     fontSize = fontSize * 0.85f,
                                     fontFamily = MainFontFamily,
                                     platformStyle = PlatformTextStyle(includeFontPadding = false),

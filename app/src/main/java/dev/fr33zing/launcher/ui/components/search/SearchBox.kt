@@ -37,11 +37,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
-import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -89,7 +88,7 @@ fun SearchBox(
                             "Begin typing to search...",
                             style =
                                 TextStyle(
-                                    color = Foreground.mix(Background, 0.5f),
+                                    color = Dim,
                                     fontSize = fontSize * 0.85f,
                                     fontFamily = MainFontFamily,
                                     platformStyle = PlatformTextStyle(includeFontPadding = false),

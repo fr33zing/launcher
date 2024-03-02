@@ -34,10 +34,8 @@ import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.form.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.typography
-import dev.fr33zing.launcher.ui.utility.mix
 
 private fun uriLabel(uri: Uri) =
     uri.pathSegments.lastOrNull()?.split(java.io.File.separatorChar)?.last() ?: ""
@@ -130,7 +128,7 @@ fun FileEditForm(arguments: EditFormArguments) {
                 Text(
                     "No file selected.",
                     style = typography.labelMedium,
-                    color = Foreground.mix(Background, 0.5f),
+                    color = Dim,
                 )
             else
                 Text(

@@ -11,6 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.mix
 
 private val catppuccinDark = Catppuccin.Frappe
@@ -18,6 +19,7 @@ private val catppuccinLight = Catppuccin.Latte
 
 var Background: Color = Color.Black
 var Foreground: Color = Color.White
+var Dim: Color = Foreground.dim()
 
 fun colorScheme(darkTheme: Boolean): ColorScheme {
     Catppuccin.Current = if (darkTheme) catppuccinDark else catppuccinLight

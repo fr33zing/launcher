@@ -68,11 +68,10 @@ import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.theme.typography
-import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import java.util.Date
 import kotlin.reflect.KProperty0
@@ -138,7 +137,7 @@ private fun LazyListScope.section(
             Text(
                 text = description,
                 style = typography.bodyMedium,
-                color = Foreground.mix(Background, 0.5f),
+                color = Dim,
                 modifier = modifier
             )
             Spacer(modifier.height(sectionHeaderSpacing - sectionHeaderShadowHeight))
@@ -252,11 +251,7 @@ private fun PreferenceSlider(
             verticalAlignment = Alignment.Top,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Default: $default$unit",
-                style = typography.bodyMedium,
-                color = Foreground.mix(Background, 0.5f)
-            )
+            Text(text = "Default: $default$unit", style = typography.bodyMedium, color = Dim)
             ResetButton(preference, default, state)
         }
     }
@@ -301,8 +296,7 @@ private fun PreferenceTextField(
                 keyboardType = KeyboardType.Text,
             ),
         keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-        placeholder =
-            placeholder?.let { { Text(placeholder, color = Foreground.mix(Background, 0.5f)) } },
+        placeholder = placeholder?.let { { Text(placeholder, color = Dim) } },
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -406,7 +400,7 @@ private fun ApplicationPreference(
             Text(
                 text = "Default: ${default.ifEmpty { "Use system default" }}",
                 style = typography.bodyMedium,
-                color = Foreground.mix(Background, 0.5f)
+                color = Dim
             )
             Row(horizontalArrangement = Arrangement.spacedBy(inlineSpacing)) {
                 TinyButton(text = "Pick app", onClick = { appPickerVisible.value = true })

@@ -27,16 +27,16 @@ import dev.fr33zing.launcher.data.persistent.payloads.Location as LocationPayloa
 import dev.fr33zing.launcher.data.persistent.payloads.Note as NotePayload
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.persistent.payloads.Website as WebsitePayload
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.Foreground
-import dev.fr33zing.launcher.ui.utility.mix
+import dev.fr33zing.launcher.ui.utility.dim
 
 private val directoryColor = Catppuccin.Current.sapphire
 private val collapsedDirectoryColor = directoryColor.copy(alpha = 0.55f)
-val RootDirectoryColor = Foreground.mix(Background, 0.5f)
+val RootDirectoryColor = Dim
 
-val UnlabeledNodeColor = Foreground.mix(Background, 0.5f)
+val UnlabeledNodeColor = Dim
 const val UnlabeledNodeText = "<Blank>"
 
 enum class NodeKind {
@@ -106,7 +106,7 @@ enum class NodeKind {
                         payload is ApplicationPayload &&
                         payload.status != ApplicationPayload.Status.Valid
                 ) {
-                    Foreground.mix(Background, 0.5f)
+                    Dim
                 } else Foreground
             }
             File ->
@@ -115,21 +115,21 @@ enum class NodeKind {
                         payload is FilePayload &&
                         payload.status != FilePayload.Status.Valid
                 ) {
-                    Catppuccin.Current.peach.mix(Background, 0.5f)
+                    Catppuccin.Current.peach.dim()
                 } else Catppuccin.Current.peach
             Checkbox -> {
                 if (!ignoreState && payload is CheckboxPayload && payload.checked)
-                    Catppuccin.Current.green.mix(Background, 0.5f)
+                    Catppuccin.Current.green.dim()
                 else Catppuccin.Current.green
             }
             Website -> {
                 if (!ignoreState && payload is WebsitePayload && !payload.validUrl) {
-                    Catppuccin.Current.yellow.mix(Background, 0.5f)
+                    Catppuccin.Current.yellow.dim()
                 } else Catppuccin.Current.yellow
             }
             Location -> {
                 if (!ignoreState && payload is LocationPayload && !payload.status.valid) {
-                    Catppuccin.Current.lavender.mix(Background, 0.5f)
+                    Catppuccin.Current.lavender.dim()
                 } else Catppuccin.Current.lavender
             }
             Note -> Catppuccin.Current.pink

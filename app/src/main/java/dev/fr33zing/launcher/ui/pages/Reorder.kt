@@ -46,11 +46,10 @@ import dev.fr33zing.launcher.ui.components.tree.NodeDetail
 import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
-import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import org.burnoutcrew.reorderable.ReorderableItem
@@ -192,9 +191,7 @@ private fun ReorderableList(
                         ) {
                             NodeDetail(
                                 label = state.underlyingState.node.label,
-                                color =
-                                    if (!draggable) Foreground.mix(Background, 0.5f)
-                                    else LocalNodeAppearance.current.color,
+                                color = if (!draggable) Dim else LocalNodeAppearance.current.color,
                                 isValidReference = state.isValidReference,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis,

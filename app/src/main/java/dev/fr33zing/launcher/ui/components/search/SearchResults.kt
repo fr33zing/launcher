@@ -53,13 +53,12 @@ import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
-val historyColor = Foreground.mix(Background, 0.5f)
 val removeHistoryColor = Catppuccin.Current.red.mix(Background, 0.25f)
 const val MAX_SEARCH_RESULTS = 50
 
@@ -158,7 +157,7 @@ private class SearchAction(
     fun SearchActionComponent(result: Result, onTapSearchAction: () -> Unit) {
         val haptics = LocalHapticFeedback.current
         val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color = historyColor)
+        val indication = rememberCustomIndication(color = Dim)
 
         NodeDetailContainer(
             Modifier.conditional(result.onClick != null) {
@@ -171,7 +170,7 @@ private class SearchAction(
         ) {
             NodeDetail(
                 label = result.text,
-                color = historyColor,
+                color = Dim,
                 icon = icon,
                 lineThrough = false,
             )
@@ -231,7 +230,7 @@ private fun LazyListScope.historyItems(
         ) {
             NodeDetail(
                 label = recentSearch,
-                color = historyColor,
+                color = Dim,
                 icon = Icons.Outlined.Search,
                 lineThrough = false,
                 textModifier = Modifier.weight(1f)
@@ -278,7 +277,7 @@ private fun LazyListScope.resultItems(
             AnimatedVisibility(visible, enter = fadeIn(tween(1000))) {
                 Text(
                     text = "No results.",
-                    color = historyColor,
+                    color = Dim,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().absolutePadding(top = 16.dp)
                 )
@@ -315,7 +314,7 @@ private fun LazyListScope.resultItems(
                             Icon(
                                 Icons.Outlined.KeyboardReturn,
                                 "keyboard return symbol",
-                                tint = historyColor
+                                tint = Dim
                             )
                         }
                     }

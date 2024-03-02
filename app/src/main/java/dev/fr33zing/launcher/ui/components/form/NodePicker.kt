@@ -47,13 +47,11 @@ import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
-import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -222,7 +220,7 @@ private fun NodePickerRow(
                     fontSize = fontSize,
                     lineHeight = lineHeight,
                     label = "..",
-                    color = Foreground.mix(Background, 0.5f),
+                    color = Dim,
                     icon = Icons.Outlined.DriveFolderUpload,
                     textModifier = Modifier.weight(1f),
                 )

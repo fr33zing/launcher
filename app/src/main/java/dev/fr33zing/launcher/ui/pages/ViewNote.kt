@@ -18,16 +18,13 @@ import androidx.core.os.ConfigurationCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.viewmodel.ViewNoteViewModel
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
-import dev.fr33zing.launcher.ui.utility.mix
 import java.text.SimpleDateFormat
 import java.util.Date
 
 private val bodyPadding = 16.dp
 private val bodySpacing = 24.dp
-private val dim = Foreground.mix(Background, 0.5f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +47,7 @@ fun ViewNote(
                 Modifier.padding(padding)
                     .padding(horizontal = ScreenHorizontalPadding, vertical = bodyPadding)
         ) {
-            if (state.body.isBlank()) Text("This note has no body.", color = dim)
+            if (state.body.isBlank()) Text("This note has no body.", color = Dim)
             else Text(state.body)
 
             CreatedUpdatedText(state.created, state.updated)
@@ -83,5 +80,5 @@ private fun CreatedUpdatedText(created: Date, updated: Date) {
                 append(timeFormat.format(updated).trimStart('0'))
             }
         }
-    Text(dateText, color = dim)
+    Text(dateText, color = Dim)
 }
