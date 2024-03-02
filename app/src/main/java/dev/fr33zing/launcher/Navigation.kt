@@ -47,35 +47,33 @@ fun doNotGoHomeOnNextPause() {
 }
 
 object Routes {
-    object Main {
-        fun default() = home()
+    fun default() = home()
 
-        fun home() = "home"
+    fun home() = "home"
 
-        fun setup() = "setup"
+    fun setup() = "setup"
 
-        fun settings() = "settings"
+    fun settings() = "settings"
 
-        fun search() = "search"
+    fun search() = "search"
 
-        fun tree(nodeId: Int? = null) = "${home()}/tree/${nodeId ?: "{nodeId}"}"
+    fun tree(nodeId: Int? = null) = "${home()}/tree/${nodeId ?: "{nodeId}"}"
 
-        fun create(nodeId: Int? = null) = "create/${nodeId ?: "{nodeId}"}"
+    fun create(nodeId: Int? = null) = "create/${nodeId ?: "{nodeId}"}"
 
-        fun reorder(nodeId: Int? = null) = "reorder/${nodeId ?: "{nodeId}"}"
+    fun reorder(nodeId: Int? = null) = "reorder/${nodeId ?: "{nodeId}"}"
 
-        fun move(nodeId: Int? = null) = "move/${nodeId ?: "{nodeId}"}"
+    fun move(nodeId: Int? = null) = "move/${nodeId ?: "{nodeId}"}"
 
-        fun edit(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
-    }
+    fun edit(nodeId: Int? = null) = "edit/${nodeId ?: "{nodeId}"}"
 }
 
 class TreeNavigator(navController: NavController) {
-    val search = { navController.navigate(Routes.Main.search()) }
-    val create = { nodeId: Int -> navController.navigate(Routes.Main.create(nodeId)) }
-    val reorder = { nodeId: Int -> navController.navigate(Routes.Main.reorder(nodeId)) }
-    val move = { nodeId: Int -> navController.navigate(Routes.Main.move(nodeId)) }
-    val edit = { nodeId: Int -> navController.navigate(Routes.Main.edit(nodeId)) }
+    val search = { navController.navigate(Routes.search()) }
+    val create = { nodeId: Int -> navController.navigate(Routes.create(nodeId)) }
+    val reorder = { nodeId: Int -> navController.navigate(Routes.reorder(nodeId)) }
+    val move = { nodeId: Int -> navController.navigate(Routes.move(nodeId)) }
+    val edit = { nodeId: Int -> navController.navigate(Routes.edit(nodeId)) }
 }
 
 @Composable
@@ -103,26 +101,26 @@ fun SetupNavigation(db: AppDatabase) {
 }
 
 private fun createNavGraph(navController: NavController, db: AppDatabase) =
-    navController.createGraph(startDestination = Routes.Main.default()) {
+    navController.createGraph(startDestination = Routes.default()) {
         val navigateBack: () -> Unit = { navController.popBackStack() }
         val navigateTo: (String) -> (() -> Unit) = { { navController.navigate(it) } }
 
-        composable(Routes.Main.settings()) { Preferences(db) }
+        composable(Routes.settings()) { Preferences(db) }
 
-        composable(Routes.Main.setup()) { Setup(navigateToHome = navigateTo(Routes.Main.home())) }
+        composable(Routes.setup()) { Setup(navigateToHome = navigateTo(Routes.home())) }
 
         composable(
-            Routes.Main.home(),
+            Routes.home(),
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
             popEnterTransition = { fadeIn() },
             popExitTransition = { fadeOut() },
         ) {
             Home(
-                navigateToSetup = navigateTo(Routes.Main.setup()),
-                navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID)),
-                navigateToSettings = navigateTo(Routes.Main.settings()),
-                navigateToSearch = navigateTo(Routes.Main.search()),
+                navigateToSetup = navigateTo(Routes.setup()),
+                navigateToTree = navigateTo(Routes.tree(ROOT_NODE_ID)),
+                navigateToSettings = navigateTo(Routes.settings()),
+                navigateToSearch = navigateTo(Routes.search()),
             )
         }
 
@@ -134,7 +132,7 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
                 visibilityThreshold = IntOffset.VisibilityThreshold
             )
         composable(
-            Routes.Main.search(),
+            Routes.search(),
             enterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
             exitTransition = { fadeOut() + slideOutVertically(searchAnimSpec, searchOffsetY) },
             popEnterTransition = { fadeIn() + slideInVertically(searchAnimSpec, searchOffsetY) },
@@ -142,12 +140,12 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
         ) {
             Search(
                 navigateBack = navigateBack,
-                navigateToTree = navigateTo(Routes.Main.tree(ROOT_NODE_ID))
+                navigateToTree = navigateTo(Routes.tree(ROOT_NODE_ID))
             )
         }
 
         composable(
-            Routes.Main.tree(),
+            Routes.tree(),
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
             popEnterTransition = { fadeIn() },
@@ -159,13 +157,13 @@ private fun createNavGraph(navController: NavController, db: AppDatabase) =
             else Tree_old(db, navController, null)
         }
 
-        composable(Routes.Main.create()) { Create(navigateBack) }
+        composable(Routes.create()) { Create(navigateBack) }
 
-        composable(Routes.Main.reorder()) { Reorder(navigateBack) }
+        composable(Routes.reorder()) { Reorder(navigateBack) }
 
-        composable(Routes.Main.move()) { Move(navigateBack) }
+        composable(Routes.move()) { Move(navigateBack) }
 
-        composable(Routes.Main.edit()) { Edit(navigateBack) }
+        composable(Routes.edit()) { Edit(navigateBack) }
     }
 
 // TODO move this

@@ -982,7 +982,7 @@ private fun NodeOptionButtons(
 
         if (showEditButton) {
             NodeOptionButton(fontSize, lineHeight, Icons.Outlined.Edit, "Edit") {
-                navController.navigate(Routes.Main.edit(node.nodeId))
+                navController.navigate(Routes.edit(node.nodeId))
             }
         }
 
