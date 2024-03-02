@@ -9,6 +9,7 @@ import dev.fr33zing.launcher.data.persistent.payloads.Note
 import dev.fr33zing.launcher.data.utility.cast
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadStateHolder
+import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +23,12 @@ import kotlinx.coroutines.flow.transformLatest
 class ViewNoteViewModel
 @Inject
 constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : ViewModel() {
-    data class NoteState(val title: String, val body: String)
+    data class NoteState(
+        val title: String = "",
+        val body: String = "",
+        val created: Date = Date(),
+        val updated: Date = Date()
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow =
@@ -36,7 +42,12 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
                 emitAll(stateHolder.flow)
             }
             .mapLatest { (node, payload) ->
-                NoteState(title = node.label.trim(), body = payload.cast<Note>().body.trim())
+                NoteState(
+                    title = node.label.trim(),
+                    body = payload.cast<Note>().body.trim(),
+                    created = payload.created,
+                    updated = payload.updated,
+                )
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NoteState("", ""))
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NoteState())
 }
