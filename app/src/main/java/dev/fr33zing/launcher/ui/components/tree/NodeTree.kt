@@ -84,6 +84,9 @@ fun NodeTree(
     onClearSelectedNode: () -> Unit = {},
     onClearHighlightedNode: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
+    // Scrolling
+    setScrollToKeyCallback: ((ScrollToKeyEvent) -> Unit) -> Unit,
+    performQueuedScrollToKey: () -> Unit,
     // Other
     paddingAndShadowHeight: PaddingAndShadowHeight = rememberPaddingAndShadowHeight(),
     features: NodeRowFeatureSet = NodeRowFeatures.All,
@@ -131,7 +134,6 @@ fun NodeTree(
             .map { treeNodeList -> treeNodeList.map { Pair(it, animation.progress(it.key)) } }
             .collectAsStateWithLifecycle(emptyList())
 
-    val scrollToKey by scrollToKeyFlow.collectAsStateWithLifecycle(null)
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val nodeDimensions = LocalNodeDimensions.current
@@ -148,22 +150,13 @@ fun NodeTree(
             // TODO maybe consider window insets?
             ((-screenHeight / 2) + singleLineItemHeight).toInt()
         }
-    fun scrollToItemByKey(consumeAfterNextUpdate: Boolean = false) {
-        scrollToKey?.let { event ->
-            if (event.afterNextUpdate || consumeAfterNextUpdate) {
-                if (consumeAfterNextUpdate) onScrollToKeyAfterNextUpdate()
-                return
+    setScrollToKeyCallback { event ->
+        val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
+        if (index != -1) {
+            coroutineScope.launch {
+                if (event.snap) lazyListState.scrollToItem(index, scrollOffset)
+                else lazyListState.animateScrollToItem(index, scrollOffset)
             }
-            onScrolledToKey()
-
-            val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
-            if (index == -1) return
-            val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == event }
-            if (!visible)
-                coroutineScope.launch {
-                    if (event.snap) lazyListState.scrollToItem(index, scrollOffset)
-                    else lazyListState.animateScrollToItem(index, scrollOffset)
-                }
         }
     }
 
@@ -287,8 +280,6 @@ fun NodeTree(
             }
         }
 
-        LaunchedEffect(scrollToKey) { scrollToItemByKey() }
-
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
@@ -300,10 +291,10 @@ fun NodeTree(
                 contentType = { _, item -> item.first.underlyingNodeKind }
             ) { index, (initialTreeNodeState, appearAnimationProgress) ->
                 listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
-
                 if (index == treeNodeList.lastIndex) bottomActionButtons()
-                LaunchedEffect(Unit) { scrollToItemByKey(true) }
             }
+
+            performQueuedScrollToKey()
         }
     }
 }

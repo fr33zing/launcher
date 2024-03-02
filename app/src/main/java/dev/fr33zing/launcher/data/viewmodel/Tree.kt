@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private data class JumpToNodeEvent(
@@ -53,7 +52,6 @@ private data class JumpToKey(
 data class ScrollToKeyEvent(
     val key: TreeNodeKey,
     val snap: Boolean,
-    val afterNextUpdate: Boolean,
 )
 
 private val jumpToNodeFlow = MutableSharedFlow<JumpToNodeEvent?>(1)
@@ -75,6 +73,7 @@ constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val rootNodeId = savedStateHandle.nodeId()
+    private var queuedScrollToKeyEvent: ScrollToKeyEvent? = null
 
     // HACK: this controls showing the node, scrolling to it, and highlighting it
     val highlightKeyFlow: StateFlow<TreeNodeKey?> =
@@ -89,8 +88,10 @@ constructor(
             }
             .onEach {
                 it?.let { (key, snap, _, afterNextUpdate) ->
-                    _scrollToKeyFlow.emit(ScrollToKeyEvent(key, snap, afterNextUpdate))
-                } ?: _scrollToKeyFlow.emit(null)
+                    val event = ScrollToKeyEvent(key, snap)
+                    if (!afterNextUpdate) scrollToKeyCallback(event)
+                    else queuedScrollToKeyEvent = event
+                }
             }
             .map { if (it?.highlight == true) it.key else null }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
@@ -110,10 +111,14 @@ constructor(
     val treeStateFlow =
         stateHolder.stateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TreeState())
 
-    fun onScrollToKeyAfterNextUpdate() =
-        _scrollToKeyFlow.update { it?.copy(afterNextUpdate = false) }
+    var scrollToKeyCallback: (ScrollToKeyEvent) -> Unit = {}
 
-    fun onScrolledToKey() = _scrollToKeyFlow.update { null }
+    fun performQueuedScrollToKey() {
+        queuedScrollToKeyEvent?.let {
+            queuedScrollToKeyEvent = null
+            scrollToKeyCallback(it)
+        }
+    }
 
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
         stateHolder.onActivateNode(treeNodeState)

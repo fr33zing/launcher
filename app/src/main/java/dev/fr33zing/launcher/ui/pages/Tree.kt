@@ -10,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import dev.fr33zing.launcher.TreeNavigator
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.viewmodel.ScrollToKeyEvent
 import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.tree.NodeActions
@@ -42,6 +43,10 @@ fun Tree(
     fun createNode(position: RelativeNodePosition, kind: NodeKind) =
         viewModel.createNode(position, kind) { nodeId -> nodeActions.create(nodeId) }
 
+    fun setScrollToKeyCallback(callback: (ScrollToKeyEvent) -> Unit) {
+        viewModel.scrollToKeyCallback = callback
+    }
+
     CompositionLocalProvider(
         LocalNodeDimensions provides rememberNodeDimensions(),
         LocalOverscrollConfiguration provides null
@@ -52,8 +57,8 @@ fun Tree(
             scrollToKeyFlow = viewModel.scrollToKeyFlow,
             highlightKeyFlow = viewModel.highlightKeyFlow,
             onSearch = navigateTo.search,
-            onScrollToKeyAfterNextUpdate = viewModel::onScrollToKeyAfterNextUpdate,
-            onScrolledToKey = viewModel::onScrolledToKey,
+            setScrollToKeyCallback = ::setScrollToKeyCallback,
+            performQueuedScrollToKey = viewModel::performQueuedScrollToKey,
             onDisableFlowStagger = viewModel::disableFlowStagger,
             onActivatePayload = ::activatePayload,
             onSelectNode = viewModel::selectNode,
