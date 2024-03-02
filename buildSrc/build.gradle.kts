@@ -24,13 +24,14 @@ tasks {
             migrationClasses.add(className)
             return "$className::class"
         }
-        val databaseVersion = "5"
+        val databaseVersion = "6"
         val autoMigrations =
             """
                 AutoMigration(from = 1, to = 2),
                 AutoMigration(from = 2, to = 3),
                 AutoMigration(from = 3, to = 4, ${migration("RenameWebLinkToWebsite")}),
                 AutoMigration(from = 4, to = 5),
+                AutoMigration(from = 5, to = 6),
             """
 
         // Update these variables to add support for new NodeKind variants and payload classes.
