@@ -36,16 +36,36 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private data class JumpToNodeEvent(val nodeId: Int, val snap: Boolean, val highlight: Boolean)
+private data class JumpToNodeEvent(
+    val nodeId: Int,
+    val snap: Boolean,
+    val highlight: Boolean,
+    val afterNextUpdate: Boolean,
+)
 
-private data class JumpToKey(val key: TreeNodeKey, val snap: Boolean, val highlight: Boolean)
+private data class JumpToKey(
+    val key: TreeNodeKey,
+    val snap: Boolean,
+    val highlight: Boolean,
+    val afterNextUpdate: Boolean,
+)
 
-data class ScrollToKeyEvent(val key: TreeNodeKey, val snap: Boolean)
+data class ScrollToKeyEvent(
+    val key: TreeNodeKey,
+    val snap: Boolean,
+    val afterNextUpdate: Boolean,
+)
 
 private val jumpToNodeFlow = MutableSharedFlow<JumpToNodeEvent?>(1)
 
-fun sendJumpToNode(nodeId: Int, snap: Boolean = true, highlight: Boolean = true) =
-    jumpToNodeFlow.tryEmit(null) && jumpToNodeFlow.tryEmit(JumpToNodeEvent(nodeId, snap, highlight))
+fun sendJumpToNode(
+    nodeId: Int,
+    snap: Boolean = true,
+    highlight: Boolean = true,
+    afterNextUpdate: Boolean = false
+) =
+    jumpToNodeFlow.tryEmit(null) &&
+        jumpToNodeFlow.tryEmit(JumpToNodeEvent(nodeId, snap, highlight, afterNextUpdate))
 
 @HiltViewModel
 class TreeViewModel
@@ -61,15 +81,16 @@ constructor(
         jumpToNodeFlow
             .onEach { it?.let { (nodeId) -> stateHolder.ensureNodeIsShown(nodeId) } }
             .map {
-                it?.let { (nodeId) ->
+                it?.let { (nodeId, snap, highlight, afterNextUpdate) ->
                     val lineage = db.nodeLineage(nodeId)
                     val key = TreeNodeKey(lineage.map { node -> node.nodeId })
-                    JumpToKey(key, it.snap, it.highlight)
+                    JumpToKey(key, snap, highlight, afterNextUpdate)
                 }
             }
             .onEach {
-                it?.let { _scrollToKeyFlow.emit(ScrollToKeyEvent(it.key, it.snap)) }
-                    ?: _scrollToKeyFlow.emit(null)
+                it?.let { (key, snap, _, afterNextUpdate) ->
+                    _scrollToKeyFlow.emit(ScrollToKeyEvent(key, snap, afterNextUpdate))
+                } ?: _scrollToKeyFlow.emit(null)
             }
             .map { if (it?.highlight == true) it.key else null }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
@@ -89,6 +110,9 @@ constructor(
     val treeStateFlow =
         stateHolder.stateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TreeState())
 
+    fun onScrollToKeyAfterNextUpdate() =
+        _scrollToKeyFlow.update { it?.copy(afterNextUpdate = false) }
+
     fun onScrolledToKey() = _scrollToKeyFlow.update { null }
 
     fun activatePayload(context: Context, treeNodeState: TreeNodeState) {
@@ -104,9 +128,6 @@ constructor(
         CoroutineScope(Dispatchers.Main).launch {
             flow {
                     val nodeId = db.createNode(position, kind)
-                    val lineage = db.nodeLineage(nodeId)
-                    val key = TreeNodeKey(lineage.map { it.nodeId })
-                    _scrollToKeyFlow.update { ScrollToKeyEvent(key, snap = true) }
                     emit(nodeId)
                 }
                 .flowOn(Dispatchers.IO)

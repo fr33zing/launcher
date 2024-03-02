@@ -76,6 +76,7 @@ fun NodeTree(
     highlightKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
     // Events
     onSearch: () -> Unit = {},
+    onScrollToKeyAfterNextUpdate: () -> Unit = {},
     onScrolledToKey: () -> Unit = {},
     onDisableFlowStagger: () -> Unit = {},
     onActivatePayload: (TreeNodeState) -> Unit = {},
@@ -147,9 +148,14 @@ fun NodeTree(
             // TODO maybe consider window insets?
             ((-screenHeight / 2) + singleLineItemHeight).toInt()
         }
-    // TODO make scrollToItemKey work correctly after reorder
-    fun scrollToItemByKey() {
+    fun scrollToItemByKey(consumeAfterNextUpdate: Boolean = false) {
         scrollToKey?.let { event ->
+            if (event.afterNextUpdate || consumeAfterNextUpdate) {
+                if (consumeAfterNextUpdate) onScrollToKeyAfterNextUpdate()
+                return
+            }
+            onScrolledToKey()
+
             val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
             if (index == -1) return
             val visible = lazyListState.layoutInfo.visibleItemsInfo.any { it.key == event }
@@ -158,7 +164,6 @@ fun NodeTree(
                     if (event.snap) lazyListState.scrollToItem(index, scrollOffset)
                     else lazyListState.animateScrollToItem(index, scrollOffset)
                 }
-            onScrolledToKey()
         }
     }
 
@@ -282,6 +287,8 @@ fun NodeTree(
             }
         }
 
+        LaunchedEffect(scrollToKey) { scrollToItemByKey() }
+
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
@@ -294,8 +301,8 @@ fun NodeTree(
             ) { index, (initialTreeNodeState, appearAnimationProgress) ->
                 listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
 
-                if (index == 0) LaunchedEffect(scrollToKey) { scrollToItemByKey() }
                 if (index == treeNodeList.lastIndex) bottomActionButtons()
+                LaunchedEffect(Unit) { scrollToItemByKey(true) }
             }
         }
     }

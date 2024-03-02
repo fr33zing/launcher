@@ -52,8 +52,9 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
     }
 
     fun jumpToNode() {
-        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) }
-            ?: throw Exception("nodePayload is null")
+        nodePayload?.node?.nodeId?.let {
+            sendJumpToNode(nodeId = it, snap = false, afterNextUpdate = true)
+        } ?: throw Exception("nodePayload is null")
     }
 
     fun cancelChanges() {

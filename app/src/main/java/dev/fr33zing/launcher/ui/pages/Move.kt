@@ -65,7 +65,11 @@ fun Move(
     val askOnReject by preferences.confirmationDialogs.moveNode.askOnReject.state
 
     fun jumpToNode() {
-        sendJumpToNode(viewModel.nodeToMove?.nodeId ?: throw Exception("nodeToMove is null"))
+        sendJumpToNode(
+            nodeId = viewModel.nodeToMove?.nodeId ?: throw Exception("nodeToMove is null"),
+            snap = false,
+            afterNextUpdate = true,
+        )
     }
 
     fun cancelMove() {
