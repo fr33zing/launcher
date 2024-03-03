@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -190,19 +191,16 @@ fun NodeTree(
 
     BackHandler(enabled = treeState.multiSelectState != null) { onEndMultiSelect() }
 
-    Box(
+    Column(
         modifier =
-            Modifier.fillMaxSize()
-                .padding(vertical = paddingHeight)
-                .verticalScrollShadows(shadowHeight)
-                .pointerInput(Unit) {
-                    detectFling(
-                        onFirstDown = onDisableFlowStagger,
-                        onFlingDown = onSearch,
-                        flingUpEnabled = { false },
-                        flingDownEnabled = { !lazyListState.canScrollBackward }
-                    )
-                },
+            Modifier.fillMaxSize().padding(vertical = paddingHeight).pointerInput(Unit) {
+                detectFling(
+                    onFirstDown = onDisableFlowStagger,
+                    onFlingDown = onSearch,
+                    flingUpEnabled = { false },
+                    flingDownEnabled = { !lazyListState.canScrollBackward }
+                )
+            },
     ) {
         @Composable
         fun listItem(
@@ -286,10 +284,12 @@ fun NodeTree(
             }
         }
 
+        MultiSelectStatusBar(treeState)
+
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().verticalScrollShadows(shadowHeight)
         ) {
             itemsIndexed(
                 items = treeNodeList,
