@@ -62,7 +62,11 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
     }
 }
 
-@Immutable data class TreeState(val selectedKey: TreeNodeKey? = null)
+@Immutable
+data class TreeState(
+    val selectedKey: TreeNodeKey? = null,
+    val multiSelectedKeys: Map<TreeNodeKey, Boolean>? = null
+)
 
 @Immutable
 data class TreeNodeState(
@@ -100,6 +104,23 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
     fun onSelectNode(key: TreeNodeKey) = _stateFlow.update { it.copy(selectedKey = key) }
 
     fun onClearSelectedNode() = _stateFlow.update { it.copy(selectedKey = null) }
+
+    fun onBeginMultiSelect() =
+        _stateFlow.value.selectedKey?.let { key ->
+            _stateFlow.update { state ->
+                state.copy(selectedKey = null, multiSelectedKeys = mapOf(key to true))
+            }
+        } ?: throw Exception("selectedKey is null")
+
+    fun onToggleNodeMultiSelected(key: TreeNodeKey) =
+        _stateFlow.update { state ->
+            state.copy(
+                multiSelectedKeys =
+                    (state.multiSelectedKeys ?: throw Exception("multiSelectedKeys is null"))
+                        .toMutableMap()
+                        .also { it[key] = !it.computeIfAbsent(key) { false } }
+            )
+        }
 
     private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
         var key = TreeNodeKey(emptyList())

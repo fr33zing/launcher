@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.DriveFileMove
 import androidx.compose.material.icons.outlined.East
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -61,6 +62,7 @@ class NodeActions(
     val edit: (Int) -> Unit,
     val create: (Int) -> Unit,
     val viewNote: (Int) -> Unit,
+    val beginMultiSelect: () -> Unit,
 )
 
 @Immutable
@@ -79,6 +81,15 @@ class NodeActionButtonKind(
     companion object {
         val kinds =
             listOf(
+                // Enter multi-select mode
+                NodeActionButtonKind(
+                    label = "Batch",
+                    icon = Icons.Outlined.SelectAll,
+                    visible = { true },
+                ) { (_, actions) ->
+                    ActionButton { actions.beginMultiSelect() }
+                },
+
                 // Move node to trash
                 NodeActionButtonKind(
                     label = "Trash",

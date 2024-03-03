@@ -129,6 +129,8 @@ constructor(
 
     fun clearSelectedNode() = stateHolder.onClearSelectedNode()
 
+    fun beginMultiSelect() = stateHolder.onBeginMultiSelect()
+
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             flow {

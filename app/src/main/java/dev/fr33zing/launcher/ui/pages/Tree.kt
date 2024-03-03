@@ -35,6 +35,7 @@ fun Tree(
             edit = navigateTo.edit,
             create = navigateTo.create,
             viewNote = navigateTo.viewNote,
+            beginMultiSelect = viewModel::beginMultiSelect,
         )
     }
 
