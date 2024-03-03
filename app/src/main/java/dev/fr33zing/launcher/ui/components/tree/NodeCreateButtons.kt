@@ -54,13 +54,12 @@ fun NodeCreateButton(
         remember(
             showChildren,
             position,
-            treeState.selectedKey,
+            treeState.normalState.selectedKey,
             treeNodeState.key,
             treeNodeState.permissions,
         ) {
-
             // Only show for the selected node
-            if (treeState.selectedKey != treeNodeState.key) false
+            if (treeState.normalState.selectedKey != treeNodeState.key) false
             else {
                 fun TreeNodeState.canCreate(scope: PermissionScope) =
                     permissions.hasPermission(PermissionKind.Create, scope)

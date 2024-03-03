@@ -90,14 +90,15 @@ fun NodeInteractions(
             }
         }
     val selected =
-        remember(treeNodeState, treeState) { treeNodeState.key == treeState?.selectedKey }
-    val multiSelectActive =
-        remember(treeState) { hasFeature.MULTI_SELECT && treeState?.multiSelectState != null }
+        remember(treeNodeState, treeState) {
+            treeNodeState.key == treeState?.normalState?.selectedKey
+        }
+    val treeMode = remember(treeState) { treeState?.mode ?: TreeState.Mode.Normal }
     val canMultiSelect =
         remember(treeState, treeNodeState) {
-            if (!hasFeature.MULTI_SELECT || !multiSelectActive) return@remember false
+            if (!hasFeature.MULTI_SELECT || treeMode != TreeState.Mode.Batch) return@remember false
             val nodeParentId = treeNodeState.value.underlyingState.node.parentId
-            val multiSelectParentId = treeState?.multiSelectState?.parentId
+            val multiSelectParentId = treeState?.batchState?.parentId
             nodeParentId != null &&
                 multiSelectParentId != null &&
                 nodeParentId == multiSelectParentId
@@ -105,8 +106,7 @@ fun NodeInteractions(
     val multiSelected =
         remember(treeState, treeNodeState) {
             hasFeature.MULTI_SELECT &&
-                treeState?.multiSelectState?.selectedKeys?.getOrDefault(treeNodeState.key, false)
-                    ?: false
+                treeState?.batchState?.selectedKeys?.getOrDefault(treeNodeState.key, false) ?: false
         }
 
     val activatePayload by rememberUpdatedState {
@@ -139,7 +139,7 @@ fun NodeInteractions(
                 }
 
             val contentContainerModifier =
-                Modifier.conditional(hasFeature.ACTIVATE && !multiSelectActive) {
+                Modifier.conditional(hasFeature.ACTIVATE && treeMode != TreeState.Mode.Batch) {
                         combinedClickable(
                             interactionSource = interactionSource,
                             indication = indication,
@@ -161,7 +161,7 @@ fun NodeInteractions(
                             onLongClick = onSelectNode
                         )
                     }
-                    .conditional(multiSelectActive) {
+                    .conditional(treeMode == TreeState.Mode.Batch) {
                         conditional(canMultiSelect) {
                                 clickable(interactionSource, indication = null) {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -180,7 +180,7 @@ fun NodeInteractions(
                 ) {
                     Box(Modifier.weight(1f)) { content() }
                     AnimatedVisibility(
-                        visible = multiSelectActive,
+                        visible = treeMode == TreeState.Mode.Batch,
                         enter = fadeIn() + expandHorizontally(expandFrom = AbsoluteAlignment.Right),
                         exit =
                             fadeOut() + shrinkHorizontally(shrinkTowards = AbsoluteAlignment.Right)

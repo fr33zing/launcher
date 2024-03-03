@@ -39,7 +39,7 @@ fun MultiSelectStatusBar(treeState: TreeState) {
     val spacing by preferences.nodeAppearance.spacing.state
 
     AnimatedVisibility(
-        visible = treeState.multiSelectState != null,
+        visible = treeState.batchState != null,
         enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
         exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
     ) {
@@ -52,9 +52,7 @@ fun MultiSelectStatusBar(treeState: TreeState) {
                     .absolutePadding(top = spacing / 2)
         ) {
             val selectedCount =
-                remember(treeState) {
-                    treeState.multiSelectState?.selectedKeys?.count { it.value } ?: 0
-                }
+                remember(treeState) { treeState.batchState?.selectedKeys?.count { it.value } ?: 0 }
             Text("$selectedCount items selected", fontWeight = FontWeight.Bold)
 
             Icon(

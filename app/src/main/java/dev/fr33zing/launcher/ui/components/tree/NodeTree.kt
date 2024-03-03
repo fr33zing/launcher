@@ -189,7 +189,7 @@ fun NodeTree(
 
     LaunchedEffect(Unit) { onClearSelectedNode() }
 
-    BackHandler(enabled = treeState.multiSelectState != null) { onEndMultiSelect() }
+    BackHandler(enabled = treeState.mode == TreeState.Mode.Batch) { onEndMultiSelect() }
 
     Column(
         modifier =

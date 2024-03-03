@@ -63,13 +63,72 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
 }
 
 @Immutable
-data class TreeMultiSelectState(val parentId: Int, val selectedKeys: Map<TreeNodeKey, Boolean>)
-
-@Immutable
 data class TreeState(
-    val selectedKey: TreeNodeKey? = null,
-    val multiSelectState: TreeMultiSelectState? = null
-)
+    val mode: Mode = Mode.Normal,
+    val normalState: NormalState = NormalState(),
+    val batchState: BatchState? = null
+) {
+    enum class Mode {
+        Normal,
+        Batch
+    }
+
+    @Immutable data class NormalState(val selectedKey: TreeNodeKey? = null)
+
+    @Immutable
+    data class BatchState(
+        val parentId: Int = ROOT_NODE_ID,
+        val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap()
+    )
+
+    fun expectMode(expectedMode: Mode) {
+        if (mode != expectedMode) throw UnexpectedModeException(mode, expectedMode)
+    }
+
+    fun changeMode(from: Mode, to: Mode): TreeState {
+        expectMode(from)
+        return changeMode(to)
+    }
+
+    private fun changeMode(nextMode: Mode): TreeState =
+        when (mode) {
+            Mode.Normal -> {
+                when (nextMode) {
+                    Mode.Normal -> sameMode()
+                    Mode.Batch ->
+                        copy(
+                            mode = Mode.Batch,
+                            batchState = BatchState(),
+                            normalState = NormalState()
+                        )
+                }
+            }
+            Mode.Batch -> {
+                when (nextMode) {
+                    Mode.Normal ->
+                        copy(
+                            mode = Mode.Normal,
+                            normalState = NormalState(),
+                            batchState = null,
+                        )
+                    else -> invalidModeChange(nextMode)
+                }
+            }
+        }
+
+    private fun sameMode(): Nothing = throw SameModeException(mode)
+
+    private fun invalidModeChange(nextMode: Mode): Nothing =
+        throw InvalidModeChangeException(mode, nextMode)
+
+    private class UnexpectedModeException(mode: Mode, expectedMode: Mode) :
+        Exception("Tree is in $mode mode when $expectedMode mode is expected")
+
+    private class SameModeException(mode: Mode) : Exception("Tree is already in $mode mode")
+
+    private class InvalidModeChangeException(mode: Mode, nextMode: Mode) :
+        Exception("Tree cannot change from $mode mode to $nextMode mode")
+}
 
 @Immutable
 data class TreeNodeState(
@@ -105,40 +164,46 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
     }
 
     fun onSelectNode(key: TreeNodeKey) =
-        _stateFlow.update {
-            if (it.multiSelectState == null) it.copy(selectedKey = key)
-            else throw Exception("multiSelectedKeys is not null")
+        _stateFlow.update { treeState ->
+            treeState.expectMode(TreeState.Mode.Normal)
+            treeState.copy(normalState = treeState.normalState.copy(selectedKey = key))
         }
 
-    fun onClearSelectedNode() = _stateFlow.update { it.copy(selectedKey = null) }
+    fun onClearSelectedNode() =
+        _stateFlow.update { treeState ->
+            treeState.expectMode(TreeState.Mode.Normal)
+            treeState.copy(normalState = treeState.normalState.copy(selectedKey = null))
+        }
 
     fun onBeginMultiSelect() =
-        _stateFlow.value.selectedKey?.let { key ->
-            _stateFlow.update { state ->
-                state.copy(
-                    selectedKey = null,
-                    multiSelectState =
-                        TreeMultiSelectState(
-                            parentId = key.nodeLineage[key.nodeLineage.size - 2],
-                            selectedKeys = mapOf(key to true),
-                        )
-                )
+        _stateFlow.value.normalState.selectedKey.let { key ->
+            _stateFlow.update { treeState ->
+                key ?: throw Exception("selectedKey is null")
+                treeState
+                    .changeMode(from = TreeState.Mode.Normal, to = TreeState.Mode.Batch)
+                    .copy(
+                        batchState =
+                            TreeState.BatchState(
+                                parentId = key.nodeLineage[key.nodeLineage.size - 2],
+                                selectedKeys = mapOf(key to true),
+                            )
+                    )
             }
-        } ?: throw Exception("selectedKey is null")
+        }
 
-    fun onEndMultiSelect() = _stateFlow.update { it.copy(multiSelectState = null) }
+    fun onEndMultiSelect() =
+        _stateFlow.update { it.changeMode(from = TreeState.Mode.Batch, to = TreeState.Mode.Normal) }
 
     fun onToggleNodeMultiSelected(key: TreeNodeKey) =
-        _stateFlow.update { state ->
-            val multiSelectState =
-                (state.multiSelectState ?: throw Exception("multiSelectedKeys is null"))
-            val nextMultiSelectedKeys =
-                multiSelectState.selectedKeys.toMutableMap().also {
+        _stateFlow.update { treeState ->
+            treeState.expectMode(TreeState.Mode.Batch)
+
+            val batchState = (treeState.batchState ?: throw Exception("multiSelectedKeys is null"))
+            val nextSelectedKeys =
+                batchState.selectedKeys.toMutableMap().also {
                     it[key] = !it.computeIfAbsent(key) { false }
                 }
-            state.copy(
-                multiSelectState = multiSelectState.copy(selectedKeys = nextMultiSelectedKeys)
-            )
+            treeState.copy(batchState = batchState.copy(selectedKeys = nextSelectedKeys))
         }
 
     private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
