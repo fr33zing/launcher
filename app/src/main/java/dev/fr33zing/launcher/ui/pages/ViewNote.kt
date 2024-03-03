@@ -1,5 +1,8 @@
 package dev.fr33zing.launcher.ui.pages
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,13 +51,14 @@ fun ViewNote(
         topBar = {
             TopAppBar(
                 title = { Text(state.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                actions = {},
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            ActionButton(icon = Icons.Rounded.Edit, contentDescription = "edit") {
-                navigateToEdit(state.nodeId)
+            AnimatedVisibility(viewModel.hasEditPermission, enter = fadeIn(), exit = fadeOut()) {
+                ActionButton(icon = Icons.Rounded.Edit, contentDescription = "edit") {
+                    if (viewModel.hasEditPermission) navigateToEdit(state.nodeId)
+                }
             }
         }
     ) { padding ->

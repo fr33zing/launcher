@@ -1,23 +1,33 @@
 package dev.fr33zing.launcher.data.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fr33zing.launcher.data.PermissionKind
+import dev.fr33zing.launcher.data.PermissionScope
 import dev.fr33zing.launcher.data.persistent.AppDatabase
+import dev.fr33zing.launcher.data.persistent.checkPermission
 import dev.fr33zing.launcher.data.persistent.payloads.Note
 import dev.fr33zing.launcher.data.utility.cast
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadStateHolder
 import java.util.Date
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ViewNoteViewModel
@@ -31,6 +41,8 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
         val updated: Date = Date()
     )
 
+    var hasEditPermission by mutableStateOf(false)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow =
         savedStateHandle
@@ -43,13 +55,24 @@ constructor(private val db: AppDatabase, savedStateHandle: SavedStateHandle) : V
                 emitAll(stateHolder.flow)
             }
             .mapLatest { (node, payload) ->
-                NoteState(
-                    nodeId = node.nodeId,
-                    title = node.label.trim(),
-                    body = payload.cast<Note>().body.trim(),
-                    created = payload.created,
-                    updated = payload.updated,
+                Pair(
+                    NoteState(
+                        nodeId = node.nodeId,
+                        title = node.label.trim(),
+                        body = payload.cast<Note>().body.trim(),
+                        created = payload.created,
+                        updated = payload.updated,
+                    ),
+                    node
                 )
             }
+            .onEach { (_, node) ->
+                hasEditPermission = false
+                CoroutineScope(Dispatchers.IO).launch {
+                    hasEditPermission =
+                        db.checkPermission(PermissionKind.Edit, PermissionScope.Self, node)
+                }
+            }
+            .mapLatest { (state) -> state }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NoteState())
 }
