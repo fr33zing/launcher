@@ -40,8 +40,8 @@ fun MultiSelectStatusBar(treeState: TreeState) {
 
     AnimatedVisibility(
         visible = treeState.batchState != null,
-        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
