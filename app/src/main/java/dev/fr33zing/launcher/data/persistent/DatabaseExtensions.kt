@@ -305,11 +305,11 @@ suspend fun AppDatabase.traverseUpward(
 }
 
 suspend fun AppDatabase.traverseUpwardWithPayload(
-    node: Node,
+    startNode: Node,
     includeFirst: Boolean = false,
     action: (Node, Payload) -> Boolean
 ) {
-    traverseUpward(node, includeFirst) {
+    traverseUpward(startNode, includeFirst) { node ->
         val payload =
             runBlocking { getPayloadByNodeId(node.kind, node.nodeId) }
                 ?: throw Exception("Payload is null")
