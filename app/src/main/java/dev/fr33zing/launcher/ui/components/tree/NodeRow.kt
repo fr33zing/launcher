@@ -30,6 +30,7 @@ fun NodeRow(
     nodeActions: NodeActions? = null,
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
+    onToggleNodeMultiSelected: () -> Unit = {},
     onActivatePayload: () -> Unit = {},
     /** Only called when [NodeRowFeatures.RECURSIVE] is not present. */
     onActivateDirectory: () -> Unit = {},
@@ -99,6 +100,7 @@ fun NodeRow(
                 nodeActions,
                 onSelectNode,
                 onClearSelectedNode,
+                onToggleNodeMultiSelected,
                 onActivatePayload,
                 onActivateDirectory,
                 onCreateNode,

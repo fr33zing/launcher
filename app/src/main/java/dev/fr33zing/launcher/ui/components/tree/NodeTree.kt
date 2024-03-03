@@ -1,5 +1,6 @@
 package dev.fr33zing.launcher.ui.components.tree
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -82,6 +83,8 @@ fun NodeTree(
     onActivatePayload: (TreeNodeState) -> Unit = {},
     onSelectNode: (TreeNodeKey) -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
+    onToggleNodeMultiSelected: (TreeNodeKey) -> Unit = {},
+    onEndMultiSelect: () -> Unit = {},
     onClearHighlightedNode: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     // Scrolling
@@ -185,6 +188,8 @@ fun NodeTree(
 
     LaunchedEffect(Unit) { onClearSelectedNode() }
 
+    BackHandler(enabled = treeState.multiSelectState != null) { onEndMultiSelect() }
+
     Box(
         modifier =
             Modifier.fillMaxSize()
@@ -232,6 +237,7 @@ fun NodeTree(
                     nodeActions = nodeActions,
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,
+                    onToggleNodeMultiSelected = { onToggleNodeMultiSelected(treeNodeState.key) },
                     onActivatePayload = { onActivatePayload(treeNodeState) },
                     onCreateNode = onCreateNode,
                     appearAnimationProgress = appearAnimationProgress,

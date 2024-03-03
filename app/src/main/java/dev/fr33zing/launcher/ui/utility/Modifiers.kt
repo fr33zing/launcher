@@ -10,12 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -103,5 +109,27 @@ fun rememberPaddingAndShadowHeight(): PaddingAndShadowHeight {
 
     return remember(paddingHeight, shadowHeight) {
         PaddingAndShadowHeight(paddingHeight, shadowHeight)
+    }
+}
+
+// Based on: https://stackoverflow.com/a/76244926
+fun Modifier.deemphasize(): Modifier {
+    val saturationMatrix = ColorMatrix().apply { setToSaturation(0f) }
+    val saturationFilter = ColorFilter.colorMatrix(saturationMatrix)
+    val paint =
+        Paint().apply {
+            colorFilter = saturationFilter
+            alpha = 0.5f
+        }
+
+    return drawWithCache {
+        val canvasBounds = Rect(Offset.Zero, size)
+        onDrawWithContent {
+            drawIntoCanvas {
+                it.saveLayer(canvasBounds, paint)
+                drawContent()
+                it.restore()
+            }
+        }
     }
 }

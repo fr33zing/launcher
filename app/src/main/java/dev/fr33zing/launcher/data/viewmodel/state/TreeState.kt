@@ -63,9 +63,12 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
 }
 
 @Immutable
+data class TreeMultiSelectState(val parentId: Int, val selectedKeys: Map<TreeNodeKey, Boolean>)
+
+@Immutable
 data class TreeState(
     val selectedKey: TreeNodeKey? = null,
-    val multiSelectedKeys: Map<TreeNodeKey, Boolean>? = null
+    val multiSelectState: TreeMultiSelectState? = null
 )
 
 @Immutable
@@ -101,24 +104,40 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
         if (state.key in showChildren) showChildren[state.key] = !showChildren[state.key]!!
     }
 
-    fun onSelectNode(key: TreeNodeKey) = _stateFlow.update { it.copy(selectedKey = key) }
+    fun onSelectNode(key: TreeNodeKey) =
+        _stateFlow.update {
+            if (it.multiSelectState == null) it.copy(selectedKey = key)
+            else throw Exception("multiSelectedKeys is not null")
+        }
 
     fun onClearSelectedNode() = _stateFlow.update { it.copy(selectedKey = null) }
 
     fun onBeginMultiSelect() =
         _stateFlow.value.selectedKey?.let { key ->
             _stateFlow.update { state ->
-                state.copy(selectedKey = null, multiSelectedKeys = mapOf(key to true))
+                state.copy(
+                    selectedKey = null,
+                    multiSelectState =
+                        TreeMultiSelectState(
+                            parentId = key.nodeLineage[key.nodeLineage.size - 2],
+                            selectedKeys = mapOf(key to true),
+                        )
+                )
             }
         } ?: throw Exception("selectedKey is null")
 
+    fun onEndMultiSelect() = _stateFlow.update { it.copy(multiSelectState = null) }
+
     fun onToggleNodeMultiSelected(key: TreeNodeKey) =
         _stateFlow.update { state ->
+            val multiSelectState =
+                (state.multiSelectState ?: throw Exception("multiSelectedKeys is null"))
+            val nextMultiSelectedKeys =
+                multiSelectState.selectedKeys.toMutableMap().also {
+                    it[key] = !it.computeIfAbsent(key) { false }
+                }
             state.copy(
-                multiSelectedKeys =
-                    (state.multiSelectedKeys ?: throw Exception("multiSelectedKeys is null"))
-                        .toMutableMap()
-                        .also { it[key] = !it.computeIfAbsent(key) { false } }
+                multiSelectState = multiSelectState.copy(selectedKeys = nextMultiSelectedKeys)
             )
         }
 

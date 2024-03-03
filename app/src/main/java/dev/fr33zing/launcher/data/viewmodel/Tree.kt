@@ -131,6 +131,10 @@ constructor(
 
     fun beginMultiSelect() = stateHolder.onBeginMultiSelect()
 
+    fun endMultiSelect() = stateHolder.onEndMultiSelect()
+
+    fun toggleNodeMultiSelected(key: TreeNodeKey) = stateHolder.onToggleNodeMultiSelected(key)
+
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             flow {

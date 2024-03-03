@@ -7,6 +7,8 @@ const val DIM_RATIO = 0.5f
 
 fun Color.dim() = mix(Background, DIM_RATIO)
 
+fun Color.dim(ratio: Float) = mix(Background, ratio)
+
 fun Color.translucent() = mix(Color.Transparent, DIM_RATIO)
 
 fun Color.mix(with: Color, withRatio: Float): Color {

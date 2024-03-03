@@ -65,6 +65,8 @@ fun Tree(
             onActivatePayload = ::activatePayload,
             onSelectNode = viewModel::selectNode,
             onClearSelectedNode = viewModel::clearSelectedNode,
+            onToggleNodeMultiSelected = viewModel::toggleNodeMultiSelected,
+            onEndMultiSelect = viewModel::endMultiSelect,
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,

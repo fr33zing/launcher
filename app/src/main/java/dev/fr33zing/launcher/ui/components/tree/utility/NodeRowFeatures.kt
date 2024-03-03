@@ -32,6 +32,9 @@ enum class NodeRowFeatures {
 
     /** If true, long pressing the NodeRow will show action buttons over itself. */
     ACTION_BUTTONS,
+
+    // TODO write doc comment
+    MULTI_SELECT,
     ;
 
     companion object FeatureSets {
