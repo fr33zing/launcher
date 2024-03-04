@@ -47,7 +47,8 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.ActionButton
 import dev.fr33zing.launcher.ui.components.ActionButtonSpacing
 import dev.fr33zing.launcher.ui.components.ActionButtonVerticalPadding
-import dev.fr33zing.launcher.ui.components.tree.modal.ModalTopBar
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalBar
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarPosition
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
@@ -289,12 +290,12 @@ fun NodeTree(
         // Content
         //
 
-        ModalTopBar(treeState)
+        ModalBar(ModalBarPosition.Top, treeState)
 
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-            modifier = Modifier.fillMaxSize().verticalScrollShadows(shadowHeight)
+            modifier = Modifier.fillMaxWidth().weight(1f).verticalScrollShadows(shadowHeight)
         ) {
             itemsIndexed(
                 items = treeNodeList,
@@ -307,5 +308,7 @@ fun NodeTree(
 
             performQueuedScrollToKey()
         }
+
+        ModalBar(ModalBarPosition.Bottom, treeState)
     }
 }

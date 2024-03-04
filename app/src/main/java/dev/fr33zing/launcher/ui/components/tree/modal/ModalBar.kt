@@ -19,19 +19,25 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalClearStateDelay
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.modalFiniteAnimationSpec
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
+import kotlinx.coroutines.delay
 
 private val verticalPadding = 8.dp
 
@@ -43,29 +49,59 @@ private fun modalTopBarContent(treeState: TreeState): (@Composable RowScope.() -
         else -> null
     }
 
-@Composable
-fun ModalTopBar(
-    treeState: TreeState,
-    modalContent: (TreeState) -> (@Composable RowScope.() -> Unit)?,
+private fun modalBottomBarContent(treeState: TreeState): (@Composable RowScope.() -> Unit)? =
+    when (treeState.mode) {
+        TreeState.Mode.Batch -> {
+            { BatchTopBar(treeState) }
+        }
+        else -> null
+    }
+
+enum class ModalBarPosition(
+    val content: (TreeState) -> (@Composable RowScope.() -> Unit)?,
+    val expandFrom: Alignment.Vertical,
 ) {
+    Top(::modalTopBarContent, Alignment.Bottom),
+    Bottom(::modalBottomBarContent, Alignment.Top);
+
+    val shrinkTowards = expandFrom
+}
+
+@Composable
+fun ModalBar(position: ModalBarPosition, treeState: TreeState) {
     val preferences = Preferences(LocalContext.current)
     val spacing by preferences.nodeAppearance.spacing.state
 
-    val content = modalContent(treeState)
+    // Keep content during hide animation
+    var contentState by remember { mutableStateOf<@Composable (RowScope.() -> Unit)?>(null) }
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(treeState) {
+        if (treeState.mode != TreeState.Mode.Normal) {
+            contentState = position.content(treeState)
+            visible = true
+        } else {
+            visible = false
+            delay(ModalClearStateDelay)
+            contentState = null
+        }
+    }
+
+    val floatAnimSpec = modalFiniteAnimationSpec<Float>(treeState.mode)
+    val intSizeAnimSpec = modalFiniteAnimationSpec<IntSize>(treeState.mode)
 
     AnimatedVisibility(
-        visible = content != null,
-        enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
-        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
+        visible,
+        enter = fadeIn(floatAnimSpec) + expandVertically(intSizeAnimSpec, position.expandFrom),
+        exit = fadeOut(floatAnimSpec) + shrinkVertically(intSizeAnimSpec, position.shrinkTowards),
     ) {
         ModalAnimatedContent(
             state = treeState,
             mode = { it.mode },
-            label = "modal top bar",
+            label = "modal bar: ${position.name}",
         ) {
-            if (content != null)
+            if (contentState != null)
                 Row(
-                    content = content,
+                    content = contentState!!,
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier =
