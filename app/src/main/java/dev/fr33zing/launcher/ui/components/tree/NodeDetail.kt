@@ -1,6 +1,7 @@
 package dev.fr33zing.launcher.ui.components.tree
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.absolutePadding
@@ -32,9 +33,14 @@ import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.UnlabeledNodeColor
 import dev.fr33zing.launcher.data.UnlabeledNodeText
+import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
+import dev.fr33zing.launcher.ui.utility.dim
+
+private val irrelevantColor = Foreground.dim(0.8f)
 
 @Composable
 fun NodeDetailContainer(
@@ -61,6 +67,7 @@ fun NodeDetailContainer(
 @Composable
 fun NodeDetail(
     label: String,
+    relevance: NodeRelevance? = null,
     isValidReference: Boolean = false,
     fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
     lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
@@ -96,10 +103,19 @@ fun NodeDetail(
         }
     val textDecoration = if (lineThrough) TextDecoration.LineThrough else null
 
+    val relevanceColor =
+        relevance?.let {
+            animateColorAsState(
+                targetValue = if (relevance == NodeRelevance.Relevant) color else irrelevantColor,
+                label = "node relevance color"
+            )
+        }
+    val finalColor = relevanceColor?.value ?: color
+
     Icon(
         icon,
         contentDescription = null,
-        tint = color,
+        tint = finalColor,
         modifier = Modifier.size(lineHeight),
     )
     Text(
@@ -108,7 +124,7 @@ fun NodeDetail(
             Modifier.offset(y = lineHeight * -0.1f) // HACK: Vertically align with icon
                 .absolutePadding(left = lineHeight * 0.5f)
                 .then(textModifier),
-        color = color,
+        color = finalColor,
         fontSize = fontSize,
         softWrap = softWrap,
         overflow = overflow,

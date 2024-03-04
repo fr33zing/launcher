@@ -34,7 +34,7 @@ enum class NodeRowFeatures {
     ACTION_BUTTONS,
 
     // TODO write doc comment
-    MULTI_SELECT,
+    MODAL,
     ;
 
     companion object FeatureSets {

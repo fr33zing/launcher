@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeRowFeatures
@@ -48,9 +49,17 @@ fun NodeRow(
                     val RENDER_STATE = features.contains(NodeRowFeatures.RENDER_STATE)
                     val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
                     val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
+                    val MODAL = features.contains(NodeRowFeatures.MODAL)
                     val interactive = features.interactive()
                 }
             }
+        }
+    val relevance =
+        remember(treeState, treeNodeState, features) {
+            if (!hasFeature.MODAL) null
+            else
+                treeState?.mode?.relevance?.invoke(treeState, treeNodeState)
+                    ?: NodeRelevance.Relevant
         }
 
     @Composable
@@ -81,6 +90,7 @@ fun NodeRow(
                 }
             NodeDetail(
                 label,
+                relevance = relevance,
                 isValidReference = treeNodeState.value.isValidReference,
                 buildLabelString = buildLabelString,
                 textModifier = textModifier(),
@@ -95,6 +105,7 @@ fun NodeRow(
             NodeInteractions(
                 treeState,
                 treeNodeState,
+                relevance,
                 adjacentTreeNodeStates,
                 features,
                 nodeActions,

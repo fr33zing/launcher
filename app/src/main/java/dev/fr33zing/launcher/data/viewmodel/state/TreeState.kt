@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.reflect.jvm.jvmName
 
 @Immutable
 data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
@@ -68,9 +69,20 @@ data class TreeState(
     val normalState: NormalState = NormalState(),
     val batchState: BatchState? = null
 ) {
-    enum class Mode {
-        Normal,
-        Batch
+    //
+    // Classes
+    //
+
+    enum class Mode(val relevance: (TreeState, TreeNodeState) -> NodeRelevance) {
+        Normal({ _, _ -> NodeRelevance.Relevant }),
+        Batch({ treeState, treeNodeState ->
+            val nodeParentId = treeNodeState.value.underlyingState.node.parentId
+            val batchParentId = treeState.batchState?.parentId
+            val relevant =
+                nodeParentId != null && batchParentId != null && nodeParentId == batchParentId
+
+            if (relevant) NodeRelevance.Relevant else NodeRelevance.Irrelevant
+        })
     }
 
     @Immutable data class NormalState(val selectedKey: TreeNodeKey? = null)
@@ -80,6 +92,22 @@ data class TreeState(
         val parentId: Int = ROOT_NODE_ID,
         val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap()
     )
+
+    //
+    // Functions
+    //
+
+    fun isBatchSelected(key: TreeNodeKey): Boolean =
+        modeState<BatchState>().selectedKeys.getOrDefault(key, false)
+
+    private inline fun <reified T> modeState(): T =
+        when (T::class) {
+            BatchState::class -> {
+                expectMode(Mode.Batch)
+                batchState as? T ?: throw InvalidModeStateValueException(Mode.Batch)
+            }
+            else -> throw InvalidModeStateClassException(T::class.simpleName ?: T::class.jvmName)
+        }
 
     fun expectMode(expectedMode: Mode) {
         if (mode != expectedMode) throw UnexpectedModeException(mode, expectedMode)
@@ -121,13 +149,22 @@ data class TreeState(
     private fun invalidModeChange(nextMode: Mode): Nothing =
         throw InvalidModeChangeException(mode, nextMode)
 
-    private class UnexpectedModeException(mode: Mode, expectedMode: Mode) :
+    //
+    // Exceptions
+    //
+
+    class UnexpectedModeException(mode: Mode, expectedMode: Mode) :
         Exception("Tree is in $mode mode when $expectedMode mode is expected")
 
-    private class SameModeException(mode: Mode) : Exception("Tree is already in $mode mode")
+    class SameModeException(mode: Mode) : Exception("Tree is already in $mode mode")
 
-    private class InvalidModeChangeException(mode: Mode, nextMode: Mode) :
+    class InvalidModeChangeException(mode: Mode, nextMode: Mode) :
         Exception("Tree cannot change from $mode mode to $nextMode mode")
+
+    class InvalidModeStateValueException(mode: Mode) : Exception("Invalid state for $mode mode")
+
+    class InvalidModeStateClassException(className: String) :
+        Exception("Class $className does not match any modes")
 }
 
 @Immutable
