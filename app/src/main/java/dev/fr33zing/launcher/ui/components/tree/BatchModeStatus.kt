@@ -64,7 +64,7 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 private val verticalPadding = 8.dp
 
 @Composable
-fun MultiSelectStatusBar(treeState: TreeState) {
+fun BatchModeStatus(treeState: TreeState) {
     val interactionSource = remember { MutableInteractionSource() }
     val openMenuIndication = rememberCustomIndication(circular = true, circularSizeFactor = 1f)
     val preferences = Preferences(LocalContext.current)
@@ -72,7 +72,7 @@ fun MultiSelectStatusBar(treeState: TreeState) {
     val showMenu = remember { mutableStateOf(false) }
 
     AnimatedVisibility(
-        visible = treeState.batchState != null,
+        visible = treeState.mode == TreeState.Mode.Batch && treeState.batchState != null,
         enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
         exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
     ) {

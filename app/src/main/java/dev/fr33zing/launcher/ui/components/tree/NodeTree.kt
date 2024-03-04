@@ -284,7 +284,7 @@ fun NodeTree(
             }
         }
 
-        MultiSelectStatusBar(treeState)
+        BatchModeStatus(treeState)
 
         LazyColumn(
             state = lazyListState,
