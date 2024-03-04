@@ -47,6 +47,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.ActionButton
 import dev.fr33zing.launcher.ui.components.ActionButtonSpacing
 import dev.fr33zing.launcher.ui.components.ActionButtonVerticalPadding
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalTopBar
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
@@ -284,7 +285,11 @@ fun NodeTree(
             }
         }
 
-        BatchModeStatus(treeState)
+        //
+        // Content
+        //
+
+        ModalTopBar(treeState)
 
         LazyColumn(
             state = lazyListState,

@@ -1,4 +1,4 @@
-package dev.fr33zing.launcher.ui.components.tree
+package dev.fr33zing.launcher.ui.components.tree.old
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
