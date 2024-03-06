@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.DriveFileMove
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Icon
@@ -16,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.data.viewmodel.state.selectedCount
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButton
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButtonRow
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
@@ -41,9 +43,23 @@ fun BatchTopBar(treeState: TreeState) {
 
 @Composable
 fun BatchBottomBar(treeState: TreeState) {
+    val selectedCount = remember(treeState) { treeState.batchState.selectedCount() }
+    val anySelected = remember(selectedCount) { selectedCount > 0 }
+
     ModalActionButtonRow {
-        ModalActionButton(label = "Select all", icon = Icons.Outlined.SelectAll) {}
-        ModalActionButton(label = "Move", icon = Icons.Outlined.DriveFileMove) {}
-        ModalActionButton(label = "Trash", icon = Icons.Outlined.DeleteOutline) {}
+        ModalActionButton(
+            label = if (anySelected) "Deselect all" else "Select all",
+            icon = if (anySelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll
+        ) {}
+        ModalActionButton(
+            label = "Move",
+            icon = Icons.Outlined.DriveFileMove,
+            enabled = anySelected,
+        ) {}
+        ModalActionButton(
+            label = "Trash",
+            icon = Icons.Outlined.DeleteOutline,
+            enabled = anySelected,
+        ) {}
     }
 }

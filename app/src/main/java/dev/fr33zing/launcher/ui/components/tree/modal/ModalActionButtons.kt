@@ -1,5 +1,10 @@
 package dev.fr33zing.launcher.ui.components.tree.modal
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -9,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +27,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import kotlin.math.roundToInt
 
@@ -33,6 +40,7 @@ fun ModalActionButton(
     label: String,
     icon: ImageVector,
     color: Color = Foreground,
+    enabled: Boolean = true,
     action: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -40,28 +48,47 @@ fun ModalActionButton(
         rememberCustomIndication(color = color, circular = true, circularSizeFactor = 1.15f)
     val density = LocalDensity.current
     val fontSizeDp = remember { with(density) { fontSize.toDp() } }
+    val animatedColor by
+        animateColorAsState(
+            targetValue = if (enabled) color else color.dim(0.6f),
+            label = "modal action button color"
+        )
 
     ModalActionButtonLayout(
         Modifier.clickable(
+            enabled = enabled,
             interactionSource = interactionSource,
             indication = indication,
             onClick = action
         )
     ) {
-        Icon(
-            icon,
-            label,
-            tint = color,
-            modifier = Modifier.size(fontSizeDp * 1.5f),
-        )
-        Text(
-            label,
-            fontSize = fontSize,
-            color = color,
-            overflow = TextOverflow.Visible,
-            softWrap = false,
-            textAlign = TextAlign.Center,
-        )
+        AnimatedContent(
+            targetState = icon,
+            label = "modal action button icon",
+            transitionSpec = { fadeIn().togetherWith(fadeOut()) }
+        ) { icon ->
+            Icon(
+                icon,
+                label,
+                tint = animatedColor,
+                modifier = Modifier.size(fontSizeDp * 1.5f),
+            )
+        }
+
+        AnimatedContent(
+            targetState = label,
+            label = "modal action button label",
+            transitionSpec = { fadeIn().togetherWith(fadeOut()) }
+        ) { label ->
+            Text(
+                label,
+                fontSize = fontSize,
+                color = animatedColor,
+                overflow = TextOverflow.Visible,
+                softWrap = false,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

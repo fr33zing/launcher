@@ -63,6 +63,8 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
     }
 }
 
+fun TreeState.BatchState?.selectedCount() = this?.selectedKeys?.count { it.value } ?: 0
+
 @Immutable
 data class TreeState(
     val mode: Mode = Mode.Normal,
