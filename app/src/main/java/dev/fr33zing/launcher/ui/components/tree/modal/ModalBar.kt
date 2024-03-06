@@ -51,9 +51,6 @@ private fun modalTopBarContent(treeState: TreeState): (@Composable RowScope.() -
 
 private fun modalBottomBarContent(treeState: TreeState): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
-        TreeState.Mode.Batch -> {
-            { BatchTopBar(treeState) }
-        }
         else -> null
     }
 
