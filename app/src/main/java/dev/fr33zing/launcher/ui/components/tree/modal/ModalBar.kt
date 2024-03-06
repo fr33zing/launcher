@@ -120,19 +120,18 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState) {
 @Composable
 private fun BatchTopBar(treeState: TreeState) {
     val interactionSource = remember { MutableInteractionSource() }
-    val openMenuIndication = rememberCustomIndication(circular = true, circularSizeFactor = 1f)
-    val showMenu = remember { mutableStateOf(false) }
+    val indication = rememberCustomIndication(circular = true, circularSizeFactor = 1f)
 
+    val showMenu = remember { mutableStateOf(false) }
     val selectedCount =
         remember(treeState) { treeState.batchState?.selectedKeys?.count { it.value } ?: 0 }
-    Text("$selectedCount items selected", fontWeight = FontWeight.Bold)
 
+    Text("$selectedCount items selected", fontWeight = FontWeight.Bold)
     Box {
         Icon(
             Icons.Filled.MoreHoriz,
             contentDescription = "menu button",
-            modifier =
-                Modifier.clickable(interactionSource, openMenuIndication) { showMenu.value = true }
+            modifier = Modifier.clickable(interactionSource, indication) { showMenu.value = true }
         )
     }
 }
