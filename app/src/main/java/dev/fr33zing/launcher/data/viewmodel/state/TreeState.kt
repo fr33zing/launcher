@@ -208,7 +208,6 @@ class TreeStateHolder(private val db: AppDatabase, rootNodeId: Int = ROOT_NODE_I
 
     fun onClearSelectedNode() =
         _stateFlow.update { treeState ->
-            treeState.expectMode(TreeState.Mode.Normal)
             treeState.copy(normalState = treeState.normalState.copy(selectedKey = null))
         }
 
