@@ -30,6 +30,7 @@ import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedConte
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalClearStateDelay
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.modalFiniteAnimationSpec
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.utility.conditional
 import kotlinx.coroutines.delay
 
 private val verticalPadding = 8.dp
@@ -103,7 +104,12 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState) {
                                 horizontal = ScreenHorizontalPadding,
                                 vertical = verticalPadding
                             )
-                            .absolutePadding(top = spacing / 2)
+                            .conditional(position == ModalBarPosition.Top) {
+                                absolutePadding(top = spacing / 2)
+                            }
+                            .conditional(position == ModalBarPosition.Bottom) {
+                                absolutePadding(bottom = spacing / 2)
+                            }
                 )
         }
     }

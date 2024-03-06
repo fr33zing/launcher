@@ -5,6 +5,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.DriveFileMove
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButton
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButtonRow
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
@@ -34,4 +39,11 @@ fun BatchTopBar(treeState: TreeState) {
     }
 }
 
-@Composable fun BatchBottomBar(treeState: TreeState) {}
+@Composable
+fun BatchBottomBar(treeState: TreeState) {
+    ModalActionButtonRow {
+        ModalActionButton(label = "Select all", icon = Icons.Outlined.SelectAll) {}
+        ModalActionButton(label = "Move", icon = Icons.Outlined.DriveFileMove) {}
+        ModalActionButton(label = "Trash", icon = Icons.Outlined.DeleteOutline) {}
+    }
+}
