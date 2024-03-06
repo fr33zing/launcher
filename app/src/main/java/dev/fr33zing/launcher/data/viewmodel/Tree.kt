@@ -20,7 +20,6 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeStateHolder
 import dev.fr33zing.launcher.nodeId
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,6 +33,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private data class JumpToNodeEvent(
     val nodeId: Int,
@@ -96,7 +96,7 @@ constructor(
             .map { if (it?.highlight == true) it.key else null }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
-    private val stateHolder = TreeStateHolder(db, rootNodeId)
+    private val stateHolder = TreeStateHolder(db, rootNodeId, viewModelScope)
     private var shouldStaggerFlow = mutableStateOf(true)
 
     private val _scrollToKeyFlow = MutableStateFlow<ScrollToKeyEvent?>(null)
@@ -129,11 +129,15 @@ constructor(
 
     fun clearSelectedNode() = stateHolder.onClearSelectedNode()
 
-    fun beginMultiSelect() = stateHolder.onBeginMultiSelect()
+    fun beginBatchSelect() = stateHolder.onBeginBatchSelect()
 
-    fun endMultiSelect() = stateHolder.onEndMultiSelect()
+    fun endBatchSelect() = stateHolder.onEndBatchSelect()
 
-    fun toggleNodeMultiSelected(key: TreeNodeKey) = stateHolder.onToggleNodeMultiSelected(key)
+    fun batchSelectAll() = stateHolder.onBatchSelectAll()
+
+    fun batchDeselectAll() = stateHolder.onBatchDeselectAll()
+
+    fun toggleNodeBatchSelected(key: TreeNodeKey) = stateHolder.onToggleNodeBatchSelected(key)
 
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {

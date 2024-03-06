@@ -15,6 +15,7 @@ import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.tree.NodeActions
 import dev.fr33zing.launcher.ui.components.tree.NodeTree
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarActions
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
@@ -35,7 +36,13 @@ fun Tree(
             edit = navigateTo.edit,
             create = navigateTo.create,
             viewNote = navigateTo.viewNote,
-            beginMultiSelect = viewModel::beginMultiSelect,
+            beginBatchSelect = viewModel::beginBatchSelect,
+        )
+    }
+    val modalBarActions = remember {
+        ModalBarActions(
+            batchSelectAll = viewModel::batchSelectAll,
+            batchDeselectAll = viewModel::batchDeselectAll
         )
     }
 
@@ -65,11 +72,12 @@ fun Tree(
             onActivatePayload = ::activatePayload,
             onSelectNode = viewModel::selectNode,
             onClearSelectedNode = viewModel::clearSelectedNode,
-            onToggleNodeMultiSelected = viewModel::toggleNodeMultiSelected,
-            onEndMultiSelect = viewModel::endMultiSelect,
+            onToggleNodeBatchSelected = viewModel::toggleNodeBatchSelected,
+            onEndBatchSelect = viewModel::endBatchSelect,
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,
+            modalBarActions = modalBarActions,
         )
     }
 }

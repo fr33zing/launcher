@@ -33,8 +33,8 @@ import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalNodeComponents
 import dev.fr33zing.launcher.ui.components.tree.modal.modalNodeContainerModifier
-import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalActions
-import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalArguments
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeActions
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
@@ -80,7 +80,7 @@ fun NodeInteractions(
         }
     val treeMode = remember(treeState) { treeState?.mode ?: TreeState.Mode.Normal }
     val treeModeSpecificActions = remember { // TODO maybe move this to NodeRow?
-        ModalActions(
+        ModalNodeActions(
             activatePayload = onActivatePayload,
             selectNode = onSelectNode,
             clearSelectedNode = onClearSelectedNode,
@@ -90,7 +90,7 @@ fun NodeInteractions(
     val modalArguments =
         remember(treeState) {
             if (treeState == null || relevance == null) null
-            else ModalArguments(treeModeSpecificActions, treeState, treeNodeState, relevance)
+            else ModalNodeArguments(treeModeSpecificActions, treeState, treeNodeState, relevance)
         }
 
     val activatePayload by rememberUpdatedState {

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +36,10 @@ import kotlinx.coroutines.delay
 
 private val verticalPadding = 8.dp
 
-private fun modalTopBarContent(treeState: TreeState): (@Composable RowScope.() -> Unit)? =
+private fun modalTopBarContent(
+    treeState: TreeState,
+    actions: ModalBarActions
+): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
         TreeState.Mode.Batch -> {
             { BatchTopBar(treeState) }
@@ -43,16 +47,25 @@ private fun modalTopBarContent(treeState: TreeState): (@Composable RowScope.() -
         else -> null
     }
 
-private fun modalBottomBarContent(treeState: TreeState): (@Composable RowScope.() -> Unit)? =
+private fun modalBottomBarContent(
+    treeState: TreeState,
+    actions: ModalBarActions
+): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
         TreeState.Mode.Batch -> {
-            { BatchBottomBar(treeState) }
+            { BatchBottomBar(treeState, actions) }
         }
         else -> null
     }
 
+@Immutable
+data class ModalBarActions(
+    val batchSelectAll: () -> Unit,
+    val batchDeselectAll: () -> Unit,
+)
+
 enum class ModalBarPosition(
-    val content: (TreeState) -> (@Composable RowScope.() -> Unit)?,
+    val content: (TreeState, ModalBarActions) -> (@Composable RowScope.() -> Unit)?,
     val expandFrom: Alignment.Vertical,
 ) {
     Top(::modalTopBarContent, Alignment.Bottom),
@@ -62,7 +75,7 @@ enum class ModalBarPosition(
 }
 
 @Composable
-fun ModalBar(position: ModalBarPosition, treeState: TreeState) {
+fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalBarActions) {
     val preferences = Preferences(LocalContext.current)
     val spacing by preferences.nodeAppearance.spacing.state
 
@@ -71,7 +84,7 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(treeState) {
         if (treeState.mode != TreeState.Mode.Normal) {
-            contentState = position.content(treeState)
+            contentState = position.content(treeState, actions)
             visible = true
         } else {
             visible = false

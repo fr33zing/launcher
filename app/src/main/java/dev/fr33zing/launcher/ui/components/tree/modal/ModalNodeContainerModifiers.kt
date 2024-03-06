@@ -13,14 +13,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalArguments
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
-fun Modifier.modalNodeContainerModifier(arguments: ModalArguments) =
+fun Modifier.modalNodeContainerModifier(arguments: ModalNodeArguments) =
     when (arguments.treeState.mode) {
         TreeState.Mode.Normal -> normalModifier(arguments)
         TreeState.Mode.Batch -> batchModifier(arguments)
@@ -31,7 +31,7 @@ fun Modifier.modalNodeContainerModifier(arguments: ModalArguments) =
 //
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun Modifier.normalModifier(arguments: ModalArguments) = composed {
+private fun Modifier.normalModifier(arguments: ModalNodeArguments) = composed {
     val (actions, _, treeNodeState, _) = arguments
     val interactionSource = remember { MutableInteractionSource() }
     val indication =
@@ -68,7 +68,7 @@ private fun Modifier.normalModifier(arguments: ModalArguments) = composed {
 
 private val batchSelectedColor = Foreground.dim(0.8f)
 
-private fun Modifier.batchModifier(arguments: ModalArguments) = composed {
+private fun Modifier.batchModifier(arguments: ModalNodeArguments) = composed {
     val (actions, treeState, treeNodeState, relevance) = arguments
 
     if (relevance != NodeRelevance.Relevant) return@composed this

@@ -18,12 +18,12 @@ import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
-import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalArguments
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.dim
 
 @Composable
-fun ModalNodeComponents(arguments: ModalArguments) {
+fun ModalNodeComponents(arguments: ModalNodeArguments) {
     Box(Modifier.padding(horizontal = 16.dp)) {
         ModalAnimatedContent(
             state = arguments,
@@ -45,7 +45,7 @@ fun ModalNodeComponents(arguments: ModalArguments) {
 private val indeterminateCheckboxColor = Foreground.dim(0.85f)
 
 @Composable
-private fun BatchCheckbox(arguments: ModalArguments) {
+private fun BatchCheckbox(arguments: ModalNodeArguments) {
     val (_, treeState, treeNodeState, _) = arguments
 
     val selected = remember(arguments) { treeState.isBatchSelected(treeNodeState.key) }

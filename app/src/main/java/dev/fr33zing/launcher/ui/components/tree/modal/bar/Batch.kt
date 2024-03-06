@@ -20,6 +20,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.selectedCount
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButton
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButtonRow
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarActions
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
@@ -42,15 +43,16 @@ fun BatchTopBar(treeState: TreeState) {
 }
 
 @Composable
-fun BatchBottomBar(treeState: TreeState) {
+fun BatchBottomBar(treeState: TreeState, actions: ModalBarActions) {
     val selectedCount = remember(treeState) { treeState.batchState.selectedCount() }
     val anySelected = remember(selectedCount) { selectedCount > 0 }
 
     ModalActionButtonRow {
         ModalActionButton(
             label = if (anySelected) "Deselect all" else "Select all",
-            icon = if (anySelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll
-        ) {}
+            icon = if (anySelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll,
+            action = if (anySelected) actions.batchDeselectAll else actions.batchSelectAll
+        )
         ModalActionButton(
             label = "Move",
             icon = Icons.Outlined.DriveFileMove,

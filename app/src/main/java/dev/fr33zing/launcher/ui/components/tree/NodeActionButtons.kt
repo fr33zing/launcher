@@ -62,7 +62,7 @@ class NodeActions(
     val edit: (Int) -> Unit,
     val create: (Int) -> Unit,
     val viewNote: (Int) -> Unit,
-    val beginMultiSelect: () -> Unit,
+    val beginBatchSelect: () -> Unit,
 )
 
 @Immutable
@@ -87,7 +87,7 @@ class NodeActionButtonKind(
                     icon = Icons.Outlined.SelectAll,
                     visible = { true },
                 ) { (_, actions) ->
-                    ActionButton { actions.beginMultiSelect() }
+                    ActionButton { actions.beginBatchSelect() }
                 },
 
                 // Move node to trash
