@@ -2,6 +2,7 @@ package dev.fr33zing.launcher.ui.components.tree.modal
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -34,6 +35,7 @@ import kotlin.math.roundToInt
 private val fontSize = 14.sp
 private val rowHeight = 44.dp
 private val rowVerticalPadding = 8.dp
+private const val ANIMATION_DURATION = 125
 
 @Composable
 fun ModalActionButton(
@@ -51,7 +53,8 @@ fun ModalActionButton(
     val animatedColor by
         animateColorAsState(
             targetValue = if (enabled) color else color.dim(0.6f),
-            label = "modal action button color"
+            label = "modal action button color",
+            animationSpec = tween(ANIMATION_DURATION),
         )
 
     ModalActionButtonLayout(
@@ -65,7 +68,9 @@ fun ModalActionButton(
         AnimatedContent(
             targetState = icon,
             label = "modal action button icon",
-            transitionSpec = { fadeIn().togetherWith(fadeOut()) }
+            transitionSpec = {
+                fadeIn(tween(ANIMATION_DURATION)).togetherWith(fadeOut(tween(ANIMATION_DURATION)))
+            }
         ) { icon ->
             Icon(
                 icon,
@@ -78,7 +83,9 @@ fun ModalActionButton(
         AnimatedContent(
             targetState = label,
             label = "modal action button label",
-            transitionSpec = { fadeIn().togetherWith(fadeOut()) }
+            transitionSpec = {
+                fadeIn(tween(ANIMATION_DURATION)).togetherWith(fadeOut(tween(ANIMATION_DURATION)))
+            }
         ) { label ->
             Text(
                 label,
