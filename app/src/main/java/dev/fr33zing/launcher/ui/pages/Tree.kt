@@ -41,8 +41,9 @@ fun Tree(
     }
     val modalBarActions = remember {
         ModalBarActions(
+            endBatchSelect = viewModel::endBatchSelect,
             batchSelectAll = viewModel::batchSelectAll,
-            batchDeselectAll = viewModel::batchDeselectAll
+            batchDeselectAll = viewModel::batchDeselectAll,
         )
     }
 

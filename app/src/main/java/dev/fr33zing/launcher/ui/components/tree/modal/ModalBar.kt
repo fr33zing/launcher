@@ -42,7 +42,7 @@ private fun modalTopBarContent(
 ): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
         TreeState.Mode.Batch -> {
-            { BatchTopBar(treeState) }
+            { BatchTopBar(treeState, actions) }
         }
         else -> null
     }
@@ -60,6 +60,7 @@ private fun modalBottomBarContent(
 
 @Immutable
 data class ModalBarActions(
+    val endBatchSelect: () -> Unit,
     val batchSelectAll: () -> Unit,
     val batchDeselectAll: () -> Unit,
 )
