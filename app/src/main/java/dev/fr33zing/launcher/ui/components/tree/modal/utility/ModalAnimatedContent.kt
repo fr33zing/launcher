@@ -14,9 +14,9 @@ import androidx.compose.ui.Alignment
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 
 private const val inDuration = 220
-private const val outDuration = 90
-private const val inDelay = 90
-private const val outDelayShort = 220
+private const val outDuration = 100
+private const val inDelay = 0
+private const val outDelayShort = 0
 private const val outDelayLong = 1000
 
 const val ModalClearStateDelay = outDelayLong.toLong()
@@ -44,11 +44,11 @@ fun <S> ModalAnimatedContent(
     state: S,
     mode: (S) -> TreeState.Mode,
     label: String,
-    content: @Composable() (AnimatedContentScope.(targetState: S) -> Unit)
+    content: @Composable (AnimatedContentScope.(targetState: S) -> Unit)
 ) =
     AnimatedContent(
         targetState = state,
-        contentKey = mode,
+        contentKey = { mode(it) },
         label = label,
         contentAlignment = Alignment.Center,
         transitionSpec = modalAnimatedContentTransitionSpec(mode),

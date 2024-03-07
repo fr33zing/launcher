@@ -5,6 +5,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.West
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButton
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButtonRow
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActions
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
@@ -35,5 +39,19 @@ fun MoveTopBar(treeState: TreeState, actions: ModalActions) {
             modifier =
                 Modifier.clickable(interactionSource, indication, onClick = actions.endBatchMove)
         )
+    }
+}
+
+@Composable
+fun MoveBottomBar(treeState: TreeState, actions: ModalActions) {
+    ModalActionButtonRow {
+        ModalActionButton(
+            label = "Selection",
+            icon = Icons.Outlined.West,
+        ) {}
+        ModalActionButton(
+            label = "Browse",
+            icon = Icons.Outlined.List,
+        ) {}
     }
 }

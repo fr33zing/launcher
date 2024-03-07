@@ -8,7 +8,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +27,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchBottomBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchTopBar
+import dev.fr33zing.launcher.ui.components.tree.modal.bar.MoveBottomBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.MoveTopBar
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalClearStateDelay
@@ -38,29 +38,20 @@ import kotlinx.coroutines.delay
 
 private val verticalPadding = 8.dp
 
-private fun modalTopBarContent(
-    treeState: TreeState,
-    actions: ModalActions
-): (@Composable RowScope.() -> Unit)? =
+@Composable
+private fun ModalTopBarContent(treeState: TreeState, actions: ModalActions): Unit =
     when (treeState.mode) {
-        TreeState.Mode.Batch -> {
-            { BatchTopBar(treeState, actions) }
-        }
-        TreeState.Mode.Move -> {
-            { MoveTopBar(treeState, actions) }
-        }
-        else -> null
+        TreeState.Mode.Batch -> BatchTopBar(treeState, actions)
+        TreeState.Mode.Move -> MoveTopBar(treeState, actions)
+        else -> {}
     }
 
-private fun modalBottomBarContent(
-    treeState: TreeState,
-    actions: ModalActions
-): (@Composable RowScope.() -> Unit)? =
+@Composable
+private fun ModalBottomBarContent(treeState: TreeState, actions: ModalActions): Unit =
     when (treeState.mode) {
-        TreeState.Mode.Batch -> {
-            { BatchBottomBar(treeState, actions) }
-        }
-        else -> null
+        TreeState.Mode.Batch -> BatchBottomBar(treeState, actions)
+        TreeState.Mode.Move -> MoveBottomBar(treeState, actions)
+        else -> {}
     }
 
 @Immutable
@@ -73,11 +64,10 @@ data class ModalActions(
 )
 
 enum class ModalBarPosition(
-    val content: (TreeState, ModalActions) -> (@Composable RowScope.() -> Unit)?,
     val expandFrom: Alignment.Vertical,
 ) {
-    Top(::modalTopBarContent, Alignment.Bottom),
-    Bottom(::modalBottomBarContent, Alignment.Top);
+    Top(Alignment.Bottom),
+    Bottom(Alignment.Top);
 
     val shrinkTowards = expandFrom
 }
@@ -88,16 +78,13 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalAct
     val spacing by preferences.nodeAppearance.spacing.state
 
     // Keep content during hide animation
-    var contentState by remember { mutableStateOf<@Composable (RowScope.() -> Unit)?>(null) }
     var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(treeState) {
+    LaunchedEffect(treeState.mode) {
         if (treeState.mode != TreeState.Mode.Normal) {
-            contentState = position.content(treeState, actions)
             visible = true
         } else {
             visible = false
             delay(ModalClearStateDelay)
-            contentState = null
         }
     }
 
@@ -109,30 +96,35 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalAct
         enter = fadeIn(floatAnimSpec) + expandVertically(intSizeAnimSpec, position.expandFrom),
         exit = fadeOut(floatAnimSpec) + shrinkVertically(intSizeAnimSpec, position.shrinkTowards),
     ) {
-        ModalAnimatedContent(
-            state = treeState,
-            mode = { it.mode },
-            label = "modal bar: ${position.name}",
-        ) {
-            if (contentState != null)
-                Row(
-                    content = contentState!!,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(
-                                horizontal = ScreenHorizontalPadding,
-                                vertical = verticalPadding
-                            )
-                            .conditional(position == ModalBarPosition.Top) {
-                                absolutePadding(top = spacing / 2)
+        Box {
+            ModalAnimatedContent(
+                state = treeState,
+                mode = { it.mode },
+                label = "modal bar: ${position.name}",
+            ) {
+                Box(
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = ScreenHorizontalPadding, vertical = verticalPadding)
+                        .conditional(position == ModalBarPosition.Top) {
+                            absolutePadding(top = spacing / 2)
+                        }
+                        .conditional(position == ModalBarPosition.Bottom) {
+                            absolutePadding(bottom = spacing / 2)
+                        }
+                ) {
+                    when (position) {
+                        ModalBarPosition.Top ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                ModalTopBarContent(it, actions)
                             }
-                            .conditional(position == ModalBarPosition.Bottom) {
-                                absolutePadding(bottom = spacing / 2)
-                            }
-                )
-            else Box(Modifier.fillMaxWidth())
+                        ModalBarPosition.Bottom -> ModalBottomBarContent(it, actions)
+                    }
+                }
+            }
         }
     }
 }
