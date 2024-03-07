@@ -15,7 +15,7 @@ import dev.fr33zing.launcher.data.viewmodel.TreeViewModel
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.tree.NodeActions
 import dev.fr33zing.launcher.ui.components.tree.NodeTree
-import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarActions
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActions
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 
@@ -40,10 +40,12 @@ fun Tree(
         )
     }
     val modalBarActions = remember {
-        ModalBarActions(
+        ModalActions(
             endBatchSelect = viewModel::endBatchSelect,
             batchSelectAll = viewModel::batchSelectAll,
             batchDeselectAll = viewModel::batchDeselectAll,
+            beginBatchMove = viewModel::beginBatchMove,
+            endBatchMove = viewModel::endBatchMove,
         )
     }
 
@@ -74,11 +76,10 @@ fun Tree(
             onSelectNode = viewModel::selectNode,
             onClearSelectedNode = viewModel::clearSelectedNode,
             onToggleNodeBatchSelected = viewModel::toggleNodeBatchSelected,
-            onEndBatchSelect = viewModel::endBatchSelect,
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,
-            modalBarActions = modalBarActions,
+            modalActions = modalBarActions,
         )
     }
 }

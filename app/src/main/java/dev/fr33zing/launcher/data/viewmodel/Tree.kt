@@ -139,6 +139,10 @@ constructor(
 
     fun toggleNodeBatchSelected(key: TreeNodeKey) = stateHolder.onToggleNodeBatchSelected(key)
 
+    fun beginBatchMove() = stateHolder.onBeginBatchMove()
+
+    fun endBatchMove() = stateHolder.onEndBatchMove()
+
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             flow {

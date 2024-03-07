@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
+import dev.fr33zing.launcher.data.utility.unreachable
 import dev.fr33zing.launcher.data.viewmodel.ScrollToKeyEvent
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
@@ -47,8 +48,8 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.ActionButton
 import dev.fr33zing.launcher.ui.components.ActionButtonSpacing
 import dev.fr33zing.launcher.ui.components.ActionButtonVerticalPadding
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActions
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalBar
-import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarActions
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarPosition
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
@@ -90,7 +91,6 @@ fun NodeTree(
     onClearHighlightedNode: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     // Modal events
-    onEndBatchSelect: () -> Unit = {},
     onToggleNodeBatchSelected: (TreeNodeKey) -> Unit = {},
     // Scrolling
     setScrollToKeyCallback: ((ScrollToKeyEvent) -> Unit) -> Unit,
@@ -99,7 +99,7 @@ fun NodeTree(
     paddingAndShadowHeight: PaddingAndShadowHeight = rememberPaddingAndShadowHeight(),
     features: NodeRowFeatureSet = NodeRowFeatures.All,
     nodeActions: NodeActions? = null,
-    modalBarActions: ModalBarActions? = null,
+    modalActions: ModalActions? = null,
     lazyListState: LazyListState = rememberLazyListState(),
 ) {
     val (paddingHeight, shadowHeight) = paddingAndShadowHeight
@@ -194,7 +194,13 @@ fun NodeTree(
 
     LaunchedEffect(Unit) { onClearSelectedNode() }
 
-    BackHandler(enabled = treeState.mode == TreeState.Mode.Batch) { onEndBatchSelect() }
+    BackHandler(enabled = treeState.mode != TreeState.Mode.Normal) {
+        when (treeState.mode) {
+            TreeState.Mode.Normal -> unreachable { "BackHandler should be disabled" }
+            TreeState.Mode.Batch -> modalActions?.endBatchSelect?.invoke()
+            TreeState.Mode.Move -> modalActions?.endBatchMove?.invoke()
+        }
+    }
 
     Column(
         modifier =
@@ -293,7 +299,7 @@ fun NodeTree(
         // Content
         //
 
-        modalBarActions?.let { ModalBar(ModalBarPosition.Top, treeState, modalBarActions) }
+        modalActions?.let { ModalBar(ModalBarPosition.Top, treeState, modalActions) }
 
         LazyColumn(
             state = lazyListState,
@@ -312,6 +318,6 @@ fun NodeTree(
             performQueuedScrollToKey()
         }
 
-        modalBarActions?.let { ModalBar(ModalBarPosition.Bottom, treeState, modalBarActions) }
+        modalActions?.let { ModalBar(ModalBarPosition.Bottom, treeState, modalActions) }
     }
 }

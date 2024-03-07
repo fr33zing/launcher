@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.absolutePadding
@@ -27,6 +28,7 @@ import dev.fr33zing.launcher.data.persistent.Preferences
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchBottomBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchTopBar
+import dev.fr33zing.launcher.ui.components.tree.modal.bar.MoveTopBar
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalClearStateDelay
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.modalFiniteAnimationSpec
@@ -38,18 +40,21 @@ private val verticalPadding = 8.dp
 
 private fun modalTopBarContent(
     treeState: TreeState,
-    actions: ModalBarActions
+    actions: ModalActions
 ): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
         TreeState.Mode.Batch -> {
             { BatchTopBar(treeState, actions) }
+        }
+        TreeState.Mode.Move -> {
+            { MoveTopBar(treeState, actions) }
         }
         else -> null
     }
 
 private fun modalBottomBarContent(
     treeState: TreeState,
-    actions: ModalBarActions
+    actions: ModalActions
 ): (@Composable RowScope.() -> Unit)? =
     when (treeState.mode) {
         TreeState.Mode.Batch -> {
@@ -59,14 +64,16 @@ private fun modalBottomBarContent(
     }
 
 @Immutable
-data class ModalBarActions(
+data class ModalActions(
     val endBatchSelect: () -> Unit,
     val batchSelectAll: () -> Unit,
     val batchDeselectAll: () -> Unit,
+    val beginBatchMove: () -> Unit,
+    val endBatchMove: () -> Unit,
 )
 
 enum class ModalBarPosition(
-    val content: (TreeState, ModalBarActions) -> (@Composable RowScope.() -> Unit)?,
+    val content: (TreeState, ModalActions) -> (@Composable RowScope.() -> Unit)?,
     val expandFrom: Alignment.Vertical,
 ) {
     Top(::modalTopBarContent, Alignment.Bottom),
@@ -76,7 +83,7 @@ enum class ModalBarPosition(
 }
 
 @Composable
-fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalBarActions) {
+fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalActions) {
     val preferences = Preferences(LocalContext.current)
     val spacing by preferences.nodeAppearance.spacing.state
 
@@ -125,6 +132,7 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalBar
                                 absolutePadding(bottom = spacing / 2)
                             }
                 )
+            else Box(Modifier.fillMaxWidth())
         }
     }
 }

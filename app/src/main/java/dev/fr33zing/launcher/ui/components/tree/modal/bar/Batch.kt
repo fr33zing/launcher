@@ -19,14 +19,14 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.data.viewmodel.state.selectedCount
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButton
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalActionButtonRow
-import dev.fr33zing.launcher.ui.components.tree.modal.ModalBarActions
+import dev.fr33zing.launcher.ui.components.tree.modal.ModalActions
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 private val closeButtonColor = Catppuccin.Current.red
 
 @Composable
-fun BatchTopBar(treeState: TreeState, actions: ModalBarActions) {
+fun BatchTopBar(treeState: TreeState, actions: ModalActions) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication =
         rememberCustomIndication(circular = true, circularSizeFactor = 1f, color = closeButtonColor)
@@ -50,7 +50,7 @@ fun BatchTopBar(treeState: TreeState, actions: ModalBarActions) {
 }
 
 @Composable
-fun BatchBottomBar(treeState: TreeState, actions: ModalBarActions) {
+fun BatchBottomBar(treeState: TreeState, actions: ModalActions) {
     val selectedCount = remember(treeState) { treeState.batchState.selectedCount() }
     val anySelected = remember(selectedCount) { selectedCount > 0 }
 
@@ -64,7 +64,8 @@ fun BatchBottomBar(treeState: TreeState, actions: ModalBarActions) {
             label = "Move",
             icon = Icons.Outlined.DriveFileMove,
             enabled = anySelected,
-        ) {}
+            action = actions.beginBatchMove
+        )
         ModalActionButton(
             label = "Trash",
             icon = Icons.Outlined.DeleteOutline,

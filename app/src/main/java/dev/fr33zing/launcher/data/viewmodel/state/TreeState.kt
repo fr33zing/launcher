@@ -21,6 +21,7 @@ import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.utility.castOrNull
 import dev.fr33zing.launcher.data.utility.notNull
+import kotlin.reflect.jvm.jvmName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,7 +42,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.reflect.jvm.jvmName
 
 @Immutable
 data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
@@ -72,7 +72,8 @@ fun TreeState.BatchState?.selectedCount() = this?.selectedKeys?.count { it.value
 data class TreeState(
     val mode: Mode = Mode.Normal,
     val normalState: NormalState = NormalState(),
-    val batchState: BatchState? = null
+    val batchState: BatchState? = null,
+    val moveState: MoveState? = null,
 ) {
     //
     // Classes
@@ -87,6 +88,14 @@ data class TreeState(
                 nodeParentId != null && batchParentId != null && nodeParentId == batchParentId
 
             if (relevant) NodeRelevance.Relevant else NodeRelevance.Irrelevant
+        }),
+        Move({ treeState, treeNodeState ->
+            if (treeNodeState.value.node.nodeId == treeState.moveState!!.parentId)
+                NodeRelevance.Irrelevant
+            else if (treeState.moveState.movingKeys.getOrDefault(treeNodeState.key, false))
+                NodeRelevance.Irrelevant
+            else if (treeNodeState.value.node.kind == NodeKind.Directory) NodeRelevance.Relevant
+            else NodeRelevance.Disruptive
         })
     }
 
@@ -98,6 +107,12 @@ data class TreeState(
         val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap()
     )
 
+    @Immutable
+    data class MoveState(
+        val parentId: Int = ROOT_NODE_ID,
+        val movingKeys: Map<TreeNodeKey, Boolean> = emptyMap()
+    )
+
     //
     // Functions
     //
@@ -105,11 +120,18 @@ data class TreeState(
     fun isBatchSelected(key: TreeNodeKey): Boolean =
         modeState<BatchState>().selectedKeys.getOrDefault(key, false)
 
+    fun isMoving(key: TreeNodeKey): Boolean =
+        modeState<MoveState>().movingKeys.getOrDefault(key, false)
+
     inline fun <reified T> modeState(): T =
         when (T::class) {
             BatchState::class -> {
                 expectMode(Mode.Batch)
                 batchState as? T ?: throw InvalidModeStateValueException(Mode.Batch)
+            }
+            MoveState::class -> {
+                expectMode(Mode.Move)
+                moveState as? T ?: throw InvalidModeStateValueException(Mode.Move)
             }
             else -> throw InvalidModeStateClassException(T::class.simpleName ?: T::class.jvmName)
         }
@@ -130,23 +152,53 @@ data class TreeState(
                     Mode.Normal -> sameMode()
                     Mode.Batch ->
                         copy(
+                            normalState = NormalState(),
                             mode = Mode.Batch,
                             batchState = BatchState(),
-                            normalState = NormalState()
-                        )
-                }
-            }
-            Mode.Batch -> {
-                when (nextMode) {
-                    Mode.Normal ->
-                        copy(
-                            mode = Mode.Normal,
-                            normalState = NormalState(),
-                            batchState = null,
                         )
                     else -> invalidModeChange(nextMode)
                 }
             }
+            Mode.Batch -> {
+                when (nextMode) {
+                    Mode.Batch -> sameMode()
+                    Mode.Normal ->
+                        copy(
+                            batchState = null,
+                            mode = Mode.Normal,
+                            normalState = NormalState(),
+                        )
+                    Mode.Move ->
+                        copy(
+                            batchState = null,
+                            mode = Mode.Move,
+                            moveState =
+                                MoveState(
+                                    parentId = batchState!!.parentId,
+                                    movingKeys = batchState.selectedKeys
+                                )
+                        )
+                }
+            }
+            Mode.Move ->
+                when (nextMode) {
+                    Mode.Move -> sameMode()
+                    Mode.Normal ->
+                        copy(
+                            moveState = null,
+                            mode = Mode.Normal,
+                        )
+                    Mode.Batch ->
+                        copy(
+                            moveState = null,
+                            mode = Mode.Batch,
+                            batchState =
+                                BatchState(
+                                    parentId = moveState!!.parentId,
+                                    selectedKeys = moveState.movingKeys
+                                )
+                        )
+                }
         }
 
     private fun sameMode(): Nothing = throw SameModeException(mode)
@@ -274,6 +326,16 @@ class TreeStateHolder(
                 batchState =
                     treeState.modeState<TreeState.BatchState>().copy(selectedKeys = emptyMap())
             )
+        }
+
+    fun onBeginBatchMove() =
+        _stateFlow.update { treeState ->
+            treeState.changeMode(TreeState.Mode.Batch, TreeState.Mode.Move)
+        }
+
+    fun onEndBatchMove() =
+        _stateFlow.update { treeState ->
+            treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Batch)
         }
 
     private fun ensureKeyIsShown(targetKey: TreeNodeKey) {

@@ -1,7 +1,12 @@
 package dev.fr33zing.launcher.ui.components.tree
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -125,5 +130,17 @@ fun NodeRow(
             NodeAppearAnimation(appearAnimationProgress, content)
         else content()
 
-    Providers { Animation { Interactions { Detail() } } }
+    @Composable
+    fun Relevance(content: @Composable () -> Unit) =
+        if (relevance != null)
+            AnimatedVisibility(
+                visible = relevance != NodeRelevance.Disruptive,
+                enter = fadeIn() + expandVertically { -it },
+                exit = fadeOut() + shrinkVertically { -it },
+            ) {
+                content()
+            }
+        else content()
+
+    Providers { Animation { Relevance { Interactions { Detail() } } } }
 }

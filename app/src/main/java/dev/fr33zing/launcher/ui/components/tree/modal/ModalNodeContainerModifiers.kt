@@ -24,6 +24,7 @@ fun Modifier.modalNodeContainerModifier(arguments: ModalNodeArguments) =
     when (arguments.treeState.mode) {
         TreeState.Mode.Normal -> normalModifier(arguments)
         TreeState.Mode.Batch -> batchModifier(arguments)
+        TreeState.Mode.Move -> moveModifier(arguments)
     }
 
 //
@@ -82,3 +83,21 @@ private fun Modifier.batchModifier(arguments: ModalNodeArguments) = composed {
         }
         .conditional(selected) { background(batchSelectedColor) }
 }
+
+//
+// Move
+//
+
+private fun Modifier.moveModifier(arguments: ModalNodeArguments) =
+    conditional(arguments.relevance == NodeRelevance.Relevant) { normalModifier(arguments) }
+
+// private fun Modifier.moveModifier(arguments: ModalNodeArguments) = composed {
+//    val (_, treeState, treeNodeState, relevance) = arguments
+//
+//    if (relevance != NodeRelevance.Disruptive) return@composed this
+//
+//    val selected = treeState.isMoving(treeNodeState.key)
+//
+//    conditional(arguments.relevance == NodeRelevance.Relevant) { normalModifier(arguments) }
+//        .conditional(selected) { background(batchSelectedColor) }
+// }

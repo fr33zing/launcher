@@ -31,8 +31,8 @@ fun ModalNodeComponents(arguments: ModalNodeArguments) {
             label = "modal node components",
         ) { state ->
             when (state.treeState.mode) {
-                TreeState.Mode.Normal -> {}
                 TreeState.Mode.Batch -> BatchCheckbox(state)
+                else -> {}
             }
         }
     }
