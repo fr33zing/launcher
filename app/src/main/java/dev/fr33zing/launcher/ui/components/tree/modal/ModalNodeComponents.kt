@@ -3,8 +3,10 @@ package dev.fr33zing.launcher.ui.components.tree.modal
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.IndeterminateCheckBox
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
+import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.dim
 
@@ -31,7 +34,8 @@ fun ModalNodeComponents(arguments: ModalNodeArguments) {
             label = "modal node components",
         ) { state ->
             when (state.treeState.mode) {
-                TreeState.Mode.Batch -> BatchCheckbox(state)
+                TreeState.Mode.Batch -> Batch(state)
+                TreeState.Mode.Move -> Move(state)
                 else -> {}
             }
         }
@@ -45,7 +49,7 @@ fun ModalNodeComponents(arguments: ModalNodeArguments) {
 private val indeterminateCheckboxColor = Foreground.dim(0.85f)
 
 @Composable
-private fun BatchCheckbox(arguments: ModalNodeArguments) {
+private fun Batch(arguments: ModalNodeArguments) {
     val (_, treeState, treeNodeState, _) = arguments
 
     val selected = remember(arguments) { treeState.isBatchSelected(treeNodeState.key) }
@@ -64,5 +68,40 @@ private fun BatchCheckbox(arguments: ModalNodeArguments) {
         Icon(Icons.Filled.CheckBoxOutlineBlank, contentDescription = "unchecked checkbox")
     } else {
         Icon(Icons.Filled.CheckBox, contentDescription = "checked checkbox")
+    }
+}
+
+//
+// Move
+//
+
+@Composable
+private fun Move(arguments: ModalNodeArguments) {
+    val (_, treeState, treeNodeState, _) = arguments
+
+    val moving = remember(arguments) { treeState.isMoving(treeNodeState.key) }
+
+    // Keep state during hide animation
+    var relevant by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { relevant = arguments.relevance == NodeRelevance.Relevant }
+
+    if (moving) {
+        Icon(
+            Icons.Filled.CheckBox,
+            contentDescription = "checked checkbox",
+            tint = indeterminateCheckboxColor
+        )
+    } else if (!relevant) {
+        Icon(
+            Icons.Filled.Close,
+            contentDescription = "invalid destination",
+            tint = indeterminateCheckboxColor
+        )
+    } else {
+        Icon(
+            Icons.Filled.Check,
+            contentDescription = "move button",
+            tint = Catppuccin.Current.green
+        )
     }
 }

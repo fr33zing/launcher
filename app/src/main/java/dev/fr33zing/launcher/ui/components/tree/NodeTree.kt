@@ -231,15 +231,10 @@ fun NodeTree(
                 }
             val treeNodeState by
                 initialTreeNodeState.flow.value.collectAsStateWithLifecycle(initialTreeNodeState)
-            val simpleMode by
-                remember(appearAnimationProgress) {
-                    derivedStateOf { (appearAnimationProgress?.value ?: 1f) < 1f }
-                }
 
             @Composable
             fun nodeRow() {
                 NodeRow(
-                    simple = simpleMode,
                     treeState = treeState,
                     treeNodeState = treeNodeState,
                     adjacentTreeNodeStates = adjacentTreeNodeStates,

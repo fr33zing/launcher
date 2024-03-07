@@ -29,7 +29,6 @@ import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun NodeRow(
-    simple: Boolean = false,
     treeState: TreeState? = null,
     treeNodeState: TreeNodeState,
     adjacentTreeNodeStates: AdjacentTreeNodeStates? = null,
@@ -106,7 +105,7 @@ fun NodeRow(
 
     @Composable
     fun Interactions(content: @Composable () -> Unit) =
-        if (!simple && hasFeature.interactive)
+        if (hasFeature.interactive)
             NodeInteractions(
                 treeState,
                 treeNodeState,

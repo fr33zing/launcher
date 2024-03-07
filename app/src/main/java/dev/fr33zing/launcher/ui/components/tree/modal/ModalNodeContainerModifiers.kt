@@ -88,16 +88,13 @@ private fun Modifier.batchModifier(arguments: ModalNodeArguments) = composed {
 // Move
 //
 
-private fun Modifier.moveModifier(arguments: ModalNodeArguments) =
-    conditional(arguments.relevance == NodeRelevance.Relevant) { normalModifier(arguments) }
+private fun Modifier.moveModifier(arguments: ModalNodeArguments) = run {
+    val (_, treeState, treeNodeState, relevance) = arguments
 
-// private fun Modifier.moveModifier(arguments: ModalNodeArguments) = composed {
-//    val (_, treeState, treeNodeState, relevance) = arguments
-//
-//    if (relevance != NodeRelevance.Disruptive) return@composed this
-//
-//    val selected = treeState.isMoving(treeNodeState.key)
-//
-//    conditional(arguments.relevance == NodeRelevance.Relevant) { normalModifier(arguments) }
-//        .conditional(selected) { background(batchSelectedColor) }
-// }
+    if (relevance == NodeRelevance.Disruptive) return@run this
+
+    val moving = treeState.isMoving(treeNodeState.key)
+
+    conditional(arguments.relevance == NodeRelevance.Relevant) { normalModifier(arguments) }
+        .conditional(moving) { background(batchSelectedColor) }
+}

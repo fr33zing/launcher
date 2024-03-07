@@ -39,7 +39,7 @@ fun Tree(
             beginBatchSelect = viewModel::beginBatchSelect,
         )
     }
-    val modalBarActions = remember {
+    val modalActions = remember {
         ModalActions(
             endBatchSelect = viewModel::endBatchSelect,
             batchSelectAll = viewModel::batchSelectAll,
@@ -79,7 +79,7 @@ fun Tree(
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,
-            modalActions = modalBarActions,
+            modalActions = modalActions,
         )
     }
 }

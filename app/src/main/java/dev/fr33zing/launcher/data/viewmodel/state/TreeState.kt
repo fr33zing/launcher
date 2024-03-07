@@ -21,7 +21,6 @@ import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.utility.castOrNull
 import dev.fr33zing.launcher.data.utility.notNull
-import kotlin.reflect.jvm.jvmName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,6 +41,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.reflect.jvm.jvmName
 
 @Immutable
 data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
@@ -55,7 +55,7 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
 
     fun parentKey() =
         if (nodeLineage.size == 1) emptyKey()
-        else TreeNodeKey(nodeLineage.subList(0, nodeLineage.size - 2))
+        else TreeNodeKey(nodeLineage.subList(0, nodeLineage.size - 1))
 
     fun directDescendantOf(key: TreeNodeKey) = key == parentKey()
 
@@ -98,7 +98,8 @@ data class TreeState(
         }),
         Move({ treeState, treeNodeState ->
             if (treeNodeState.key == treeState.moveState!!.parentKey) NodeRelevance.Irrelevant
-            else if (treeState.moveState.movingKeys.getOrDefault(treeNodeState.key, false))
+            else if (treeState.isMoving(treeNodeState.key)) NodeRelevance.Relevant
+            else if (treeNodeState.key.directDescendantOf(treeState.moveState.parentKey))
                 NodeRelevance.Irrelevant
             else if (treeNodeState.value.node.kind == NodeKind.Directory) NodeRelevance.Relevant
             else NodeRelevance.Disruptive
