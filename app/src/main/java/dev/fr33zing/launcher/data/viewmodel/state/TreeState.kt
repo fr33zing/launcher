@@ -53,12 +53,20 @@ data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
 
     fun childKey(childNodeId: Int) = TreeNodeKey(nodeLineage + listOf(childNodeId))
 
+    fun parentKey() =
+        if (nodeLineage.size == 1) emptyKey()
+        else TreeNodeKey(nodeLineage.subList(0, nodeLineage.size - 2))
+
+    fun directDescendantOf(key: TreeNodeKey) = key == parentKey()
+
     override fun writeToParcel(parcel: Parcel, flags: Int) = parcel.writeList(nodeLineage)
 
     override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<TreeNodeKey> {
         fun rootKey(nodeId: Int) = TreeNodeKey(listOf(nodeId))
+
+        fun emptyKey() = TreeNodeKey(emptyList())
 
         override fun createFromParcel(parcel: Parcel): TreeNodeKey = TreeNodeKey(parcel)
 
@@ -82,16 +90,14 @@ data class TreeState(
     enum class Mode(val relevance: (TreeState, TreeNodeState) -> NodeRelevance) {
         Normal({ _, _ -> NodeRelevance.Relevant }),
         Batch({ treeState, treeNodeState ->
-            val nodeParentId = treeNodeState.value.underlyingState.node.parentId
-            val batchParentId = treeState.batchState?.parentId
-            val relevant =
-                nodeParentId != null && batchParentId != null && nodeParentId == batchParentId
+            val nodeParentKey = treeNodeState.key.parentKey()
+            val batchParentKey = treeState.batchState?.parentKey
+            val relevant = batchParentKey != null && nodeParentKey == batchParentKey
 
             if (relevant) NodeRelevance.Relevant else NodeRelevance.Irrelevant
         }),
         Move({ treeState, treeNodeState ->
-            if (treeNodeState.value.node.nodeId == treeState.moveState!!.parentId)
-                NodeRelevance.Irrelevant
+            if (treeNodeState.key == treeState.moveState!!.parentKey) NodeRelevance.Irrelevant
             else if (treeState.moveState.movingKeys.getOrDefault(treeNodeState.key, false))
                 NodeRelevance.Irrelevant
             else if (treeNodeState.value.node.kind == NodeKind.Directory) NodeRelevance.Relevant
@@ -103,13 +109,13 @@ data class TreeState(
 
     @Immutable
     data class BatchState(
-        val parentId: Int = ROOT_NODE_ID,
+        val parentKey: TreeNodeKey = TreeNodeKey.emptyKey(),
         val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap()
     )
 
     @Immutable
     data class MoveState(
-        val parentId: Int = ROOT_NODE_ID,
+        val parentKey: TreeNodeKey = TreeNodeKey.emptyKey(),
         val movingKeys: Map<TreeNodeKey, Boolean> = emptyMap()
     )
 
@@ -174,7 +180,7 @@ data class TreeState(
                             mode = Mode.Move,
                             moveState =
                                 MoveState(
-                                    parentId = batchState!!.parentId,
+                                    parentKey = batchState!!.parentKey,
                                     movingKeys = batchState.selectedKeys
                                 )
                         )
@@ -194,7 +200,7 @@ data class TreeState(
                             mode = Mode.Batch,
                             batchState =
                                 BatchState(
-                                    parentId = moveState!!.parentId,
+                                    parentKey = moveState!!.parentKey,
                                     selectedKeys = moveState.movingKeys
                                 )
                         )
@@ -281,7 +287,7 @@ class TreeStateHolder(
                     .copy(
                         batchState =
                             TreeState.BatchState(
-                                parentId = key.nodeLineage[key.nodeLineage.size - 2],
+                                parentKey = key.parentKey(),
                                 selectedKeys = mapOf(key to true),
                             )
                     )
@@ -339,7 +345,7 @@ class TreeStateHolder(
         }
 
     private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
-        var key = TreeNodeKey(emptyList())
+        var key = TreeNodeKey.emptyKey()
         targetKey.nodeLineage.forEachIndexed { index, nodeId ->
             if (index == targetKey.nodeLineage.lastIndex) return
             key = key.childKey(nodeId)
