@@ -14,8 +14,8 @@ import dev.fr33zing.launcher.data.utility.getApplicationCategoryName
 import dev.fr33zing.launcher.data.utility.getApplicationCategoryOverrides
 import dev.fr33zing.launcher.data.utility.notNull
 import io.reactivex.rxjava3.subjects.PublishSubject
-import java.io.File
 import kotlinx.coroutines.runBlocking
+import java.io.File
 
 const val ROOT_NODE_ID = -1
 
@@ -139,8 +139,6 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
     val order =
         if (position.offset == RelativeNodeOffset.Within) 0
         else relativeToNode.order + position.offset.orderOffset
-
-    var event: Pair<Int, Int>? = null
     val createdNodeId = withTransaction {
         val siblings = nodeDao().getChildNodes(parentId).fixOrder()
         siblings.filter { it.order >= order }.forEach { it.order++ }
@@ -148,10 +146,8 @@ suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: 
         insert(Node(nodeId = 0, parentId = parentId, kind = newNodeKind, order = order, label = ""))
         val lastNodeId = nodeDao().getLastNodeId()
         insert(createDefaultPayloadForNode(newNodeKind, lastNodeId))
-        if (parentId != null) event = Pair(lastNodeId, parentId)
         lastNodeId
     }
-    event?.let { NodeCreatedSubject.onNext(it) }
     return createdNodeId
 }
 
@@ -224,10 +220,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             collapsed = specialMode.initiallyCollapsed
                         )
                     )
-
                     nodeDao().getChildNodes(parentId).fixOrder().let { updateMany(it) }
-
-                    if (parentId != null) NodeCreatedSubject.onNext(Pair(lastNodeId, parentId))
                     lastNodeId
                 }
         nodeDao().getNodeById(nodeId).notNull()
@@ -237,25 +230,16 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
 suspend fun AppDatabase.getRootNode(): Node =
     getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
 
-suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int) {
-    val oldParentNodeId = withTransaction {
-        val oldParentNodeId = node.parentId
-        node.parentId = newParentNodeId
-        node.order = -1
-        update(node)
-        val oldSiblings = nodeDao().getChildNodes(oldParentNodeId).fixOrder()
-        val newSiblings = nodeDao().getChildNodes(newParentNodeId).fixOrder()
-        updateMany(oldSiblings + newSiblings)
+suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int) = withTransaction {
+    val oldParentNodeId = node.parentId
+    node.parentId = newParentNodeId
+    node.order = -1
+    update(node)
+    val oldSiblings = nodeDao().getChildNodes(oldParentNodeId).fixOrder()
+    val newSiblings = nodeDao().getChildNodes(newParentNodeId).fixOrder()
+    updateMany(oldSiblings + newSiblings)
 
-        oldParentNodeId
-    }
-    NodeMovedSubject.onNext(
-        Triple(
-            node.nodeId,
-            oldParentNodeId ?: throw Exception("Parent is null (cannot move root node)"),
-            newParentNodeId
-        )
-    )
+    oldParentNodeId
 }
 
 suspend fun AppDatabase.moveToTrash(node: Node) {
@@ -279,12 +263,6 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
         payloads.forEach { delete(it) }
         nodeDao().getChildNodes(node.parentId ?: ROOT_NODE_ID).fixOrder().let { updateMany(it) }
     }
-    NodeDeletedSubject.onNext(
-        Pair(
-            node.nodeId,
-            node.parentId ?: throw Exception("Node has no parent (cannot delete root node)")
-        )
-    )
 }
 
 suspend fun AppDatabase.traverseUpward(
