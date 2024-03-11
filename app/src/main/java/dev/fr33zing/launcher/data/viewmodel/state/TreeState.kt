@@ -98,12 +98,17 @@ data class TreeState(
             if (relevant) NodeRelevance.Relevant else NodeRelevance.Irrelevant
         }),
         Move({ treeState, treeNodeState ->
-            if (treeNodeState.key == treeState.moveState!!.parentKey) NodeRelevance.Irrelevant
-            else if (treeState.isMoving(treeNodeState.key)) NodeRelevance.Relevant
-            else if (treeNodeState.key.directDescendantOf(treeState.moveState.parentKey))
-                NodeRelevance.Irrelevant
-            else if (treeNodeState.value.node.kind == NodeKind.Directory) NodeRelevance.Relevant
-            else NodeRelevance.Disruptive
+            val parent by lazy { treeNodeState.key == treeState.moveState!!.parentKey }
+            val moving by lazy { treeState.isMoving(treeNodeState.key) }
+            val child by lazy {
+                treeNodeState.key.directDescendantOf(treeState.moveState!!.parentKey)
+            }
+            val directory by lazy { treeNodeState.value.node.kind == NodeKind.Directory }
+
+            if (parent) NodeRelevance.Irrelevant
+            else if (moving) NodeRelevance.Relevant
+            else if (child && !directory) NodeRelevance.Irrelevant
+            else if (directory) NodeRelevance.Relevant else NodeRelevance.Disruptive
         })
     }
 
