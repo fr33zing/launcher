@@ -1,8 +1,11 @@
 package dev.fr33zing.launcher.ui.components.tree.modal
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
@@ -19,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
+import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.utility.dim
+import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
 fun ModalNodeComponents(arguments: ModalNodeArguments) {
@@ -75,9 +80,11 @@ private fun Batch(arguments: ModalNodeArguments) {
 // Move
 //
 
+private val confirmColor = Catppuccin.Current.green
+
 @Composable
 private fun Move(arguments: ModalNodeArguments) {
-    val (_, treeState, treeNodeState, _) = arguments
+    val (actions, treeState, treeNodeState) = arguments
 
     val moving = remember(arguments) { treeState.isMoving(treeNodeState.key) }
 
@@ -98,10 +105,32 @@ private fun Move(arguments: ModalNodeArguments) {
             tint = indeterminateCheckboxColor
         )
     } else {
+        val movingCount =
+            remember(treeState) { treeState.moveState?.movingKeys?.count { it.value } ?: 0 }
+        val dialogVisible = remember { mutableStateOf(false) }
+        val yesText =
+            remember(treeState) {
+                "Move $movingCount item${if (movingCount > 1) "s" else ""} to \"${arguments.treeNodeState.value.node.label.ifEmpty { "<Blank>" }}\""
+            }
+        YesNoDialog(
+            visible = dialogVisible,
+            icon = Icons.Filled.Check,
+            yesText = yesText,
+            yesColor = confirmColor,
+            yesIcon = Icons.Filled.Check,
+            noText = "Choose another destination",
+            noIcon = Icons.Filled.ArrowBack,
+            onYes = { actions.moveBatchSelectedNodes(treeNodeState) },
+        )
+
+        val interactionSource = remember { MutableInteractionSource() }
+        val indication = rememberCustomIndication(color = confirmColor, circular = true)
         Icon(
             Icons.Filled.Check,
             contentDescription = "move button",
-            tint = Catppuccin.Current.green
+            tint = confirmColor,
+            modifier =
+                Modifier.clickable(interactionSource, indication) { dialogVisible.value = true }
         )
     }
 }

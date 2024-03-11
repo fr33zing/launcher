@@ -76,6 +76,7 @@ fun Tree(
             onSelectNode = viewModel::selectNode,
             onClearSelectedNode = viewModel::clearSelectedNode,
             onToggleNodeBatchSelected = viewModel::toggleNodeBatchSelected,
+            onMoveBatchSelectedNodes = viewModel::moveBatchSelectedNodes,
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,

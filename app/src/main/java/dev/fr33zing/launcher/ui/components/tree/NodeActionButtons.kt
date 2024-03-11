@@ -81,7 +81,7 @@ class NodeActionButtonKind(
     companion object {
         val kinds =
             listOf(
-                // Enter multi-select mode
+                // Enter Batch mode
                 NodeActionButtonKind(
                     label = "Batch",
                     icon = Icons.Outlined.SelectAll,

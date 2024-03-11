@@ -11,7 +11,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
-import dev.fr33zing.launcher.data.persistent.moveToTrash
+import dev.fr33zing.launcher.data.persistent.moveNodeToTrash
 import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.utility.notNull
 import dev.fr33zing.launcher.data.utility.stagger
@@ -143,6 +143,9 @@ constructor(
 
     fun endBatchMove() = stateHolder.onEndBatchMove()
 
+    fun moveBatchSelectedNodes(newParent: TreeNodeState) =
+        stateHolder.onMoveBatchSelectedNodes(newParent)
+
     fun createNode(position: RelativeNodePosition, kind: NodeKind, callback: (Int) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             flow {
@@ -157,7 +160,7 @@ constructor(
 
     fun moveNodeToTrash(nodeId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
-            db.nodeDao().getNodeById(nodeId).notNull().let { db.moveToTrash(it) }
+            db.nodeDao().getNodeById(nodeId).notNull().let { db.moveNodeToTrash(it) }
         }
     }
 

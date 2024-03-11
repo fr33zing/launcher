@@ -37,6 +37,8 @@ import androidx.compose.ui.window.DialogWindowProvider
 import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Foreground
 
+val baseDialogExtraVerticalPadding = 24.dp
+val baseDialogPadding = 24.dp
 val baseDialogBorderWidth = 1.dp
 val baseDialogBorderColor = Foreground
 val baseDialogBackgroundColor = Background.copy(alpha = 0.825f)
@@ -71,7 +73,7 @@ fun BaseDialog(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(vertical = 24.dp).imePadding()
+                modifier = Modifier.padding(vertical = baseDialogExtraVerticalPadding).imePadding()
             ) {
                 BaseDialogIcon(icon)
                 BaseDialogCard(modifier, content)
@@ -96,12 +98,11 @@ private fun BaseDialogCard(
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.(Dp) -> Unit) = {}
 ) {
-    val padding = remember { 36.dp }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.baseDialogStyles(MaterialTheme.shapes.large).then(modifier),
     ) {
-        content(padding)
+        content(baseDialogPadding)
     }
 }
 

@@ -92,6 +92,7 @@ fun NodeTree(
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
     // Modal events
     onToggleNodeBatchSelected: (TreeNodeKey) -> Unit = {},
+    onMoveBatchSelectedNodes: (newParent: TreeNodeState) -> Unit = {},
     // Scrolling
     setScrollToKeyCallback: ((ScrollToKeyEvent) -> Unit) -> Unit,
     performQueuedScrollToKey: () -> Unit,
@@ -241,7 +242,8 @@ fun NodeTree(
                     nodeActions = nodeActions,
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,
-                    onToggleNodeMultiSelected = { onToggleNodeBatchSelected(treeNodeState.key) },
+                    onToggleNodeBatchSelected = { onToggleNodeBatchSelected(treeNodeState.key) },
+                    onMoveBatchSelectedNodes = onMoveBatchSelectedNodes,
                     onActivatePayload = { onActivatePayload(treeNodeState) },
                     onCreateNode = onCreateNode,
                     appearAnimationProgress = appearAnimationProgress,

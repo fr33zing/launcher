@@ -56,6 +56,7 @@ fun NodeInteractions(
     onSelectNode: () -> Unit = {},
     onClearSelectedNode: () -> Unit = {},
     onToggleNodeBatchSelected: () -> Unit = {},
+    onMoveBatchSelectedNodes: (newParent: TreeNodeState) -> Unit = {},
     onActivatePayload: () -> Unit = {},
     onActivateDirectory: () -> Unit = {},
     onCreateNode: (RelativeNodePosition, NodeKind) -> Unit = { _, _ -> },
@@ -84,7 +85,8 @@ fun NodeInteractions(
             activatePayload = onActivatePayload,
             selectNode = onSelectNode,
             clearSelectedNode = onClearSelectedNode,
-            toggleBatchSelected = onToggleNodeBatchSelected
+            toggleBatchSelected = onToggleNodeBatchSelected,
+            moveBatchSelectedNodes = onMoveBatchSelectedNodes,
         )
     }
     val modalArguments =

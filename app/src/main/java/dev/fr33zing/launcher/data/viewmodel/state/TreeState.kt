@@ -17,6 +17,7 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
+import dev.fr33zing.launcher.data.persistent.moveNodes
 import dev.fr33zing.launcher.data.persistent.nodeLineage
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.utility.castOrNull
@@ -345,10 +346,29 @@ class TreeStateHolder(
             treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Batch)
         }
 
-    private fun ensureKeyIsShown(targetKey: TreeNodeKey) {
+    fun onMoveBatchSelectedNodes(
+        newParent: TreeNodeState,
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ) =
+        _stateFlow.update { treeState ->
+            val moveState = treeState.modeState<TreeState.MoveState>()
+            val movingNodes =
+                moveState.movingKeys
+                    .filter { it.value }
+                    .keys
+                    .let { listFlow.findNodes(it) }
+                    .map { it.value.underlyingState.node }
+
+            treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Normal).also {
+                ensureKeyIsShown(newParent.key, showTargetChildren = true)
+                scope.launch { db.moveNodes(movingNodes, newParent.value.node.nodeId) }
+            }
+        }
+
+    private fun ensureKeyIsShown(targetKey: TreeNodeKey, showTargetChildren: Boolean = false) {
         var key = TreeNodeKey.emptyKey()
         targetKey.nodeLineage.forEachIndexed { index, nodeId ->
-            if (index == targetKey.nodeLineage.lastIndex) return
+            if (index == targetKey.nodeLineage.lastIndex && !showTargetChildren) return
             key = key.childKey(nodeId)
             showChildren[key] = true
             if (index == targetKey.nodeLineage.lastIndex - 1) ensureKeyIsShownFlow.update { key }
@@ -486,3 +506,9 @@ class TreeStateHolder(
 
 private fun canHaveChildren(node: Node) =
     node.kind == NodeKind.Directory || node.kind == NodeKind.Reference
+
+private fun StateFlow<List<TreeNodeState>>.findNodes(keys: Collection<TreeNodeKey>) =
+    keys.map { key ->
+        value.find { treeNodeState -> treeNodeState.key == key }
+            ?: throw Exception("Couldn't find TreeNodeState with key: $key")
+    }

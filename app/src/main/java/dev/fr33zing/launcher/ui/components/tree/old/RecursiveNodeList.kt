@@ -106,7 +106,7 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodeOffset
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.persistent.createNode
 import dev.fr33zing.launcher.data.persistent.deleteRecursively
-import dev.fr33zing.launcher.data.persistent.moveToTrash
+import dev.fr33zing.launcher.data.persistent.moveNodeToTrash
 import dev.fr33zing.launcher.data.persistent.payloads.Application
 import dev.fr33zing.launcher.data.persistent.payloads.Directory
 import dev.fr33zing.launcher.data.persistent.payloads.Note
@@ -939,7 +939,7 @@ private fun NodeOptionButtons(
                     "moved-to-trash:${node.nodeId}",
                     "Moved ${node.kind.label.lowercase()} '${node.label}' to the trash."
                 )
-                CoroutineScope(Dispatchers.IO).launch { db.moveToTrash(node) }
+                CoroutineScope(Dispatchers.IO).launch { db.moveNodeToTrash(node) }
             }
 
         if (showEmptyTrashButton) {

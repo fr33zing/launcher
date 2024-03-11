@@ -238,11 +238,24 @@ suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int) = withTransac
     val oldSiblings = nodeDao().getChildNodes(oldParentNodeId).fixOrder()
     val newSiblings = nodeDao().getChildNodes(newParentNodeId).fixOrder()
     updateMany(oldSiblings + newSiblings)
-
-    oldParentNodeId
 }
 
-suspend fun AppDatabase.moveToTrash(node: Node) {
+suspend fun AppDatabase.moveNodes(nodes: List<Node>, newParentNodeId: Int) = withTransaction {
+    if (nodes.isEmpty()) throw Exception("List of nodes to move is empty")
+
+    val oldParentNodeIds = nodes.map { it.parentId }.toSet()
+
+    nodes.forEachIndexed { index, node ->
+        node.parentId = newParentNodeId
+        node.order = -index - 1
+    }
+    updateMany(nodes)
+    val oldSiblings = oldParentNodeIds.flatMap { nodeDao().getChildNodes(it).fixOrder() }
+    val newSiblings = nodeDao().getChildNodes(newParentNodeId).fixOrder()
+    updateMany(oldSiblings + newSiblings)
+}
+
+suspend fun AppDatabase.moveNodeToTrash(node: Node) {
     val trash = getOrCreateSingletonDirectory(Directory.SpecialMode.Trash)
     moveNode(node, trash.nodeId)
 }

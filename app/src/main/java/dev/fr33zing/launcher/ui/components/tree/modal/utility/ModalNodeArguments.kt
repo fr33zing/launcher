@@ -10,7 +10,8 @@ data class ModalNodeActions(
     val activatePayload: () -> Unit,
     val selectNode: () -> Unit,
     val clearSelectedNode: () -> Unit,
-    val toggleBatchSelected: () -> Unit
+    val toggleBatchSelected: () -> Unit,
+    val moveBatchSelectedNodes: (newParent: TreeNodeState) -> Unit,
 )
 
 @Immutable
