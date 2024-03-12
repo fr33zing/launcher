@@ -11,7 +11,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import dev.fr33zing.launcher.data.NodeKind
@@ -43,7 +42,7 @@ fun NodeKindPickerDialog(
                     padding - spacing / 2
                 }
             Column(modifier = Modifier.padding(vertical = verticalPadding)) {
-                kinds.forEach { Option(visible, it) { onKindChosen(it) } }
+                kinds.forEach { Option(it) { onKindChosen(it) } }
             }
         }
     }
@@ -51,7 +50,6 @@ fun NodeKindPickerDialog(
 
 @Composable
 private fun Option(
-    visible: MutableState<Boolean>,
     kind: NodeKind,
     onClick: () -> Unit,
 ) {

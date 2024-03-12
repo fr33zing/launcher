@@ -75,7 +75,6 @@ fun TreeBrowser(
                 if (targetState.canTraverseUpward) {
                     TraverseUpRow(
                         enabled = !transition.isRunning,
-                        horizontalPadding = horizontalPadding,
                         onTraverseUp = stateHolder::traverseUpward,
                     )
                 }
@@ -100,7 +99,6 @@ fun TreeBrowser(
 @Composable
 private fun TraverseUpRow(
     enabled: Boolean,
-    horizontalPadding: Dp,
     onTraverseUp: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
