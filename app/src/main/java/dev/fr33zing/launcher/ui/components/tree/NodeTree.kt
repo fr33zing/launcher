@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +26,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -60,14 +58,13 @@ import dev.fr33zing.launcher.ui.utility.rememberPaddingAndShadowHeight
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-private const val APPEAR_ANIMATION_DURATION_MS = 350
-private const val HIGHLIGHT_ANIMATION_DURATION_MS = 500
-private const val UNHIGHLIGHT_ANIMATION_DURATION_MS = 1000
-private const val HIGHLIGHT_ANIMATION_MAX_ALPHA = 0.4f
+const val APPEAR_ANIMATION_DURATION_MS = 350
+const val HIGHLIGHT_ANIMATION_DURATION_MS = 500
+const val UNHIGHLIGHT_ANIMATION_DURATION_MS = 1000
+const val HIGHLIGHT_ANIMATION_MAX_ALPHA = 0.4f
 
 private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVector1D>?>
 
@@ -75,11 +72,13 @@ private typealias ListItem = Pair<TreeNodeState, Animatable<Float, AnimationVect
 
 @Composable
 fun NodeTree(
-    // Flows
+    // Data
     treeStateFlow: Flow<TreeState>,
-    treeNodeListFlow: Flow<List<TreeNodeState>>,
+    animatedTreeNodeListFlow: Flow<List<ListItem>>,
+    // Scrolling & highlighting
     scrollToKeyFlow: Flow<ScrollToKeyEvent?> = flowOf(null),
-    highlightKeyFlow: Flow<TreeNodeKey?> = flowOf(null),
+    highlightKeyFlow: Flow<TreeNodeKey?>,
+    highlightAlpha: Animatable<Float, AnimationVector1D>,
     // Regular events
     onSearch: () -> Unit = {},
     onScrollToKeyAfterNextUpdate: () -> Unit = {},
@@ -105,52 +104,17 @@ fun NodeTree(
 ) {
     val (paddingHeight, shadowHeight) = paddingAndShadowHeight
     val coroutineScope = rememberCoroutineScope()
-    val hasFeature =
-        remember(features) {
-            object {
-                val APPEAR_ANIMATION = features.contains(NodeRowFeatures.APPEAR_ANIMATION)
-            }
-        }
-    val animation =
-        object {
-            val progressMap = remember {
-                mutableStateMapOf<TreeNodeKey, Animatable<Float, AnimationVector1D>>()
-            }
-
-            fun progress(key: TreeNodeKey): Animatable<Float, AnimationVector1D>? =
-                if (!hasFeature.APPEAR_ANIMATION) null
-                else {
-                    progressMap.computeIfAbsent(key) {
-                        Animatable(0f).also {
-                            coroutineScope.launch {
-                                it.animateTo(1f, tween(APPEAR_ANIMATION_DURATION_MS))
-                            }
-                        }
-                    }
-                }
-
-            fun resetRemovedNodes(treeNodeStates: List<TreeNodeState>) {
-                val nextSnapshotKeys = treeNodeStates.map { it.key }
-                progressMap
-                    .filterKeys { key -> key !in nextSnapshotKeys }
-                    .forEach { (nodeId, _) -> progressMap.remove(nodeId) }
-            }
-        }
 
     val treeState by treeStateFlow.collectAsStateWithLifecycle(TreeState())
-    val treeNodeList by
-        treeNodeListFlow
-            .onEach(animation::resetRemovedNodes)
-            .map { treeNodeList -> treeNodeList.map { Pair(it, animation.progress(it.key)) } }
+    val animatedTreeNodeList by
+        animatedTreeNodeListFlow
             .collectAsStateWithLifecycle(emptyList())
 
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val nodeDimensions = LocalNodeDimensions.current
     val screenHeight =
-        remember(configuration, density) {
-            with(density) { configuration.screenHeightDp.dp.toPx() }
-        }
+        remember(configuration, density) { with(density) { configuration.screenHeightDp.dp.toPx() } }
     val singleLineItemHeight =
         remember(nodeDimensions, density) {
             with(density) { (nodeDimensions.lineHeight + nodeDimensions.spacing).toPx().toInt() }
@@ -161,37 +125,26 @@ fun NodeTree(
             ((-screenHeight / 2) + singleLineItemHeight).toInt()
         }
     setScrollToKeyCallback { event ->
-        val index = treeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
+        val index = animatedTreeNodeList.indexOfFirst { (treeNode) -> treeNode.key == event.key }
         if (index != -1) {
             coroutineScope.launch {
-                if (event.snap) lazyListState.scrollToItem(index, scrollOffset)
-                else lazyListState.animateScrollToItem(index, scrollOffset)
+                if (event.snap) {
+                    lazyListState.scrollToItem(index, scrollOffset)
+                } else {
+                    lazyListState.animateScrollToItem(index, scrollOffset)
+                }
             }
         }
     }
-
-    val highlightAlpha = remember { Animatable(0f) }
-    val highlightKey by
-        highlightKeyFlow
-            .onEach {
-                if (it == null) return@onEach
-                onDisableFlowStagger()
-                coroutineScope.launch {
-                    highlightAlpha.snapTo(0f)
-                    highlightAlpha.animateTo(
-                        HIGHLIGHT_ANIMATION_MAX_ALPHA,
-                        tween(HIGHLIGHT_ANIMATION_DURATION_MS)
-                    )
-                    highlightAlpha.animateTo(0f, tween(UNHIGHLIGHT_ANIMATION_DURATION_MS))
-                    onClearHighlightedNode()
-                }
-            }
-            .collectAsStateWithLifecycle(null)
-
+    val canScrollFlow =
+        remember {
+            snapshotFlow { lazyListState.canScrollForward || lazyListState.canScrollBackward }
+                .onEach { canScroll -> if (canScroll) onDisableFlowStagger() }
+        }
     val canScroll by
-        snapshotFlow { lazyListState.canScrollForward || lazyListState.canScrollBackward }
-            .onEach { canScroll -> if (canScroll) onDisableFlowStagger() }
-            .collectAsStateWithLifecycle(false)
+        canScrollFlow.collectAsStateWithLifecycle(false)
+    val highlightKey by
+        highlightKeyFlow.collectAsStateWithLifecycle(null)
 
     LaunchedEffect(Unit) { onClearSelectedNode() }
 
@@ -210,7 +163,7 @@ fun NodeTree(
                     onFirstDown = onDisableFlowStagger,
                     onFlingDown = onSearch,
                     flingUpEnabled = { false },
-                    flingDownEnabled = { !lazyListState.canScrollBackward }
+                    flingDownEnabled = { !lazyListState.canScrollBackward },
                 )
             },
     ) {
@@ -250,15 +203,14 @@ fun NodeTree(
                 )
             }
 
-            if (highlightKey != treeNodeState.key) nodeRow()
-            else {
+            if (highlightKey != treeNodeState.key) {
+                nodeRow()
+            } else {
                 Box(
                     Modifier.drawWithCache {
                         val highlightColor = treeNodeState.value.node.kind.color
-                        onDrawBehind {
-                            drawRect(color = highlightColor, alpha = highlightAlpha.value)
-                        }
-                    }
+                        onDrawBehind { drawRect(color = highlightColor, alpha = highlightAlpha.value) }
+                    },
                 ) {
                     nodeRow()
                 }
@@ -270,21 +222,17 @@ fun NodeTree(
             AnimatedVisibility(visible = canScroll, enter = fadeIn(), exit = fadeOut()) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
-                    modifier =
-                        Modifier.fillMaxWidth().padding(vertical = ActionButtonVerticalPadding)
+                    modifier = Modifier.fillMaxWidth().padding(vertical = ActionButtonVerticalPadding),
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(ActionButtonSpacing)) {
                         ActionButton(
                             icon = Icons.Outlined.ArrowUpward,
-                            contentDescription = "scroll to top"
+                            contentDescription = "scroll to top",
                         ) {
                             coroutineScope.launch { lazyListState.animateScrollToItem(0) }
                         }
 
-                        ActionButton(
-                            icon = Icons.Outlined.Search,
-                            contentDescription = "scroll to top"
-                        ) {
+                        ActionButton(icon = Icons.Outlined.Search, contentDescription = "scroll to top") {
                             onSearch()
                         }
                     }
@@ -301,15 +249,18 @@ fun NodeTree(
         LazyColumn(
             state = lazyListState,
             contentPadding = remember { PaddingValues(vertical = shadowHeight) },
-            modifier = Modifier.fillMaxWidth().weight(1f).verticalScrollShadows(shadowHeight)
+            modifier = Modifier.fillMaxWidth().weight(1f).verticalScrollShadows(shadowHeight),
         ) {
             itemsIndexed(
-                items = treeNodeList,
+                items = animatedTreeNodeList,
                 key = { _, item -> item.first.key },
-                contentType = { _, item -> item.first.underlyingNodeKind }
-            ) { index, (initialTreeNodeState, appearAnimationProgress) ->
-                listItem(treeNodeList, index, initialTreeNodeState, appearAnimationProgress)
-                if (index == treeNodeList.lastIndex) bottomActionButtons()
+                contentType = { _, item -> item.first.underlyingNodeKind },
+            ) {
+                    index,
+                    (initialTreeNodeState, appearAnimationProgress),
+                ->
+                listItem(animatedTreeNodeList, index, initialTreeNodeState, appearAnimationProgress)
+                if (index == animatedTreeNodeList.lastIndex) bottomActionButtons()
             }
 
             performQueuedScrollToKey()

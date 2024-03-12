@@ -34,14 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 
 val baseDialogExtraVerticalPadding = 24.dp
 val baseDialogPadding = 24.dp
 val baseDialogBorderWidth = 1.dp
-val baseDialogBorderColor = Foreground
-val baseDialogBackgroundColor = Background.copy(alpha = 0.825f)
+val baseDialogBorderColor = foreground
+val baseDialogBackgroundColor = background.copy(alpha = 0.825f)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -56,7 +56,11 @@ fun BaseDialog(
     var reallyVisible by remember { mutableStateOf(false) }
     val imeVisible = WindowInsets.isImeVisible
     LaunchedEffect(visible.value) {
-        if (visible.value) reallyVisible = true else if (!imeVisible) reallyVisible = false
+        if (visible.value) {
+            reallyVisible = true
+        } else if (!imeVisible) {
+            reallyVisible = false
+        }
     }
     LaunchedEffect(imeVisible) { if (!visible.value && !imeVisible) reallyVisible = false }
     // See below for the rest of the hack.
@@ -67,13 +71,13 @@ fun BaseDialog(
             onDismissRequest = {
                 visible.value = false
                 onDismissRequest()
-            }
+            },
         ) {
             (LocalView.current.parent as DialogWindowProvider).window.setDimAmount(0.7f)
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(vertical = baseDialogExtraVerticalPadding).imePadding()
+                modifier = Modifier.padding(vertical = baseDialogExtraVerticalPadding).imePadding(),
             ) {
                 BaseDialogIcon(icon)
                 BaseDialogCard(modifier, content)
@@ -96,7 +100,7 @@ fun Modifier.baseDialogStyles(shape: Shape) =
 @Composable
 private fun BaseDialogCard(
     modifier: Modifier = Modifier,
-    content: @Composable (ColumnScope.(Dp) -> Unit) = {}
+    content: @Composable (ColumnScope.(Dp) -> Unit) = {},
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,8 +115,8 @@ private fun BaseDialogIcon(icon: ImageVector) {
     Icon(
         icon,
         contentDescription = "plus symbol",
-        tint = Foreground,
-        modifier = Modifier.baseDialogStyles(CircleShape).padding(12.dp).size(32.dp)
+        tint = foreground,
+        modifier = Modifier.baseDialogStyles(CircleShape).padding(12.dp).size(32.dp),
     )
 
     Spacer(Modifier.height(28.dp))

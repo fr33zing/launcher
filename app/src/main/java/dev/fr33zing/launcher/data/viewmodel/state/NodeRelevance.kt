@@ -8,5 +8,5 @@ enum class NodeRelevance {
     Irrelevant,
 
     /** Node is disruptive to he current mode. Client should hide it. */
-    Disruptive
+    Disruptive,
 }

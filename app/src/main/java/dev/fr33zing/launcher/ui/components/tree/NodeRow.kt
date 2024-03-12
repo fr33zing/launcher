@@ -61,10 +61,11 @@ fun NodeRow(
         }
     val relevance =
         remember(treeState, treeNodeState, features) {
-            if (!hasFeature.MODAL) null
-            else
-                treeState?.mode?.relevance?.invoke(treeState, treeNodeState)
-                    ?: NodeRelevance.Relevant
+            if (!hasFeature.MODAL) {
+                null
+            } else {
+                treeState?.mode?.relevance?.invoke(treeState, treeNodeState) ?: NodeRelevance.Relevant
+            }
         }
 
     @Composable
@@ -75,11 +76,13 @@ fun NodeRow(
                     treeNodeState,
                     ignoreState =
                         !hasFeature.RENDER_STATE ||
-                            (!hasFeature.EXPAND_DIRECTORIES &&
-                                treeNodeState.value.node.kind == NodeKind.Directory)
+                            (
+                                !hasFeature.EXPAND_DIRECTORIES &&
+                                    treeNodeState.value.node.kind == NodeKind.Directory
+                            ),
                 ),
             LocalNodeRowFeatures provides features,
-            content = content
+            content = content,
         )
 
     @Composable
@@ -88,9 +91,11 @@ fun NodeRow(
             val label by
                 remember(treeNodeState) {
                     derivedStateOf {
-                        if (treeNodeState.value.isValidReference)
+                        if (treeNodeState.value.isValidReference) {
                             treeNodeState.value.underlyingState.node.label
-                        else treeNodeState.value.node.label
+                        } else {
+                            treeNodeState.value.node.label
+                        }
                     }
                 }
             NodeDetail(
@@ -106,7 +111,7 @@ fun NodeRow(
 
     @Composable
     fun Interactions(content: @Composable () -> Unit) =
-        if (hasFeature.interactive)
+        if (hasFeature.interactive) {
             NodeInteractions(
                 treeState,
                 treeNodeState,
@@ -121,19 +126,23 @@ fun NodeRow(
                 onActivatePayload,
                 onActivateDirectory,
                 onCreateNode,
-                content = content
+                content = content,
             )
-        else content()
+        } else {
+            content()
+        }
 
     @Composable
     fun Animation(content: @Composable () -> Unit) =
-        if (hasFeature.APPEAR_ANIMATION && appearAnimationProgress != null)
+        if (hasFeature.APPEAR_ANIMATION && appearAnimationProgress != null) {
             NodeAppearAnimation(appearAnimationProgress, content)
-        else content()
+        } else {
+            content()
+        }
 
     @Composable
     fun Relevance(content: @Composable () -> Unit) =
-        if (relevance != null)
+        if (relevance != null) {
             AnimatedVisibility(
                 visible = relevance != NodeRelevance.Disruptive,
                 enter = fadeIn() + expandVertically { -it },
@@ -141,7 +150,9 @@ fun NodeRow(
             ) {
                 content()
             }
-        else content()
+        } else {
+            content()
+        }
 
     Providers { Animation { Relevance { Interactions { Detail() } } } }
 }

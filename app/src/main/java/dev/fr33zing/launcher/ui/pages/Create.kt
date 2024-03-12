@@ -31,7 +31,10 @@ import dev.fr33zing.launcher.ui.theme.Catppuccin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel()) {
+fun Create(
+    navigateBack: () -> Unit,
+    viewModel: CreateViewModel = hiltViewModel(),
+) {
     val nodePayload = viewModel.nodePayload
     val cancelDialogVisible = remember { mutableStateOf(false) }
     val saveDialogVisible = remember { mutableStateOf(false) }
@@ -72,7 +75,7 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
         visible = cancelDialogVisible,
         icon = Icons.Filled.Close,
         yesText = "Cancel creation",
-        yesColor = Catppuccin.Current.red,
+        yesColor = Catppuccin.current.red,
         yesIcon = Icons.Filled.Close,
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
@@ -84,7 +87,7 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
         visible = saveDialogVisible,
         icon = Icons.Filled.Check,
         yesText = "Create ${nodePayload?.node?.kind?.label}",
-        yesColor = Catppuccin.Current.green,
+        yesColor = Catppuccin.current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
@@ -101,11 +104,9 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
                         buildAnnotatedString {
                             nodePayload?.node?.let { node ->
                                 append("Creating ")
-                                withStyle(SpanStyle(color = node.kind.color)) {
-                                    append(node.kind.label)
-                                }
+                                withStyle(SpanStyle(color = node.kind.color)) { append(node.kind.label) }
                             }
-                        }
+                        },
                     )
                 },
                 actions = {
@@ -117,11 +118,11 @@ fun Create(navigateBack: () -> Unit, viewModel: CreateViewModel = hiltViewModel(
                     }
                 },
             )
-        }
+        },
     ) { padding ->
         nodePayload?.let { (node, payload) ->
             NodeEditForm(
-                EditFormArguments(padding, node, payload, true, ::disableSaving, ::enableSaving)
+                EditFormArguments(padding, node, payload, true, ::disableSaving, ::enableSaving),
             )
         }
     }

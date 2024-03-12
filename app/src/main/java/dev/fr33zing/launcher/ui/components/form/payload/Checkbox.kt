@@ -36,10 +36,12 @@ fun CheckboxEditForm(arguments: EditFormArguments) {
 }
 
 @Composable
-private fun LabeledDateText(label: String, date: Date?) =
-    OutlinedValue(label) { padding ->
-        Box(Modifier.padding(padding)) { date?.let { RelativeDateText(it) } ?: Text("Never") }
-    }
+private fun LabeledDateText(
+    label: String,
+    date: Date?,
+) = OutlinedValue(label) { padding ->
+    Box(Modifier.padding(padding)) { date?.let { RelativeDateText(it) } ?: Text("Never") }
+}
 
 @Composable
 private fun RelativeDateText(date: Date) {
@@ -55,17 +57,16 @@ private fun DateText(date: Date) {
     val timeFormat12Hour = remember(locale) { SimpleDateFormat("hh:mm:ss z", locale) }
     val timeFormat24Hour = remember(locale) { SimpleDateFormat("HH:mm:ss z", locale) }
     val dateFormat = remember(locale) { SimpleDateFormat("EEEE, LLL d, yyyy", locale) }
-    val text = remember {
-        buildString {
-            append(dateFormat.format(date))
-            append(" @ ")
-            append(
-                (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
-                    .format(date)
-                    .trimStart('0')
-            )
+    val text =
+        remember {
+            buildString {
+                append(dateFormat.format(date))
+                append(" @ ")
+                append(
+                    (if (use24HourTime) timeFormat24Hour else timeFormat12Hour).format(date).trimStart('0'),
+                )
+            }
         }
-    }
 
     Text(text)
 }

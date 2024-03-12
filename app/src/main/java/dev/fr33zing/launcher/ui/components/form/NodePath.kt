@@ -17,8 +17,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import dev.fr33zing.launcher.data.RootDirectoryColor
+import dev.fr33zing.launcher.data.UNLABELED_NODE_TEXT
 import dev.fr33zing.launcher.data.UnlabeledNodeColor
-import dev.fr33zing.launcher.data.UnlabeledNodeText
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.ROOT_NODE_ID
 import kotlin.text.Typography.nbsp
@@ -28,38 +28,45 @@ fun NodePath(
     nodeLineage: List<Node>,
     modifier: Modifier = Modifier,
 ) {
-    val inlineContents = remember {
-        mapOf(
-            "delimiter" to
-                InlineTextContent(
-                    Placeholder(
-                        width = 1.75.em,
-                        height = 0.85.em,
-                        placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-                    )
-                ) {
-                    Icon(
-                        Icons.Filled.ArrowForwardIos,
-                        contentDescription = "right chevron",
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-        )
-    }
-    val annotatedString = buildAnnotatedString {
-        nodeLineage.forEachIndexed { index, node ->
-            // Don't show root node unless it's the only node in the lineage
-            if (node.nodeId == ROOT_NODE_ID && nodeLineage.size > 1) return@forEachIndexed
-
-            val color =
-                if (node.label.isBlank()) UnlabeledNodeColor
-                else if (node.nodeId == ROOT_NODE_ID) RootDirectoryColor else node.kind.color
-            val label = node.label.ifBlank { UnlabeledNodeText }
-
-            withStyle(SpanStyle(color = color)) { append(label.replace(' ', nbsp)) }
-            if (index < nodeLineage.size - 1) appendInlineContent("delimiter", ">")
+    val inlineContents =
+        remember {
+            mapOf(
+                "delimiter" to
+                    InlineTextContent(
+                        Placeholder(
+                            width = 1.75.em,
+                            height = 0.85.em,
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                        ),
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowForwardIos,
+                            contentDescription = "right chevron",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
+            )
         }
-    }
+    val annotatedString =
+        buildAnnotatedString {
+            nodeLineage.forEachIndexed { index, node ->
+                // Don't show root node unless it's the only node in the lineage
+                if (node.nodeId == ROOT_NODE_ID && nodeLineage.size > 1) return@forEachIndexed
+
+                val color =
+                    if (node.label.isBlank()) {
+                        UnlabeledNodeColor
+                    } else if (node.nodeId == ROOT_NODE_ID) {
+                        RootDirectoryColor
+                    } else {
+                        node.kind.color
+                    }
+                val label = node.label.ifBlank { UNLABELED_NODE_TEXT }
+
+                withStyle(SpanStyle(color = color)) { append(label.replace(' ', nbsp)) }
+                if (index < nodeLineage.size - 1) appendInlineContent("delimiter", ">")
+            }
+        }
 
     Text(text = annotatedString, inlineContent = inlineContents, modifier = modifier)
 }

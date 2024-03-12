@@ -12,10 +12,12 @@ import dev.fr33zing.launcher.ui.utility.UserEditable
 class Setting(
     payloadId: Int,
     nodeId: Int,
-    @UserEditable(label = "Setting", locked = true) var setting: String = ""
+    @UserEditable(label = "Setting", locked = true) var setting: String = "",
 ) : Payload(payloadId, nodeId) {
-
-    override fun activate(db: AppDatabase, context: Context) {
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) {
         context.startActivity(Intent(setting))
     }
 }

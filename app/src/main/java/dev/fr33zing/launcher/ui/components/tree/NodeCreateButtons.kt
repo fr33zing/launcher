@@ -24,10 +24,10 @@ import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
-private val color = Foreground.copy(alpha = 0.5f)
+private val color = foreground.copy(alpha = 0.5f)
 private val icon = Icons.Outlined.Add
 
 enum class NodeCreateButtonPosition(
@@ -59,17 +59,19 @@ fun NodeCreateButton(
             treeNodeState.permissions,
         ) {
             // Only show for the selected node
-            if (treeState.normalState.selectedKey != treeNodeState.key) false
-            else {
-                fun TreeNodeState.canCreate(scope: PermissionScope) =
-                    permissions.hasPermission(PermissionKind.Create, scope)
+            if (treeState.normalState.selectedKey != treeNodeState.key) {
+                false
+            } else {
+                fun TreeNodeState.canCreate(scope: PermissionScope) = permissions.hasPermission(PermissionKind.Create, scope)
                 val hasPermission =
                     when (position) {
-                        NodeCreateButtonPosition.Above ->
-                            treeNodeState.canCreate(PermissionScope.Self)
+                        NodeCreateButtonPosition.Above -> treeNodeState.canCreate(PermissionScope.Self)
                         NodeCreateButtonPosition.Below ->
-                            if (showChildren) treeNodeState.canCreate(PermissionScope.Recursive)
-                            else treeNodeState.canCreate(PermissionScope.Self)
+                            if (showChildren) {
+                                treeNodeState.canCreate(PermissionScope.Recursive)
+                            } else {
+                                treeNodeState.canCreate(PermissionScope.Self)
+                            }
                         NodeCreateButtonPosition.OutsideBelow ->
                             adjacentTreeNodeStates.below?.canCreate(PermissionScope.Self)
                     } ?: false
@@ -83,10 +85,14 @@ fun NodeCreateButton(
                                 // Only show for nodes that are the last child of their parent
                                 treeNodeState.lastChild &&
                                 // Don't show for directories with visible children
-                                (treeNodeState.value.node.kind != NodeKind.Directory ||
-                                    (adjacentTreeNodeStates.below?.depth?.let {
-                                        it <= treeNodeState.depth
-                                    } == true))
+                                (
+                                    treeNodeState.value.node.kind != NodeKind.Directory ||
+                                        (
+                                            adjacentTreeNodeStates.below?.depth?.let {
+                                                it <= treeNodeState.depth
+                                            } == true
+                                        )
+                                )
                         else -> true
                     }
             }
@@ -96,7 +102,7 @@ fun NodeCreateButton(
         visible = visible,
         enter = expandVertically(expandFrom = position.expandFrom) + fadeIn(),
         exit = shrinkVertically(shrinkTowards = position.expandFrom) + fadeOut(),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         val label =
             remember(showChildren, position) {
@@ -124,8 +130,8 @@ fun NodeCreateButton(
                             onClick(
                                 RelativeNodePosition(
                                     treeNodeState.underlyingNodeId,
-                                    RelativeNodeOffset.Above
-                                )
+                                    RelativeNodeOffset.Above,
+                                ),
                             )
                         }
                     }
@@ -134,9 +140,12 @@ fun NodeCreateButton(
                             onClick(
                                 RelativeNodePosition(
                                     treeNodeState.underlyingNodeId,
-                                    if (showChildren) RelativeNodeOffset.Within
-                                    else RelativeNodeOffset.Below
-                                )
+                                    if (showChildren) {
+                                        RelativeNodeOffset.Within
+                                    } else {
+                                        RelativeNodeOffset.Below
+                                    },
+                                ),
                             )
                         }
                     }
@@ -146,8 +155,8 @@ fun NodeCreateButton(
                                 RelativeNodePosition(
                                     treeNodeState.underlyingNodeParentId
                                         ?: throw Exception("Cannot create outside root node"),
-                                    RelativeNodeOffset.Below
-                                )
+                                    RelativeNodeOffset.Below,
+                                ),
                             )
                         }
                     }
@@ -164,8 +173,8 @@ fun NodeCreateButton(
                     interactionSource,
                     indication,
                     enabled = visible,
-                    onClick = onClickFn
-                )
+                    onClick = onClickFn,
+                ),
         ) {
             NodeDetail(label, color = color, icon = icon, lineThrough = false)
         }

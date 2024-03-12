@@ -47,20 +47,26 @@ import kotlin.reflect.jvm.jvmName
 @Immutable
 data class TreeNodeKey(val nodeLineage: List<Int>) : Parcelable {
     constructor(
-        parcel: Parcel
+        parcel: Parcel,
     ) : this(
-        mutableListOf<Int>().also { parcel.readList(it, it.javaClass.classLoader, Int::class.java) }
+        mutableListOf<Int>().also { parcel.readList(it, it.javaClass.classLoader, Int::class.java) },
     )
 
     fun childKey(childNodeId: Int) = TreeNodeKey(nodeLineage + listOf(childNodeId))
 
     fun parentKey() =
-        if (nodeLineage.size == 1) emptyKey()
-        else TreeNodeKey(nodeLineage.subList(0, nodeLineage.size - 1))
+        if (nodeLineage.size == 1) {
+            emptyKey()
+        } else {
+            TreeNodeKey(nodeLineage.subList(0, nodeLineage.size - 1))
+        }
 
     fun directDescendantOf(key: TreeNodeKey) = key == parentKey()
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) = parcel.writeList(nodeLineage)
+    override fun writeToParcel(
+        parcel: Parcel,
+        flags: Int,
+    ) = parcel.writeList(nodeLineage)
 
     override fun describeContents(): Int = 0
 
@@ -100,16 +106,21 @@ data class TreeState(
         Move({ treeState, treeNodeState ->
             val parent by lazy { treeNodeState.key == treeState.moveState!!.parentKey }
             val moving by lazy { treeState.isMoving(treeNodeState.key) }
-            val child by lazy {
-                treeNodeState.key.directDescendantOf(treeState.moveState!!.parentKey)
-            }
+            val child by lazy { treeNodeState.key.directDescendantOf(treeState.moveState!!.parentKey) }
             val directory by lazy { treeNodeState.value.node.kind == NodeKind.Directory }
 
-            if (parent) NodeRelevance.Irrelevant
-            else if (moving) NodeRelevance.Relevant
-            else if (child && !directory) NodeRelevance.Irrelevant
-            else if (directory) NodeRelevance.Relevant else NodeRelevance.Disruptive
-        })
+            if (parent) {
+                NodeRelevance.Irrelevant
+            } else if (moving) {
+                NodeRelevance.Relevant
+            } else if (child && !directory) {
+                NodeRelevance.Irrelevant
+            } else if (directory) {
+                NodeRelevance.Relevant
+            } else {
+                NodeRelevance.Disruptive
+            }
+        }),
     }
 
     @Immutable data class NormalState(val selectedKey: TreeNodeKey? = null)
@@ -117,24 +128,22 @@ data class TreeState(
     @Immutable
     data class BatchState(
         val parentKey: TreeNodeKey = TreeNodeKey.emptyKey(),
-        val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap()
+        val selectedKeys: Map<TreeNodeKey, Boolean> = emptyMap(),
     )
 
     @Immutable
     data class MoveState(
         val parentKey: TreeNodeKey = TreeNodeKey.emptyKey(),
-        val movingKeys: Map<TreeNodeKey, Boolean> = emptyMap()
+        val movingKeys: Map<TreeNodeKey, Boolean> = emptyMap(),
     )
 
     //
     // Functions
     //
 
-    fun isBatchSelected(key: TreeNodeKey): Boolean =
-        modeState<BatchState>().selectedKeys.getOrDefault(key, false)
+    fun isBatchSelected(key: TreeNodeKey): Boolean = modeState<BatchState>().selectedKeys.getOrDefault(key, false)
 
-    fun isMoving(key: TreeNodeKey): Boolean =
-        modeState<MoveState>().movingKeys.getOrDefault(key, false)
+    fun isMoving(key: TreeNodeKey): Boolean = modeState<MoveState>().movingKeys.getOrDefault(key, false)
 
     inline fun <reified T> modeState(): T =
         when (T::class) {
@@ -153,7 +162,10 @@ data class TreeState(
         if (mode != expectedMode) throw UnexpectedModeException(mode, expectedMode)
     }
 
-    fun changeMode(from: Mode, to: Mode): TreeState {
+    fun changeMode(
+        from: Mode,
+        to: Mode,
+    ): TreeState {
         expectMode(from)
         return changeMode(to)
     }
@@ -188,8 +200,8 @@ data class TreeState(
                             moveState =
                                 MoveState(
                                     parentKey = batchState!!.parentKey,
-                                    movingKeys = batchState.selectedKeys
-                                )
+                                    movingKeys = batchState.selectedKeys,
+                                ),
                         )
                 }
             }
@@ -208,16 +220,15 @@ data class TreeState(
                             batchState =
                                 BatchState(
                                     parentKey = moveState!!.parentKey,
-                                    selectedKeys = moveState.movingKeys
-                                )
+                                    selectedKeys = moveState.movingKeys,
+                                ),
                         )
                 }
         }
 
     private fun sameMode(): Nothing = throw SameModeException(mode)
 
-    private fun invalidModeChange(nextMode: Mode): Nothing =
-        throw InvalidModeChangeException(mode, nextMode)
+    private fun invalidModeChange(nextMode: Mode): Nothing = throw InvalidModeChangeException(mode, nextMode)
 
     //
     // Exceptions
@@ -245,7 +256,7 @@ data class TreeNodeState(
     val lastChild: Boolean = false,
     val permissions: PermissionMap,
     val value: ReferenceFollowingNodePayloadState,
-    val flow: Lazy<Flow<TreeNodeState>>
+    val flow: Lazy<Flow<TreeNodeState>>,
 ) {
     val underlyingNodeId
         get() = value.underlyingState.node.nodeId
@@ -296,13 +307,12 @@ class TreeStateHolder(
                             TreeState.BatchState(
                                 parentKey = key.parentKey(),
                                 selectedKeys = mapOf(key to true),
-                            )
+                            ),
                     )
             }
         }
 
-    fun onEndBatchSelect() =
-        _stateFlow.update { it.changeMode(from = TreeState.Mode.Batch, to = TreeState.Mode.Normal) }
+    fun onEndBatchSelect() = _stateFlow.update { it.changeMode(from = TreeState.Mode.Batch, to = TreeState.Mode.Normal) }
 
     fun onToggleNodeBatchSelected(key: TreeNodeKey) =
         _stateFlow.update { treeState ->
@@ -328,8 +338,8 @@ class TreeStateHolder(
                                             NodeRelevance.Relevant
                                     }
                                     .map { it.key }
-                                    .associateWith { true }
-                        )
+                                    .associateWith { true },
+                        ),
             )
         }
 
@@ -337,7 +347,7 @@ class TreeStateHolder(
         _stateFlow.update { treeState ->
             treeState.copy(
                 batchState =
-                    treeState.modeState<TreeState.BatchState>().copy(selectedKeys = emptyMap())
+                    treeState.modeState<TreeState.BatchState>().copy(selectedKeys = emptyMap()),
             )
         }
 
@@ -353,24 +363,26 @@ class TreeStateHolder(
 
     fun onMoveBatchSelectedNodes(
         newParent: TreeNodeState,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
-    ) =
-        _stateFlow.update { treeState ->
-            val moveState = treeState.modeState<TreeState.MoveState>()
-            val movingNodes =
-                moveState.movingKeys
-                    .filter { it.value }
-                    .keys
-                    .let { listFlow.findNodes(it) }
-                    .map { it.value.underlyingState.node }
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ) = _stateFlow.update { treeState ->
+        val moveState = treeState.modeState<TreeState.MoveState>()
+        val movingNodes =
+            moveState.movingKeys
+                .filter { it.value }
+                .keys
+                .let { listFlow.findNodes(it) }
+                .map { it.value.underlyingState.node }
 
-            treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Normal).also {
-                ensureKeyIsShown(newParent.key, showTargetChildren = true)
-                scope.launch { db.moveNodes(movingNodes, newParent.value.node.nodeId) }
-            }
+        treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Normal).also {
+            ensureKeyIsShown(newParent.key, showTargetChildren = true)
+            scope.launch { db.moveNodes(movingNodes, newParent.value.node.nodeId) }
         }
+    }
 
-    private fun ensureKeyIsShown(targetKey: TreeNodeKey, showTargetChildren: Boolean = false) {
+    private fun ensureKeyIsShown(
+        targetKey: TreeNodeKey,
+        showTargetChildren: Boolean = false,
+    ) {
         var key = TreeNodeKey.emptyKey()
         targetKey.nodeLineage.forEachIndexed { index, nodeId ->
             if (index == targetKey.nodeLineage.lastIndex && !showTargetChildren) return
@@ -390,80 +402,79 @@ class TreeStateHolder(
 
     val listFlow: StateFlow<List<TreeNodeState>> =
         flow {
-                fun traverse(
-                    key: TreeNodeKey,
-                    node: Node,
-                    depth: Int = -1,
-                    lastChild: Boolean = false,
-                    permissions: PermissionMap = AllPermissions.clone(),
-                ): Flow<List<TreeNodeState>> {
-                    val parentFlow = getTreeNodeStateFlow(key, depth, node, lastChild, permissions)
+            fun traverse(
+                key: TreeNodeKey,
+                node: Node,
+                depth: Int = -1,
+                lastChild: Boolean = false,
+                permissions: PermissionMap = AllPermissions.clone(),
+            ): Flow<List<TreeNodeState>> {
+                val parentFlow = getTreeNodeStateFlow(key, depth, node, lastChild, permissions)
 
-                    return if (!canHaveChildren(node)) parentFlow.mapLatest { listOf(it) }
-                    else {
-                        val childrenFlow =
-                            parentFlow
-                                .distinctUntilChangedBy { it.value.node.nodeId }
-                                .combine(ensureKeyIsShownFlow) { treeNode, _ -> treeNode }
-                                .transformLatest { treeNode: TreeNodeState ->
-                                    db.nodeDao()
-                                        .getChildNodesFlow(treeNode.value.node.nodeId)
-                                        .distinctUntilChangedBy { it.map { node -> node.nodeId } }
-                                        .flatMapLatest { childNodes ->
-                                            if (childNodes.isEmpty()) flowOf(emptyList())
-                                            else {
-                                                val childNodeFlows =
-                                                    childNodes.mapIndexed { index, childNode ->
-                                                        traverse(
-                                                            key = key.childKey(childNode.nodeId),
-                                                            node = childNode,
-                                                            depth = depth + 1,
-                                                            lastChild =
-                                                                index == childNodes.lastIndex,
-                                                            permissions =
-                                                                permissions.adjustChildPermissions(
-                                                                    payload = treeNode.value.payload
-                                                                )
-                                                        )
-                                                    }
-                                                combine(childNodeFlows) { arrayOfLists ->
-                                                    arrayOfLists.toList().flatten()
+                return if (!canHaveChildren(node)) {
+                    parentFlow.mapLatest { listOf(it) }
+                } else {
+                    val childrenFlow =
+                        parentFlow
+                            .distinctUntilChangedBy { it.value.node.nodeId }
+                            .combine(ensureKeyIsShownFlow) { treeNode, _ -> treeNode }
+                            .transformLatest { treeNode: TreeNodeState ->
+                                db.nodeDao()
+                                    .getChildNodesFlow(treeNode.value.node.nodeId)
+                                    .distinctUntilChangedBy { it.map { node -> node.nodeId } }
+                                    .flatMapLatest { childNodes ->
+                                        if (childNodes.isEmpty()) {
+                                            flowOf(emptyList())
+                                        } else {
+                                            val childNodeFlows =
+                                                childNodes.mapIndexed { index, childNode ->
+                                                    traverse(
+                                                        key = key.childKey(childNode.nodeId),
+                                                        node = childNode,
+                                                        depth = depth + 1,
+                                                        lastChild = index == childNodes.lastIndex,
+                                                        permissions =
+                                                            permissions.adjustChildPermissions(
+                                                                payload = treeNode.value.payload,
+                                                            ),
+                                                    )
                                                 }
+                                            combine(childNodeFlows) { arrayOfLists ->
+                                                arrayOfLists.toList().flatten()
                                             }
                                         }
-                                        .also { emitAll(it) }
-                                }
-                                .distinctUntilChangedBy {
-                                    it.map { state -> state.underlyingNodeId }
-                                }
+                                    }
+                                    .also { emitAll(it) }
+                            }
+                            .distinctUntilChangedBy { it.map { state -> state.underlyingNodeId } }
 
-                        parentFlow.combine(childrenFlow) { treeNode, children ->
-                            val showParent = treeNode.depth >= 0 // Do not show root node
-                            val showChildren =
-                                showChildren.computeIfAbsent(treeNode.key) {
-                                    val directory = treeNode.value.payload as? Directory
-                                    (directory?.collapsed ?: directory?.initiallyCollapsed) == false
-                                }
+                    parentFlow.combine(childrenFlow) { treeNode, children ->
+                        val showParent = treeNode.depth >= 0 // Do not show root node
+                        val showChildren =
+                            showChildren.computeIfAbsent(treeNode.key) {
+                                val directory = treeNode.value.payload as? Directory
+                                (directory?.collapsed ?: directory?.initiallyCollapsed) == false
+                            }
 
-                            val parentOrEmpty = if (showParent) listOf(treeNode) else emptyList()
-                            val childrenOrEmpty = if (showChildren) children else emptyList()
+                        val parentOrEmpty = if (showParent) listOf(treeNode) else emptyList()
+                        val childrenOrEmpty = if (showChildren) children else emptyList()
 
-                            parentOrEmpty + childrenOrEmpty
-                        }
+                        parentOrEmpty + childrenOrEmpty
                     }
                 }
-
-                val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
-                traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
-                    .onEach(::ensureSpecialDirectoryValidity)
-                    .also { emitAll(it) }
             }
+
+            val rootNode = db.nodeDao().getNodeById(rootNodeId).notNull()
+            traverse(key = TreeNodeKey.rootKey(rootNodeId), node = rootNode)
+                .onEach(::ensureSpecialDirectoryValidity)
+                .also { emitAll(it) }
+        }
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private suspend fun ensureSpecialDirectoryValidity(treeNodeStateList: List<TreeNodeState>) {
         treeNodeStateList.forEach { treeNodeState ->
             treeNodeState.value.underlyingState.payload.castOrNull<Directory>()?.specialMode?.let {
-                specialMode ->
+                    specialMode ->
                 val children =
                     db.nodeDao().getChildNodes(treeNodeState.underlyingNodeId).map { node ->
                         val payload = db.getPayloadByNodeId(node.kind, node.nodeId)
@@ -492,7 +503,7 @@ class TreeStateHolder(
         depth: Int,
         node: Node,
         lastChild: Boolean,
-        parentPermissions: PermissionMap
+        parentPermissions: PermissionMap,
     ): Flow<TreeNodeState> =
         treeNodeStateFlows.computeIfAbsent(key) {
             val parentStateHolder = NodePayloadStateHolder(db, node)
@@ -500,17 +511,17 @@ class TreeStateHolder(
             parentStateHolder.flowWithReferenceTarget.mapLatest { value ->
                 val showChildren = derivedStateOf { showChildren[key] }
                 val permissions = parentPermissions.adjustOwnPermissions(value.payload)
-                val flow = lazy { // TODO reuse current flow somehow
-                    getTreeNodeStateFlow(key, depth, node, lastChild, parentPermissions)
-                }
+                val flow =
+                    lazy { // TODO reuse current flow somehow
+                        getTreeNodeStateFlow(key, depth, node, lastChild, parentPermissions)
+                    }
 
                 TreeNodeState(key, depth, showChildren, lastChild, permissions, value, flow)
             }
         }
 }
 
-private fun canHaveChildren(node: Node) =
-    node.kind == NodeKind.Directory || node.kind == NodeKind.Reference
+private fun canHaveChildren(node: Node) = node.kind == NodeKind.Directory || node.kind == NodeKind.Reference
 
 private fun StateFlow<List<TreeNodeState>>.findNodes(keys: Collection<TreeNodeKey>) =
     keys.map { key ->

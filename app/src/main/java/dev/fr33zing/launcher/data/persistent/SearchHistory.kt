@@ -1,11 +1,11 @@
 package dev.fr33zing.launcher.data.persistent
 
 import android.content.Context
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 private const val HISTORY_FILE_NAME = "search_history"
 private const val HISTORY_LENGTH = 25
@@ -22,7 +22,10 @@ class SearchHistory(context: Context) {
         return file.readLines()
     }
 
-    fun add(query: String, scope: CoroutineScope) {
+    fun add(
+        query: String,
+        scope: CoroutineScope,
+    ) {
         ensureFileExists()
         val lines = ArrayDeque(file.readLines())
         if (query in lines) lines.remove(query)
@@ -32,7 +35,10 @@ class SearchHistory(context: Context) {
         file.writeText(lines.joinToString(newLine))
     }
 
-    fun remove(query: String, scope: CoroutineScope) {
+    fun remove(
+        query: String,
+        scope: CoroutineScope,
+    ) {
         ensureFileExists()
         val lines = ArrayDeque(file.readLines())
         if (query in lines) lines.remove(query)

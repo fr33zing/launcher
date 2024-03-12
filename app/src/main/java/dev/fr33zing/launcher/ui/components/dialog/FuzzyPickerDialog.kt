@@ -54,22 +54,22 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import me.xdrop.fuzzywuzzy.model.BoundExtractedResult
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 private val itemSpacing = 16.dp
 
@@ -83,13 +83,13 @@ fun <T> FuzzyPickerDialog(
     itemToAnnotatedString: (T, TextUnit, Color) -> AnnotatedString,
     showAnnotatedString: (T, Boolean) -> Boolean,
     onItemPicked: (T) -> Unit,
-    onDismissRequest: () -> Unit = {}
+    onDismissRequest: () -> Unit = {},
 ) {
     BaseDialog(
         visible,
         Icons.Filled.Search,
         onDismissRequest = onDismissRequest,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) { padding ->
         val focusManager = LocalFocusManager.current
         val focusRequester = remember { FocusRequester() }
@@ -109,12 +109,12 @@ fun <T> FuzzyPickerDialog(
             Modifier.fillMaxWidth().drawBehind {
                 val strokeWidth = 1.dp.toPx()
                 drawLine(
-                    color = Foreground,
+                    color = foreground,
                     start = Offset(0f, size.height),
                     end = Offset(size.width, size.height - strokeWidth),
-                    strokeWidth = strokeWidth
+                    strokeWidth = strokeWidth,
                 )
-            }
+            },
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(searchBoxSpacing),
@@ -123,14 +123,14 @@ fun <T> FuzzyPickerDialog(
                     Modifier.fillMaxWidth()
                         .padding(
                             horizontal = padding - searchBoxSpacing - iconSize,
-                            vertical = padding / 2
-                        )
+                            vertical = padding / 2,
+                        ),
             ) {
                 Icon(
                     Icons.Filled.Search,
                     contentDescription = "search icon",
-                    tint = Foreground,
-                    modifier = Modifier.size(iconSize)
+                    tint = foreground,
+                    modifier = Modifier.size(iconSize),
                 )
                 Box(Modifier.weight(1f)) {
                     val offsetModifier = Modifier.offset(y = lineHeight * -0.1f)
@@ -139,8 +139,8 @@ fun <T> FuzzyPickerDialog(
                         Text(
                             "Begin typing to search...",
                             fontSize = fontSize,
-                            color = Foreground.mix(Background, 0.666f),
-                            modifier = offsetModifier
+                            color = foreground.mix(background, 0.666f),
+                            modifier = offsetModifier,
                         )
                     }
 
@@ -162,29 +162,30 @@ fun <T> FuzzyPickerDialog(
                                 onDone = {
                                     focusRequester.freeFocus()
                                     focusManager.clearFocus(true)
-                                }
+                                },
                             ),
                         textStyle =
                             TextStyle(
-                                color = Foreground,
+                                color = foreground,
                                 fontSize = fontSize,
-                                fontFamily = MainFontFamily
+                                fontFamily = MainFontFamily,
                             ),
-                        cursorBrush = SolidColor(Foreground),
+                        cursorBrush = SolidColor(foreground),
                         modifier = Modifier.focusRequester(focusRequester).then(offsetModifier),
                     )
                 }
 
                 val clearButtonColor by
                     animateColorAsState(
-                        if (query.isNotEmpty()) Catppuccin.Current.red else Color.Transparent,
-                        label = "fuzzy picker dialog query clear button"
+                        if (query.isNotEmpty()) Catppuccin.current.red else Color.Transparent,
+                        label = "fuzzy picker dialog query clear button",
                     )
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = "clear button",
                     tint = clearButtonColor,
-                    modifier = Modifier.size(iconSize).clickable(role = Role.Button) { query = "" }
+                    modifier =
+                        Modifier.size(iconSize).clickable(role = Role.Button) { query = "" },
                 )
 
                 LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -192,7 +193,12 @@ fun <T> FuzzyPickerDialog(
         }
 
         @Composable
-        fun Item(item: T, padding: Dp, alpha: Double, color: Color) {
+        fun Item(
+            item: T,
+            padding: Dp,
+            alpha: Double,
+            color: Color,
+        ) {
             val interactionSource = remember(color) { MutableInteractionSource() }
             val indication = rememberCustomIndication(color = color)
 
@@ -203,28 +209,29 @@ fun <T> FuzzyPickerDialog(
                     onClick = {
                         visible.value = false
                         onItemPicked(item)
-                    }
-                )
+                    },
+                ),
             ) {
                 val itemFontSize = 19.sp
                 val string = itemToString(item)
                 val distinct = items.map(itemToString).count { it == string } == 1
                 val text =
-                    if (showAnnotatedString(item, distinct))
+                    if (showAnnotatedString(item, distinct)) {
                         itemToAnnotatedString(item, fontSize, color)
-                    else
+                    } else {
                         buildAnnotatedString {
                             withStyle(SpanStyle(color = color, fontSize = itemFontSize)) {
                                 append(itemToString(item))
                             }
                         }
+                    }
 
                 Text(
                     text,
                     modifier =
                         Modifier.fillMaxWidth()
                             .padding(horizontal = padding, vertical = itemSpacing / 2)
-                            .alpha(alpha.toFloat())
+                            .alpha(alpha.toFloat()),
                 )
             }
         }
@@ -234,10 +241,10 @@ fun <T> FuzzyPickerDialog(
                 modifier =
                     Modifier.fillMaxWidth()
                         .verticalScroll(scrollState)
-                        .padding(vertical = padding / 2)
+                        .padding(vertical = padding / 2),
             ) {
                 if (query.isEmpty()) {
-                    items.forEach { Item(it, padding, 1.0, Foreground) }
+                    items.forEach { Item(it, padding, 1.0, foreground) }
                 } else {
                     styledItems(matches).forEach {
                         with(it) { Item(referent, padding, alpha, color) }
@@ -274,7 +281,7 @@ private fun <T> styledItems(matches: MutableList<BoundExtractedResult<T>>): List
             StyledItem(
                 referent = it.first.referent,
                 alpha = alpha,
-                color = if (oneBestResult && alpha == 1.0) Catppuccin.Current.green else Foreground
+                color = if (oneBestResult && alpha == 1.0) Catppuccin.current.green else foreground,
             )
         }
 }

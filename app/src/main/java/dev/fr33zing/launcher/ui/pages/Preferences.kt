@@ -66,19 +66,19 @@ import dev.fr33zing.launcher.doNotGoHomeOnNextPause
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.dialog.ApplicationPickerDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.dim
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.theme.typography
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
-import java.util.Date
-import kotlin.reflect.KProperty0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Date
+import kotlin.reflect.KProperty0
 
 private val pageShadowHeight = 6.dp
 private val sectionSpacing = 38.dp
@@ -97,18 +97,17 @@ fun Preferences(db: AppDatabase) {
         Modifier.fillMaxSize()
             .systemBarsPadding()
             .imePadding()
-            .verticalScrollShadows(pageShadowHeight)
+            .verticalScrollShadows(pageShadowHeight),
     ) {
         LazyColumn(
             contentPadding = PaddingValues(bottom = pageShadowHeight),
-            modifier = Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxSize()
+            modifier = Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxSize(),
         ) {
             itemAppearanceSection(preferences)
             homeSection(preferences)
             confirmationDialogsSection(preferences)
             searchSection(preferences)
             noticesSection(preferences)
-            debugSection(preferences)
             backupSection(db)
         }
     }
@@ -127,25 +126,20 @@ private fun LazyListScope.section(
 ) {
     stickyHeader {
         Column(Modifier.fillMaxWidth()) {
-            val modifier = Modifier.fillMaxWidth().background(Background)
+            val modifier = Modifier.fillMaxWidth().background(background)
             Text(
                 text = name,
                 style = typography.titleLarge,
-                modifier = modifier.padding(top = pageShadowHeight)
+                modifier = modifier.padding(top = pageShadowHeight),
             )
             Spacer(modifier.height(sectionTitleSpacing))
-            Text(
-                text = description,
-                style = typography.bodyMedium,
-                color = Dim,
-                modifier = modifier
-            )
+            Text(text = description, style = typography.bodyMedium, color = dim, modifier = modifier)
             Spacer(modifier.height(sectionHeaderSpacing - sectionHeaderShadowHeight))
             Box(
                 Modifier.fillMaxWidth().height(sectionHeaderShadowHeight).drawWithCache {
-                    val brush = Brush.verticalGradient(0f to Background, 1f to Color.Transparent)
+                    val brush = Brush.verticalGradient(0f to background, 1f to Color.Transparent)
                     onDrawBehind { drawRect(brush) }
-                }
+                },
             )
         }
     }
@@ -154,9 +148,7 @@ private fun LazyListScope.section(
             verticalArrangement = Arrangement.spacedBy(preferenceSpacing),
             modifier =
                 Modifier.fillMaxWidth()
-                    .absolutePadding(
-                        bottom = if (!last) sectionSpacing - pageShadowHeight else 0.dp
-                    )
+                    .absolutePadding(bottom = if (!last) sectionSpacing - pageShadowHeight else 0.dp),
         ) {
             children()
         }
@@ -176,7 +168,7 @@ private fun PreferenceCheckbox(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(inlineSpacing),
@@ -184,13 +176,13 @@ private fun PreferenceCheckbox(
         ) {
             CompositionLocalProvider(
                 // Remove default padding
-                LocalMinimumInteractiveComponentEnforcement provides false
+                LocalMinimumInteractiveComponentEnforcement provides false,
             ) {
                 Checkbox(
                     checked = state,
                     onCheckedChange = {
                         CoroutineScope(Dispatchers.IO).launch { preference.set(it) }
-                    }
+                    },
                 )
             }
             Text(text = label, style = typography.bodyLarge)
@@ -207,7 +199,7 @@ private fun PreferenceSlider(
     property: KProperty0<Preference<Int, *>>,
     label: String,
     range: ClosedFloatingPointRange<Float>,
-    unit: String = ""
+    unit: String = "",
 ) {
     val preference = remember { property.get() }
     val default = remember { preference.default }
@@ -218,18 +210,18 @@ private fun PreferenceSlider(
         Row(
             horizontalArrangement = Arrangement.spacedBy(inlineSpacing),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 "$state$unit",
                 style =
                     typography.labelMedium.copy(
-                        platformStyle = PlatformTextStyle(includeFontPadding = false)
-                    )
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    ),
             )
             CompositionLocalProvider(
                 // Remove default padding
-                LocalMinimumInteractiveComponentEnforcement provides false
+                LocalMinimumInteractiveComponentEnforcement provides false,
             ) {
                 Slider(
                     value = state.toFloat(),
@@ -240,18 +232,18 @@ private fun PreferenceSlider(
                         SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = Catppuccin.Current.crust
+                            inactiveTrackColor = Catppuccin.current.crust,
                         ),
-                    valueRange = range
+                    valueRange = range,
                 )
             }
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(text = "Default: $default$unit", style = typography.bodyMedium, color = Dim)
+            Text(text = "Default: $default$unit", style = typography.bodyMedium, color = dim)
             ResetButton(preference, default, state)
         }
     }
@@ -296,8 +288,8 @@ private fun PreferenceTextField(
                 keyboardType = KeyboardType.Text,
             ),
         keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-        placeholder = placeholder?.let { { Text(placeholder, color = Dim) } },
-        modifier = Modifier.fillMaxWidth()
+        placeholder = placeholder?.let { { Text(placeholder, color = dim) } },
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
@@ -314,18 +306,20 @@ private fun TinyButton(
         modifier = Modifier.height(24.dp),
         enabled = enabled,
         colors =
-            if (color == null) ButtonDefaults.buttonColors()
-            else
+            if (color == null) {
+                ButtonDefaults.buttonColors()
+            } else {
                 ButtonDefaults.buttonColors(
-                    containerColor = Catppuccin.Current.red,
+                    containerColor = Catppuccin.current.red,
                 )
+            },
     ) {
         Text(
             text,
             style =
                 typography.bodyMedium.copy(
-                    platformStyle = PlatformTextStyle(includeFontPadding = false)
-                )
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                ),
         )
     }
 }
@@ -339,8 +333,8 @@ private fun <T> ResetButton(
     TinyButton(
         text = "Reset",
         enabled = state != default,
-        color = Catppuccin.Current.red,
-        onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } }
+        color = Catppuccin.current.red,
+        onClick = { CoroutineScope(Dispatchers.IO).launch { preference.set(default) } },
     )
 }
 
@@ -351,7 +345,7 @@ private fun <T> ResetButton(
 private fun LazyListScope.itemAppearanceSection(preferences: Preferences) {
     section(
         "Item appearance",
-        "Adjust the style and layout of items in the tree view and on the home screen."
+        "Adjust the style and layout of items in the tree view and on the home screen.",
     ) {
         PreferenceSlider(preferences.nodeAppearance::fontSize, "Font size", 12f..32f, "sp")
         PreferenceSlider(preferences.nodeAppearance::indent, "Indentation width", 12f..32f, "dp")
@@ -367,10 +361,7 @@ private fun LazyListScope.homeSection(preferences: Preferences) {
     section("Home", "Adjust the appearance and function of the home screen.") {
         PreferenceCheckbox(property = preferences.home::use24HourTime, label = "Use 24-hour time")
         ApplicationPreference(preferences.home.defaultApplications::clock, "Clock application")
-        ApplicationPreference(
-            preferences.home.defaultApplications::calendar,
-            "Calendar application"
-        )
+        ApplicationPreference(preferences.home.defaultApplications::calendar, "Calendar application")
     }
 }
 
@@ -378,7 +369,7 @@ private fun LazyListScope.homeSection(preferences: Preferences) {
 private fun ApplicationPreference(
     property: KProperty0<Preference<String, String>>,
     label: String,
-    overrideActivityInfos: List<LauncherActivityInfo>? = null
+    overrideActivityInfos: List<LauncherActivityInfo>? = null,
 ) {
     val preference = remember { property.get() }
     val default = remember { preference.default }
@@ -390,7 +381,7 @@ private fun ApplicationPreference(
         onAppPicked = {
             CoroutineScope(Dispatchers.IO).launch { preference.set(it.componentName.packageName) }
         },
-        overrideActivityInfos = overrideActivityInfos
+        overrideActivityInfos = overrideActivityInfos,
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
@@ -400,7 +391,7 @@ private fun ApplicationPreference(
             Text(
                 text = "Default: ${default.ifEmpty { "Use system default" }}",
                 style = typography.bodyMedium,
-                color = Dim
+                color = dim,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(inlineSpacing)) {
                 TinyButton(text = "Pick app", onClick = { appPickerVisible.value = true })
@@ -416,7 +407,10 @@ private fun ApplicationPreference(
 
 private fun LazyListScope.confirmationDialogsSection(preferences: Preferences) {
     @Composable
-    fun Subsection(label: String, children: @Composable () -> Unit) {
+    fun Subsection(
+        label: String,
+        children: @Composable () -> Unit,
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(lineSpacing)) {
             Text(text = label, style = typography.bodyLarge)
             children()
@@ -425,7 +419,7 @@ private fun LazyListScope.confirmationDialogsSection(preferences: Preferences) {
 
     section(
         "Confirmation dialogs",
-        "Adjust which actions ask for additional confirmation, and under what circumstances."
+        "Adjust which actions ask for additional confirmation, and under what circumstances.",
     ) {
         with(preferences.confirmationDialogs) {
             Subsection(label = "Creating item") {
@@ -456,22 +450,24 @@ private fun LazyListScope.searchSection(preferences: Preferences) {
     section("Search", "Adjust functionality related to the search page.") {
         val context = LocalContext.current
 
-        val webSearchApplications = remember {
-            context.queryWebSearchActivities().toLauncherActivityInfos(context)
-        }
+        val webSearchApplications =
+            remember {
+                context.queryWebSearchActivities().toLauncherActivityInfos(context)
+            }
         ApplicationPreference(
             preferences.search::webSearchApplication,
             "Web search application",
-            webSearchApplications
+            webSearchApplications,
         )
 
-        val timerApplications = remember {
-            context.queryTimerActivities().toLauncherActivityInfos(context)
-        }
+        val timerApplications =
+            remember {
+                context.queryTimerActivities().toLauncherActivityInfos(context)
+            }
         ApplicationPreference(
             preferences.search::timerApplication,
             "Timer application",
-            timerApplications
+            timerApplications,
         )
     }
 }
@@ -485,18 +481,8 @@ private fun LazyListScope.noticesSection(preferences: Preferences) {
         PreferenceSlider(preferences.notices::durationSeconds, "Duration", 2f..8f, " seconds")
         PreferenceCheckbox(
             property = preferences.notices::positionAtTop,
-            label = "Position at top of screen"
+            label = "Position at top of screen",
         )
-    }
-}
-
-//
-// Section: Debug
-//
-
-private fun LazyListScope.debugSection(preferences: Preferences) {
-    section("Debug", "These settings are only available to aid in development.") {
-        PreferenceCheckbox(property = preferences.debug::useNewTree, label = "Use new tree")
     }
 }
 
@@ -510,10 +496,7 @@ private fun LazyListScope.backupSection(db: AppDatabase) {
         "Backup database and preferences into a ZIP archive. Restoring a backup will cause the application to restart.",
         last = true,
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
             BackupExportButton(db, Modifier.weight(1f))
             BackupImportButton(db, Modifier.weight(1f))
         }
@@ -521,7 +504,10 @@ private fun LazyListScope.backupSection(db: AppDatabase) {
 }
 
 @Composable
-private fun BackupImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
+private fun BackupImportButton(
+    db: AppDatabase,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val openDocumentLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { importUri ->
@@ -529,12 +515,10 @@ private fun BackupImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
                 sendNotice(
                     "backup-import-failed-uri-null",
                     "Backup import failed: No import path was provided.",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             } else {
-                CoroutineScope(Dispatchers.IO).launch {
-                    importBackupArchive(context, db, importUri)
-                }
+                CoroutineScope(Dispatchers.IO).launch { importBackupArchive(context, db, importUri) }
             }
         }
 
@@ -543,25 +527,28 @@ private fun BackupImportButton(db: AppDatabase, modifier: Modifier = Modifier) {
             doNotGoHomeOnNextPause()
             openDocumentLauncher.launch(arrayOf("application/zip"))
         },
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(text = "Restore")
     }
 }
 
 @Composable
-private fun BackupExportButton(db: AppDatabase, modifier: Modifier = Modifier) {
+private fun BackupExportButton(
+    db: AppDatabase,
+    modifier: Modifier = Modifier,
+) {
     var exportDate by remember { mutableStateOf<Date?>(null) }
     val context = LocalContext.current
     val createDocumentLauncher =
         rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("application/zip")
+            ActivityResultContracts.CreateDocument("application/zip"),
         ) { exportUri ->
             if (exportUri == null) {
                 sendNotice(
                     "backup-export-failed-uri-null",
                     "Backup export failed: No export path was provided.",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
@@ -577,7 +564,7 @@ private fun BackupExportButton(db: AppDatabase, modifier: Modifier = Modifier) {
             val filename = generateExportFilename(context, exportDate!!)
             createDocumentLauncher.launch(filename)
         },
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(text = "Backup")
     }

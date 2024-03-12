@@ -30,8 +30,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
@@ -39,7 +39,7 @@ fun ColumnScope.GiantPickerButtonContainer(content: @Composable () -> Unit) {
     Column(
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.weight(1f).fillMaxWidth()
+        modifier = Modifier.weight(1f).fillMaxWidth(),
     ) {
         content()
     }
@@ -49,7 +49,7 @@ fun ColumnScope.GiantPickerButtonContainer(content: @Composable () -> Unit) {
 fun <T> GiantPickerButton(
     text: String,
     onPicked: (T) -> Unit,
-    dialog: @Composable (dialogVisible: MutableState<Boolean>, onPicked: (T) -> Unit) -> Unit
+    dialog: @Composable (dialogVisible: MutableState<Boolean>, onPicked: (T) -> Unit) -> Unit,
 ) {
     val dialogVisible = remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
@@ -65,8 +65,8 @@ fun <T> GiantPickerButton(
         remember(density, buttonFontSizeDp) { with(density) { buttonFontSizeDp.toSp() } }
     val buttonColor by
         animateColorAsState(
-            if (!dialogVisible.value) Foreground else Foreground.mix(Background, 0.75f),
-            label = "GiantPickerButton container color"
+            if (!dialogVisible.value) foreground else foreground.mix(background, 0.75f),
+            label = "GiantPickerButton container color",
         )
 
     var pressed by remember { mutableStateOf(false) }
@@ -78,7 +78,7 @@ fun <T> GiantPickerButton(
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = buttonColor,
-                contentColor = Background,
+                contentColor = background,
             ),
         modifier =
             Modifier.requiredSize(buttonSize)
@@ -97,16 +97,16 @@ fun <T> GiantPickerButton(
                                 true
                             }
                     }
-                }
+                },
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(buttonIconTextSpacing),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
                 Icons.Filled.Search,
                 contentDescription = "search",
-                modifier = Modifier.size(buttonIconSize)
+                modifier = Modifier.size(buttonIconSize),
             )
             Text(text, fontSize = buttonFontSize)
         }

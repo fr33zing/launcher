@@ -26,7 +26,7 @@ import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
@@ -51,7 +51,7 @@ fun ModalNodeComponents(arguments: ModalNodeArguments) {
 // Batch
 //
 
-private val indeterminateCheckboxColor = Foreground.dim(0.85f)
+private val indeterminateCheckboxColor = foreground.dim(0.85f)
 
 @Composable
 private fun Batch(arguments: ModalNodeArguments) {
@@ -67,7 +67,7 @@ private fun Batch(arguments: ModalNodeArguments) {
         Icon(
             Icons.Filled.IndeterminateCheckBox,
             contentDescription = "indeterminate checkbox",
-            tint = indeterminateCheckboxColor
+            tint = indeterminateCheckboxColor,
         )
     } else if (!selected) {
         Icon(Icons.Filled.CheckBoxOutlineBlank, contentDescription = "unchecked checkbox")
@@ -80,7 +80,7 @@ private fun Batch(arguments: ModalNodeArguments) {
 // Move
 //
 
-private val confirmColor = Catppuccin.Current.green
+private val confirmColor = Catppuccin.current.green
 
 @Composable
 private fun Move(arguments: ModalNodeArguments) {
@@ -96,13 +96,13 @@ private fun Move(arguments: ModalNodeArguments) {
         Icon(
             Icons.Filled.CheckBox,
             contentDescription = "checked checkbox",
-            tint = indeterminateCheckboxColor
+            tint = indeterminateCheckboxColor,
         )
     } else if (!relevant) {
         Icon(
             Icons.Filled.Close,
             contentDescription = "invalid destination",
-            tint = indeterminateCheckboxColor
+            tint = indeterminateCheckboxColor,
         )
     } else {
         val movingCount =
@@ -110,7 +110,15 @@ private fun Move(arguments: ModalNodeArguments) {
         val dialogVisible = remember { mutableStateOf(false) }
         val yesText =
             remember(treeState) {
-                "Move $movingCount item${if (movingCount > 1) "s" else ""} to \"${arguments.treeNodeState.value.node.label.ifEmpty { "<Blank>" }}\""
+                buildString {
+                    append("Move ")
+                    append(movingCount)
+                    append(" item")
+                    append(if (movingCount > 1) "s" else "")
+                    append(" to \"")
+                    append(arguments.treeNodeState.value.node.label.ifEmpty { "<Blank>" })
+                    append("\"")
+                }
             }
         YesNoDialog(
             visible = dialogVisible,
@@ -129,8 +137,7 @@ private fun Move(arguments: ModalNodeArguments) {
             Icons.Filled.Check,
             contentDescription = "move button",
             tint = confirmColor,
-            modifier =
-                Modifier.clickable(interactionSource, indication) { dialogVisible.value = true }
+            modifier = Modifier.clickable(interactionSource, indication) { dialogVisible.value = true },
         )
     }
 }

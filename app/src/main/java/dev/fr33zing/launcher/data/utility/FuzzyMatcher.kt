@@ -5,7 +5,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 
 @Composable
-fun <T> rememberFuzzyMatcher(elements: List<T>, toStringFn: (T) -> String) = remember {
+fun <T> rememberFuzzyMatcher(
+    elements: List<T>,
+    toStringFn: (T) -> String,
+) = remember {
     FuzzyMatcher(elements, toStringFn)
 }
 
@@ -23,8 +26,9 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
         query: String,
         filterPredicate: (T) -> Boolean = { true },
     ): List<Result<T>> =
-        if (query.isEmpty()) listOf()
-        else
+        if (query.isEmpty()) {
+            listOf()
+        } else {
             elementStrings
                 .filter { filterPredicate(it.key) }
                 .map { (element, elementString) ->
@@ -42,8 +46,9 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                             if (!matching) currentMatch.start = i
                             matching = true
                             currentMatch.length++
-                            if (currentMatch.length > longestMatch.length)
+                            if (currentMatch.length > longestMatch.length) {
                                 longestMatch = currentMatch.copy()
+                            }
                             if (currentMatch.length == query.length) break
                         } else {
                             if (matching) currentMatch = Match()
@@ -52,15 +57,15 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                     }
 
                     val substrings =
-                        if (longestMatch.length == 0)
+                        if (longestMatch.length == 0) {
                             listOf(
                                 Substring(
                                     elementString,
                                     index = longestMatch.start,
                                     matches = false,
-                                )
+                                ),
                             )
-                        else if (longestMatch.start == 0) {
+                        } else if (longestMatch.start == 0) {
                             listOf(
                                 Substring(
                                     elementString.substring(0, longestMatch.length),
@@ -71,7 +76,7 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                                     elementString.substring(longestMatch.length),
                                     index = longestMatch.start,
                                     matches = false,
-                                )
+                                ),
                             )
                         } else {
                             listOf(
@@ -83,18 +88,16 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                                 Substring(
                                     elementString.substring(
                                         longestMatch.start,
-                                        longestMatch.start + longestMatch.length
+                                        longestMatch.start + longestMatch.length,
                                     ),
                                     index = longestMatch.start,
                                     matches = true,
                                 ),
                                 Substring(
-                                    elementString.substring(
-                                        longestMatch.start + longestMatch.length
-                                    ),
+                                    elementString.substring(longestMatch.start + longestMatch.length),
                                     index = longestMatch.start + longestMatch.length,
                                     matches = false,
-                                )
+                                ),
                             )
                         }
 
@@ -103,6 +106,7 @@ class FuzzyMatcher<T>(elements: List<T>, toStringFn: (T) -> String) {
                 .filter { it.score > 0 }
                 .sortedWith(
                     compareByDescending<Result<T>> { it.score }
-                        .thenBy { it.substrings.first { substring -> substring.matches }.index }
+                        .thenBy { it.substrings.first { substring -> substring.matches }.index },
                 )
+        }
 }

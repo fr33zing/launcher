@@ -9,11 +9,11 @@ class Catppuccin {
         val Macchiato = MacchiatoPalette()
         val Mocha = MochaPalette()
 
-        var Current: Palette = Frappe
+        var current: Palette = Frappe
     }
 
     abstract class Palette {
-        companion object;
+        companion object abstract
 
         abstract val rosewater: Color
         abstract val flamingo: Color

@@ -19,7 +19,10 @@ enum class PermissionKind {
 
 typealias PermissionMap = Map<PermissionKind, MutableSet<PermissionScope>>
 
-fun PermissionMap.hasPermission(kind: PermissionKind, scope: PermissionScope): Boolean {
+fun PermissionMap.hasPermission(
+    kind: PermissionKind,
+    scope: PermissionScope,
+): Boolean {
     return (this[kind] ?: return false).contains(scope)
 }
 

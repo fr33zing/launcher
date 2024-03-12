@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.charleskorn.kaml.Yaml
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.text.SimpleDateFormat
@@ -14,17 +16,19 @@ import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 
 @Serializable
 data class BackupMetadata(
     val packageName: String,
     val packageVersion: String,
-    val generatedEpochSecond: Long
+    val generatedEpochSecond: Long,
 )
 
-fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
+fun importBackupArchive(
+    context: Context,
+    db: AppDatabase,
+    inputFileUri: Uri,
+) {
     context.contentResolver.openInputStream(inputFileUri)?.use { fileInputStream ->
         ZipInputStream(BufferedInputStream(fileInputStream)).use { zipInputStream ->
             var zipEntry = zipInputStream.nextEntry
@@ -37,10 +41,10 @@ fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
                         }
                     }
                     "preferences" -> {
-                        context
-                            .preferencesDataStoreFile(PREFERENCES_DATASTORE_NAME)
-                            .outputStream()
-                            .use { outputStream -> zipInputStream.copyTo(outputStream, 1024) }
+                        context.preferencesDataStoreFile(PREFERENCES_DATASTORE_NAME).outputStream().use {
+                                outputStream ->
+                            zipInputStream.copyTo(outputStream, 1024)
+                        }
                     }
                     else -> {}
                 }
@@ -52,13 +56,21 @@ fun importBackupArchive(context: Context, db: AppDatabase, inputFileUri: Uri) {
     }
 }
 
-fun generateExportFilename(context: Context, date: Date): String {
+fun generateExportFilename(
+    context: Context,
+    date: Date,
+): String {
     val packageName = context.packageName.replace('.', '-')
     val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(date)
     return listOf(timestamp, "backup", packageName, "zip").joinToString(".")
 }
 
-fun exportBackupArchive(context: Context, db: AppDatabase, outputFileUri: Uri, date: Date) {
+fun exportBackupArchive(
+    context: Context,
+    db: AppDatabase,
+    outputFileUri: Uri,
+    date: Date,
+) {
     val copyFromStorageEntries =
         mapOf(
             "database" to db.getCheckpointedDatabaseFile(),
@@ -93,25 +105,29 @@ private fun restartApplication(context: Context) {
     val restartIntent =
         Intent.makeRestartActivityTask(
             launchIntent?.component
-                ?: throw Exception("Failed to restart application, intent component is null")
+                ?: throw Exception("Failed to restart application, intent component is null"),
         )
     context.startActivity(restartIntent)
     Runtime.getRuntime().exit(0)
 }
 
-private fun packageVersion(context: Context) =
-    mainPackageManager.getPackageInfo(context.packageName, 0).versionName
+private fun packageVersion(context: Context) = mainPackageManager.getPackageInfo(context.packageName, 0).versionName
 
-private fun createBackupMetadata(context: Context, date: Date) =
-    Yaml.default.encodeToString(
-        BackupMetadata(
-            packageName = context.packageName,
-            packageVersion = packageVersion(context),
-            generatedEpochSecond = date.toInstant().epochSecond
-        )
-    )
+private fun createBackupMetadata(
+    context: Context,
+    date: Date,
+) = Yaml.default.encodeToString(
+    BackupMetadata(
+        packageName = context.packageName,
+        packageVersion = packageVersion(context),
+        generatedEpochSecond = date.toInstant().epochSecond,
+    ),
+)
 
-private fun createBackupArchiveReadme(context: Context, date: Date): String {
+private fun createBackupArchiveReadme(
+    context: Context,
+    date: Date,
+): String {
     val title = "Backup"
     val timestamp = SimpleDateFormat("MMMM d, yyyy @ h:mm:ss a", Locale.US).format(date)
     return """

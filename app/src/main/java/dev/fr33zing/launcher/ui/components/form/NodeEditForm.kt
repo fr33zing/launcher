@@ -52,7 +52,7 @@ fun NodeEditForm(arguments: EditFormArguments) {
 fun EditFormColumn(
     innerPadding: PaddingValues,
     scrollable: Boolean = true,
-    content: @Composable (ColumnScope.() -> Unit)
+    content: @Composable (ColumnScope.() -> Unit),
 ) {
     val scrollState = rememberScrollState()
 
@@ -61,13 +61,13 @@ fun EditFormColumn(
             Modifier.fillMaxSize()
                 .imePadding()
                 .verticalScroll(scrollState, enabled = scrollable)
-                .height(IntrinsicSize.Max)
+                .height(IntrinsicSize.Max),
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(EditFormSpacing),
                 modifier =
                     Modifier.padding(innerPadding).padding(EditFormExtraPadding).fillMaxHeight(),
-                content = content
+                content = content,
             )
         }
     }

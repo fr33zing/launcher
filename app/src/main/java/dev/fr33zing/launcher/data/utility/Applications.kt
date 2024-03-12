@@ -14,9 +14,9 @@ import com.charleskorn.kaml.yamlMap
 import com.charleskorn.kaml.yamlScalar
 import dev.fr33zing.launcher.TAG
 import dev.fr33zing.launcher.data.persistent.payloads.mainPackageManager
-import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.URL
 
 const val DEFAULT_CATEGORY_NAME = "Uncategorized"
 
@@ -40,7 +40,7 @@ suspend fun getActivityInfos(context: Context): List<LauncherActivityInfo> {
 fun getApplicationCategoryName(
     context: Context,
     packageName: String,
-    applicationCategoryOverrides: Map<String, String>
+    applicationCategoryOverrides: Map<String, String>,
 ): String {
     return applicationCategoryOverrides[packageName]
         ?: getApplicationCategoryByIntentActivitiesQuery(packageName)
@@ -54,37 +54,40 @@ fun getApplicationCategoryName(
  * when there are multiple matches per category.
  */
 fun getApplicationCategoryByIntentActivitiesQuery(packageName: String): String? {
-    if (intentActivities == null)
+    if (intentActivities == null) {
         intentActivities =
             mapOf(
-                    Intent.CATEGORY_APP_BROWSER to "Web Browsers",
-                    Intent.CATEGORY_APP_CALCULATOR to "Calculators",
-                    Intent.CATEGORY_APP_CALENDAR to "Calendars",
-                    Intent.CATEGORY_APP_CONTACTS to "Contacts",
-                    Intent.CATEGORY_APP_EMAIL to "Email Clients",
-                    Intent.CATEGORY_APP_FILES to "File Browsers",
-                    Intent.CATEGORY_APP_FITNESS to "Fitness",
-                    Intent.CATEGORY_APP_GALLERY to "Galleries",
-                    Intent.CATEGORY_APP_MAPS to "Navigation",
-                    Intent.CATEGORY_APP_MARKET to "Markets",
-                    Intent.CATEGORY_APP_MESSAGING to "Messaging",
-                    Intent.CATEGORY_APP_MUSIC to "Music Players",
-                    Intent.CATEGORY_APP_WEATHER to "Weather",
-                )
+                Intent.CATEGORY_APP_BROWSER to "Web Browsers",
+                Intent.CATEGORY_APP_CALCULATOR to "Calculators",
+                Intent.CATEGORY_APP_CALENDAR to "Calendars",
+                Intent.CATEGORY_APP_CONTACTS to "Contacts",
+                Intent.CATEGORY_APP_EMAIL to "Email Clients",
+                Intent.CATEGORY_APP_FILES to "File Browsers",
+                Intent.CATEGORY_APP_FITNESS to "Fitness",
+                Intent.CATEGORY_APP_GALLERY to "Galleries",
+                Intent.CATEGORY_APP_MAPS to "Navigation",
+                Intent.CATEGORY_APP_MARKET to "Markets",
+                Intent.CATEGORY_APP_MESSAGING to "Messaging",
+                Intent.CATEGORY_APP_MUSIC to "Music Players",
+                Intent.CATEGORY_APP_WEATHER to "Weather",
+            )
                 .mapNotNull { (intentCategory, categoryName) ->
                     val resolveInfos =
                         mainPackageManager.queryIntentActivities(
                             Intent().setAction(Intent.ACTION_MAIN).addCategory(intentCategory),
-                            PackageManager.MATCH_DEFAULT_ONLY
+                            PackageManager.MATCH_DEFAULT_ONLY,
                         )
-                    if (resolveInfos.size < 2) null
-                    else
+                    if (resolveInfos.size < 2) {
+                        null
+                    } else {
                         Pair(
                             categoryName,
-                            resolveInfos.map { resolveInfo -> resolveInfo.activityInfo.packageName }
+                            resolveInfos.map { resolveInfo -> resolveInfo.activityInfo.packageName },
                         )
+                    }
                 }
                 .toMap()
+    }
 
     return intentActivities!!.keys.firstOrNull { category ->
         packageName in intentActivities!![category]!!
@@ -99,8 +102,7 @@ fun getApplicationCategoryByIntentActivitiesQuery(packageName: String): String? 
  */
 fun getFirstFDroidApplicationCategory(packageName: String): String? =
     try {
-        val url =
-            URL("https://gitlab.com/fdroid/fdroiddata/-/raw/master/metadata/${packageName}.yml")
+        val url = URL("https://gitlab.com/fdroid/fdroiddata/-/raw/master/metadata/$packageName.yml")
         val text = url.readText()
         val yamlNode = Yaml.default.parseToYamlNode(text)
         val categories =
@@ -119,7 +121,10 @@ fun getFirstFDroidApplicationCategory(packageName: String): String? =
  * See setApplicationCategoryHint for reference:
  * https://developer.android.com/reference/android/content/pm/PackageManager#setApplicationCategoryHint(java.lang.String,%20int)
  */
-fun getApplicationInfoCategoryTitle(context: Context, packageName: String): String? =
+fun getApplicationInfoCategoryTitle(
+    context: Context,
+    packageName: String,
+): String? =
     try {
         val applicationInfo = mainPackageManager.getApplicationInfo(packageName, 0)
         when (val category = applicationInfo.category) {

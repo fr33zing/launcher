@@ -10,7 +10,7 @@ annotation class UserEditable(
     val label: String,
     val supportingText: String = "",
     val locked: Boolean = false,
-    val userCanUnlock: Boolean = false
+    val userCanUnlock: Boolean = false,
 )
 
 fun <V> KMutableProperty0<V>.getUserEditableAnnotation(): UserEditable =

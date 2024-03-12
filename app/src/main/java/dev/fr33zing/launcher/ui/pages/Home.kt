@@ -34,7 +34,7 @@ fun Home(
 
     viewModel.treeBrowser.onNodeSelected { viewModel.activatePayload(context, it.payload) }
 
-    BackHandler { /* Prevent back button loop */}
+    BackHandler { /* Prevent back button loop */ }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
@@ -45,7 +45,7 @@ fun Home(
                 .longPressable { navigateToSettings() }
                 .pointerInput(Unit) {
                     detectFling(onFlingUp = navigateToTree, onFlingDown = navigateToSearch)
-                }
+                },
     ) {
         Clock(viewModel.nextAlarmFlow, ScreenHorizontalPadding)
         TreeBrowser(viewModel.treeBrowser, center = true, modifier = Modifier.weight(1f))

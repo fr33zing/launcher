@@ -13,7 +13,7 @@ import dev.fr33zing.launcher.ui.utility.conditional
 @Composable
 fun NodeAppearAnimation(
     progress: Animatable<Float, AnimationVector1D>,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val dimensions = LocalNodeDimensions.current
 
@@ -24,6 +24,6 @@ fun NodeAppearAnimation(
                 alpha = progress.value
             }
         },
-        content = { content() }
+        content = { content() },
     )
 }

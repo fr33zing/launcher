@@ -5,9 +5,9 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import dev.fr33zing.launcher.ui.utility.mix
 
-val DisabledTextFieldColor = Foreground.mix(Background, 0.666f)
-val DisabledTextFieldLabelColor = Foreground.mix(Background, 0.25f)
-val DisabledTextFieldTextColor = Foreground.mix(Background, 0.333f)
+val DisabledTextFieldColor = foreground.mix(background, 0.666f)
+val DisabledTextFieldLabelColor = foreground.mix(background, 0.25f)
+val DisabledTextFieldTextColor = foreground.mix(background, 0.333f)
 
 @Composable
 fun outlinedTextFieldColors(): TextFieldColors {
@@ -15,8 +15,8 @@ fun outlinedTextFieldColors(): TextFieldColors {
         disabledTextColor = DisabledTextFieldTextColor,
         disabledBorderColor = DisabledTextFieldColor,
         disabledLeadingIconColor = DisabledTextFieldColor,
-        focusedTrailingIconColor = Foreground,
-        unfocusedTrailingIconColor = Foreground,
+        focusedTrailingIconColor = foreground,
+        unfocusedTrailingIconColor = foreground,
         disabledTrailingIconColor = DisabledTextFieldColor,
         disabledLabelColor = DisabledTextFieldLabelColor,
         disabledPlaceholderColor = DisabledTextFieldColor,

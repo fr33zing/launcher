@@ -49,9 +49,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.Timer
@@ -76,11 +76,11 @@ data class Notice(
 
 enum class NoticeKind(val color: Color, val icon: ImageVector) {
     Information(
-        color = Background.mix(Foreground, 0.1f),
+        color = background.mix(foreground, 0.1f),
         icon = Icons.Filled.Info,
     ),
     Error(
-        color = Background.mix(Catppuccin.Current.red, 0.1f),
+        color = background.mix(Catppuccin.current.red, 0.1f),
         icon = Icons.Filled.Warning,
     ),
 }
@@ -106,23 +106,24 @@ fun Notices() {
     val density = LocalDensity.current
     val statusBarPadding =
         with(density) {
-            if (positionAtTop) PaddingValues(top = WindowInsets.systemBars.getTop(density).toDp())
-            else
+            if (positionAtTop) {
+                PaddingValues(top = WindowInsets.systemBars.getTop(density).toDp())
+            } else {
                 PaddingValues(
                     bottom =
                         max(
-                                WindowInsets.systemBars.getBottom(density),
-                                WindowInsets.ime.getBottom(density)
-                            )
-                            .toDp()
+                            WindowInsets.systemBars.getBottom(density),
+                            WindowInsets.ime.getBottom(density),
+                        )
+                            .toDp(),
                 )
+            }
         }
 
     DisposableEffect(Unit) {
         val subscription =
             noticesSubject.subscribe { notice ->
-                if (notices.value.none { it.id == notice.id })
-                    notices.value = notices.value + notice
+                if (notices.value.none { it.id == notice.id }) notices.value = notices.value + notice
             }
         onDispose { subscription.dispose() }
     }
@@ -130,14 +131,14 @@ fun Notices() {
     val infiniteTransition = rememberInfiniteTransition(label = "notice text color")
     val textColor by
         infiniteTransition.animateColor(
-            initialValue = Foreground,
-            targetValue = Foreground.mix(Background, 0.2f),
+            initialValue = foreground,
+            targetValue = foreground.mix(background, 0.2f),
             animationSpec =
                 infiniteRepeatable(
                     animation = tween(225, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse
+                    repeatMode = RepeatMode.Reverse,
                 ),
-            label = "notice text color"
+            label = "notice text color",
         )
 
     with(notices.value.firstOrNull() ?: return) {
@@ -151,7 +152,7 @@ fun Notices() {
             Timer()
                 .schedule(
                     timerTask { notices.value = notices.value.filter { it.uuid != uuid } },
-                    duration
+                    duration,
                 )
         }
 
@@ -172,13 +173,13 @@ fun Notices() {
                         modifier =
                             Modifier.fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 12.dp)
-                                .padding(statusBarPadding)
+                                .padding(statusBarPadding),
                     ) {
                         Icon(
                             kind.icon,
                             null,
                             modifier = Modifier.size(18.dp).offset(y = 1.dp),
-                            tint = textColor
+                            tint = textColor,
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(text, color = textColor)
@@ -186,12 +187,14 @@ fun Notices() {
                 }
             }
 
-            if (positionAtTop) Notice()
-            else
+            if (positionAtTop) {
+                Notice()
+            } else {
                 Column(Modifier.fillMaxSize()) {
                     Spacer(Modifier.weight(1f))
                     Notice()
                 }
+            }
         }
     }
 }

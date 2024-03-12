@@ -127,9 +127,9 @@ fun imports(
     ${(migrationClasses).sorted().joinToString("\n${indent(1)}") { "import $migrationsPackage.$it" }}
     ${(payloadClasses + "Payload").sorted().joinToString("\n${indent(1)}") { "import $payloadsPackage.$it" }}
     import $convertersPackage.Converters
+    import kotlinx.coroutines.flow.Flow
     import kotlin.reflect.KParameter
     import kotlin.reflect.typeOf
-    import kotlinx.coroutines.flow.Flow
     """
         .trimIndent()
 
@@ -139,17 +139,21 @@ fun payloadDao(payloadClass: String, extraDaoFunctions: String?) =
     interface ${payloadClass}Dao {
         @Insert suspend fun insert(entity: $payloadClass)
 
-        @Transaction @Insert suspend fun insertMany(entities: List<$payloadClass>)
+        @Transaction @Insert
+        suspend fun insertMany(entities: List<$payloadClass>)
 
         @Update suspend fun update(entity: $payloadClass)
 
-        @Transaction @Update suspend fun updateMany(entities: List<$payloadClass>)
+        @Transaction @Update
+        suspend fun updateMany(entities: List<$payloadClass>)
 
         @Delete suspend fun delete(entity: $payloadClass)
 
-        @Transaction @Delete suspend fun deleteMany(entities: List<$payloadClass>)
+        @Transaction @Delete
+        suspend fun deleteMany(entities: List<$payloadClass>)
 
-        @Query("SELECT * FROM $payloadClass") suspend fun getAllPayloads(): List<$payloadClass>
+        @Query("SELECT * FROM $payloadClass")
+        suspend fun getAllPayloads(): List<$payloadClass>
 
         @Query("SELECT * FROM $payloadClass WHERE nodeId = :nodeId")
         suspend fun getPayloadByNodeId(nodeId: Int): $payloadClass?
@@ -180,8 +184,8 @@ fun database(
             ],
         entities =
             [
-                ${payloadClasses.joinToString(",\n${indent(4)}") { "$it::class" }}
-            ]
+                ${payloadClasses.joinToString(",\n${indent(4)}") { "$it::class" }},
+            ],
     )
     abstract class AppDatabase : RoomDatabase() {
         ${payloadClasses.joinToString("\n\n${indent(2)}") { "abstract fun ${daoCall(it)}: ${it}Dao" }}
@@ -192,7 +196,10 @@ ${nodeKindToPayloadClassMap.map { "${indent(4)}${it.value}::class -> NodeKind.${
                 else -> throw Exception("Invalid payload class: ${"$"}{T::class}")
             }
 
-        fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
+        fun createDefaultPayloadForNode(
+            nodeKind: NodeKind,
+            nodeId: Int,
+        ): Payload {
             val payloadClass =
                 when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}::class" }.joinToString("\n")}
@@ -206,26 +213,29 @@ ${nodeKindToPayloadClassMap.map { "${indent(5)}NodeKind.${it.key} -> ${it.value}
             return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
         }
 
-        suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
+        suspend fun getPayloadByNodeId(
+            nodeKind: NodeKind,
+            nodeId: Int,
+        ): Payload? =
             when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadByNodeId(nodeId)" }.joinToString("\n")}
             }
 
-        fun getPayloadFlowByNodeId(nodeKind: NodeKind, nodeId: Int): Flow<Payload?> =
+        fun getPayloadFlowByNodeId(
+            nodeKind: NodeKind,
+            nodeId: Int,
+        ): Flow<Payload?> =
             when (nodeKind) {
 ${nodeKindToPayloadClassMap.map { "${indent(4)}NodeKind.${it.key} -> ${daoCall(it.value)}.getPayloadFlowByNodeId(nodeId)" }.joinToString("\n")}
             }
 
 ${listOf("insert", "update", "delete").joinToString("\n\n") { bothWriteFunctions(it, payloadClasses) }}
 
-        private fun preInsert(vararg entities: Any) =
-            entities.forEach { if (it is Payload) it.preInsert() }
+        private fun preInsert(vararg entities: Any) = entities.forEach { if (it is Payload) it.preInsert() }
 
-        private fun preUpdate(vararg entities: Any) =
-            entities.forEach { if (it is Payload) it.preUpdate() }
+        private fun preUpdate(vararg entities: Any) = entities.forEach { if (it is Payload) it.preUpdate() }
 
-        private fun preDelete(vararg entities: Any) =
-            entities.forEach { if (it is Payload) it.preDelete() }
+        private fun preDelete(vararg entities: Any) = entities.forEach { if (it is Payload) it.preDelete() }
     }
     """
         .trimIndent()

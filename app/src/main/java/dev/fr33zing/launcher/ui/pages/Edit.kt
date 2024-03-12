@@ -68,8 +68,7 @@ fun Edit(
     }
 
     fun jumpToNode() {
-        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) }
-            ?: throw Exception("nodePayload is null")
+        nodePayload?.node?.nodeId?.let { sendJumpToNode(it) } ?: throw Exception("nodePayload is null")
     }
 
     fun cancelChanges() {
@@ -87,7 +86,7 @@ fun Edit(
         visible = cancelDialogVisible,
         icon = Icons.Filled.Close,
         yesText = "Cancel changes",
-        yesColor = Catppuccin.Current.red,
+        yesColor = Catppuccin.current.red,
         yesIcon = Icons.Filled.Close,
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
@@ -99,7 +98,7 @@ fun Edit(
         visible = saveDialogVisible,
         icon = Icons.Filled.Check,
         yesText = "Save changes",
-        yesColor = Catppuccin.Current.green,
+        yesColor = Catppuccin.current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue editing",
         noIcon = Icons.Filled.ArrowBack,
@@ -116,11 +115,9 @@ fun Edit(
                         buildAnnotatedString {
                             nodePayload?.node?.let { node ->
                                 append("Editing ")
-                                withStyle(SpanStyle(color = node.kind.color)) {
-                                    append(node.kind.label)
-                                }
+                                withStyle(SpanStyle(color = node.kind.color)) { append(node.kind.label) }
                             }
-                        }
+                        },
                     )
                 },
                 actions = {
@@ -132,11 +129,11 @@ fun Edit(
                     }
                 },
             )
-        }
+        },
     ) { padding ->
         nodePayload?.let { (node, payload) ->
             NodeEditForm(
-                EditFormArguments(padding, node, payload, false, ::disableSaving, ::enableSaving)
+                EditFormArguments(padding, node, payload, false, ::disableSaving, ::enableSaving),
             )
         }
     }

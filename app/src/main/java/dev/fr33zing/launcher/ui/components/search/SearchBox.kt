@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Dim
-import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.MainFontFamily
+import dev.fr33zing.launcher.ui.theme.dim
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -54,7 +54,7 @@ fun SearchBox(
     fontSize: TextUnit = LocalNodeDimensions.current.fontSize,
     lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
     keyboardController: SoftwareKeyboardController?,
-    onGo: () -> Unit = {}
+    onGo: () -> Unit = {},
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -71,42 +71,44 @@ fun SearchBox(
                     capitalization = KeyboardCapitalization.None,
                     autoCorrect = false,
                     imeAction = ImeAction.Go,
-                    keyboardType = KeyboardType.Password // Disable auto-suggestions
+                    // Disable auto-suggestions
+                    keyboardType = KeyboardType.Password,
                 ),
             keyboardActions = KeyboardActions(onGo = { onGo() }),
             textStyle =
                 TextStyle(
-                    color = Foreground,
+                    color = foreground,
                     fontSize = fontSize,
                     fontFamily = MainFontFamily,
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
                 ),
             decorationBox = { textField ->
                 Box(contentAlignment = Alignment.CenterStart) {
-                    if (query.isEmpty())
+                    if (query.isEmpty()) {
                         Text(
                             "Begin typing to search...",
                             style =
                                 TextStyle(
-                                    color = Dim,
+                                    color = dim,
                                     fontSize = fontSize * 0.85f,
                                     fontFamily = MainFontFamily,
                                     platformStyle = PlatformTextStyle(includeFontPadding = false),
                                 ),
-                            modifier = Modifier.padding(start = 4.dp)
+                            modifier = Modifier.padding(start = 4.dp),
                         )
+                    }
                     textField()
                 }
             },
-            cursorBrush = SolidColor(Foreground),
-            modifier = Modifier.focusRequester(focusRequester).weight(1f)
+            cursorBrush = SolidColor(foreground),
+            modifier = Modifier.focusRequester(focusRequester).weight(1f),
         )
 
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
         val clearQueryButtonAlpha by
             animateFloatAsState(if (query.isEmpty()) 0f else 1f, label = "clear query button alpha")
-        val clearQueryButtonColor = Catppuccin.Current.red.copy(alpha = clearQueryButtonAlpha)
+        val clearQueryButtonColor = Catppuccin.current.red.copy(alpha = clearQueryButtonAlpha)
         val interactionSource = remember { MutableInteractionSource() }
         val indication = rememberCustomIndication(color = clearQueryButtonColor, circular = true)
 
@@ -122,7 +124,7 @@ fun SearchBox(
                     updateQuery("")
                     focusRequester.requestFocus()
                     keyboardController?.show()
-                }
+                },
         )
     }
 }

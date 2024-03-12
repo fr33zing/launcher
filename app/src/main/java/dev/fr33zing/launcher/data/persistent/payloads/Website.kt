@@ -12,24 +12,32 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.utility.UserEditable
 
 val UrlRegex =
-    (buildString {
+    (
+        buildString {
             append("^((http|https)://)(www.)?")
             append("[a-zA-Z0-9@:%._\\+~#?&//=]")
             append("{2,256}\\.[a-z]")
             append("{2,6}\\b([-a-zA-Z0-9@:%")
             append("._\\+~#?&//=]*)$")
-        })
+        }
+    )
         .toRegex()
 
 @Keep
 @Entity
-class Website(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String = "") :
+class Website(
+    payloadId: Int,
+    nodeId: Int,
+    @UserEditable("URL") var url: String = "",
+) :
     Payload(payloadId, nodeId) {
-
     val validUrl: Boolean
         get() = UrlRegex.matches(url)
 
-    override fun activate(db: AppDatabase, context: Context) = launch(context)
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) = launch(context)
 
     fun launch(context: Context) {
         if (validUrl) {
@@ -38,15 +46,15 @@ class Website(payloadId: Int, nodeId: Int, @UserEditable("URL") var url: String 
                 startActivity(context, browserIntent, null)
             } catch (e: Exception) {
                 sendNotice(
-                    "website-launch-failed:${nodeId}",
+                    "website-launch-failed:$nodeId",
                     "Failed to launch web browser. Error: ${e.message}.",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             }
         } else {
             sendNotice(
-                "website-launch-invalid:${nodeId}",
-                "Cannot launch web browser because the URL is invalid."
+                "website-launch-invalid:$nodeId",
+                "Cannot launch web browser because the URL is invalid.",
             )
         }
     }

@@ -9,8 +9,8 @@ val LocalNodeRowFeatures = compositionLocalOf { NodeRowFeatures.All }
 
 enum class NodeRowFeatures {
     /**
-     * If true, an animation will be played when the node is rendered. Only implemented in
-     * `NodeTree` at the moment.
+     * If true, an animation will be played when the node is rendered. Only implemented in `NodeTree`
+     * at the moment.
      */
     APPEAR_ANIMATION,
 
@@ -19,8 +19,8 @@ enum class NodeRowFeatures {
 
     /**
      * If false, directories cannot be expanded and their state will be ignored. If [RECURSIVE] is
-     * false and [ACTIVATE] is true, activating a directory will call `onActivateDirectory` instead
-     * of `onActivatePayload`.
+     * false and [ACTIVATE] is true, activating a directory will call `onActivateDirectory` instead of
+     * `onActivatePayload`.
      */
     RECURSIVE,
 

@@ -47,8 +47,8 @@ import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Dim
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.dim
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
@@ -90,7 +90,7 @@ fun Reorder(
         visible = cancelDialogVisible,
         icon = Icons.Filled.Close,
         yesText = "Cancel reorder",
-        yesColor = Catppuccin.Current.red,
+        yesColor = Catppuccin.current.red,
         yesIcon = Icons.Filled.Close,
         noText = "Continue reordering",
         noIcon = Icons.Filled.ArrowBack,
@@ -102,11 +102,11 @@ fun Reorder(
         visible = saveDialogVisible,
         icon = Icons.Filled.Check,
         yesText = "Save new order",
-        yesColor = Catppuccin.Current.green,
+        yesColor = Catppuccin.current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue reordering",
         noIcon = Icons.Filled.ArrowBack,
-        onYes = ::onSaveChanges
+        onYes = ::onSaveChanges,
     )
 
     BackHandler { if (askOnReject) cancelDialogVisible.value = true else onCancelChanges() }
@@ -123,32 +123,31 @@ fun Reorder(
                                     append(parentNode.kind.label)
                                 }
                             }
-                        }
+                        },
                     )
                 },
                 actions = {
                     CancelButton {
                         if (askOnReject) cancelDialogVisible.value = true else onCancelChanges()
                     }
-                    FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true else onSaveChanges()
-                    }
+                    FinishButton { if (askOnAccept) saveDialogVisible.value = true else onSaveChanges() }
                 },
             )
-        }
+        },
     ) { innerPadding ->
         Box(
             Modifier.fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = extraPadding)
-                .verticalScrollShadows(preferences.nodeAppearance.spacing.mappedDefault)
+                .verticalScrollShadows(preferences.nodeAppearance.spacing.mappedDefault),
         ) {
-            if (viewModel.parentNode != null && viewModel.reorderableNodes != null)
+            if (viewModel.parentNode != null && viewModel.reorderableNodes != null) {
                 ReorderableList(
                     viewModel.parentNode!!,
                     viewModel.reorderableNodes!!,
-                    viewModel::move
+                    viewModel::move,
                 )
+            }
         }
     }
 }
@@ -157,41 +156,38 @@ fun Reorder(
 private fun ReorderableList(
     parentNode: Node,
     reorderableNodes: List<ReferenceFollowingNodePayloadState>,
-    onMove: (from: Int, to: Int) -> Unit
+    onMove: (from: Int, to: Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
     val reorderableState =
         rememberReorderableLazyListState(
             listState = listState,
             onMove = { from, to -> onMove(from.index, to.index) },
-            canDragOver = { from, to -> to.index != 0 && from.index != 0 }
+            canDragOver = { from, to -> to.index != 0 && from.index != 0 },
         )
 
     CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
         LazyColumn(
             state = reorderableState.listState,
-            modifier = Modifier.reorderable(reorderableState).fillMaxSize()
+            modifier = Modifier.reorderable(reorderableState).fillMaxSize(),
         ) {
             items(reorderableNodes, { state -> state.underlyingState.node.nodeId }) { state ->
                 ReorderableItem(
                     reorderableState,
                     key = state.underlyingState.node.nodeId,
                 ) { isDragging ->
-                    val draggable = remember {
-                        state.underlyingState.node.nodeId != parentNode.nodeId
-                    }
+                    val draggable = remember { state.underlyingState.node.nodeId != parentNode.nodeId }
 
                     CompositionLocalProvider(
-                        LocalNodeAppearance provides
-                            rememberNodeAppearance(state.node, state.payload)
+                        LocalNodeAppearance provides rememberNodeAppearance(state.node, state.payload),
                     ) {
                         NodeDetailContainer(
                             depth = if (draggable) 1 else 0,
-                            modifier = Modifier.alpha(if (isDragging) 0.65f else 1f)
+                            modifier = Modifier.alpha(if (isDragging) 0.65f else 1f),
                         ) {
                             NodeDetail(
                                 label = state.underlyingState.node.label,
-                                color = if (!draggable) Dim else LocalNodeAppearance.current.color,
+                                color = if (!draggable) dim else LocalNodeAppearance.current.color,
                                 isValidReference = state.isValidReference,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis,
@@ -202,13 +198,13 @@ private fun ReorderableList(
                                 with(LocalNodeDimensions.current) {
                                     Box(
                                         Modifier.absolutePadding(left = lineHeight)
-                                            .detectReorder(reorderableState)
+                                            .detectReorder(reorderableState),
                                     ) {
                                         Icon(
                                             Icons.Filled.DragIndicator,
                                             contentDescription = "drag indicator",
                                             modifier = Modifier.size(lineHeight),
-                                            tint = Foreground,
+                                            tint = foreground,
                                         )
                                     }
                                 }

@@ -32,11 +32,11 @@ import dev.fr33zing.launcher.data.persistent.payloads.userManager
 import dev.fr33zing.launcher.data.utility.getActivityInfos
 import dev.fr33zing.launcher.ui.components.Notices
 import dev.fr33zing.launcher.ui.theme.LauncherTheme
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 const val TAG = "dev.fr33zing.launcher"
 
@@ -72,9 +72,7 @@ class MainActivity : ComponentActivity() {
         // checking for new applications on resume or ACTION_PACKAGE_ADDED broadcast received.
         runBlocking {
             packagesInstalledAtLaunch =
-                getActivityInfos(applicationContext).map {
-                    Pair(it.componentName.packageName, it.user)
-                }
+                getActivityInfos(applicationContext).map { Pair(it.componentName.packageName, it.user) }
         }
 
         setContent {
@@ -82,10 +80,7 @@ class MainActivity : ComponentActivity() {
             BroadcastReceiver(Intent.ACTION_PACKAGE_ADDED) { checkForNewApplications(false) }
 
             LauncherTheme {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
                     Box {
                         SetupNavigation(db)
                         Notices()
@@ -99,37 +94,45 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val activityInfos =
                 getActivityInfos(applicationContext).let { activityInfos ->
-                    if (includePackagesInstalledAtLaunch) activityInfos
-                    else
+                    if (includePackagesInstalledAtLaunch) {
+                        activityInfos
+                    } else {
                         activityInfos.filter { activityInfo ->
                             packagesInstalledAtLaunch.none { alreadyInstalled ->
                                 activityInfo.componentName.packageName == alreadyInstalled.first &&
                                     activityInfo.user == alreadyInstalled.second
                             }
                         }
+                    }
                 }
             db.createNewApplications(activityInfos)
         }
     }
+}
 
-    @Composable
-    fun BroadcastReceiver(filter: String, onReceive: (Intent?) -> Unit) {
-        val context = LocalContext.current
-        val onReceiveState by rememberUpdatedState(onReceive)
+@Composable
+fun BroadcastReceiver(
+    filter: String,
+    onReceive: (Intent?) -> Unit,
+) {
+    val context = LocalContext.current
+    val onReceiveState by rememberUpdatedState(onReceive)
 
-        DisposableEffect(context, filter) {
-            val intentFilter = IntentFilter(filter)
+    DisposableEffect(context, filter) {
+        val intentFilter = IntentFilter(filter)
 
-            val receiver =
-                object : BroadcastReceiver() {
-                    override fun onReceive(context: Context?, intent: Intent?) {
-                        onReceiveState(intent)
-                    }
+        val receiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?,
+                ) {
+                    onReceiveState(intent)
                 }
+            }
 
-            context.registerReceiver(receiver, intentFilter)
+        context.registerReceiver(receiver, intentFilter)
 
-            onDispose { context.unregisterReceiver(receiver) }
-        }
+        onDispose { context.unregisterReceiver(receiver) }
     }
 }

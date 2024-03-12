@@ -29,8 +29,8 @@ import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchBottomBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.BatchTopBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.MoveBottomBar
 import dev.fr33zing.launcher.ui.components.tree.modal.bar.MoveTopBar
+import dev.fr33zing.launcher.ui.components.tree.modal.utility.MODAL_CLEAR_STATE_DELAY
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalAnimatedContent
-import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalClearStateDelay
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.modalFiniteAnimationSpec
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 import dev.fr33zing.launcher.ui.utility.conditional
@@ -39,7 +39,10 @@ import kotlinx.coroutines.delay
 private val verticalPadding = 8.dp
 
 @Composable
-private fun ModalTopBarContent(treeState: TreeState, actions: ModalActions): Unit =
+private fun ModalTopBarContent(
+    treeState: TreeState,
+    actions: ModalActions,
+): Unit =
     when (treeState.mode) {
         TreeState.Mode.Batch -> BatchTopBar(treeState, actions)
         TreeState.Mode.Move -> MoveTopBar(treeState, actions)
@@ -47,7 +50,10 @@ private fun ModalTopBarContent(treeState: TreeState, actions: ModalActions): Uni
     }
 
 @Composable
-private fun ModalBottomBarContent(treeState: TreeState, actions: ModalActions): Unit =
+private fun ModalBottomBarContent(
+    treeState: TreeState,
+    actions: ModalActions,
+): Unit =
     when (treeState.mode) {
         TreeState.Mode.Batch -> BatchBottomBar(treeState, actions)
         TreeState.Mode.Move -> MoveBottomBar(treeState, actions)
@@ -67,13 +73,18 @@ enum class ModalBarPosition(
     val expandFrom: Alignment.Vertical,
 ) {
     Top(Alignment.Bottom),
-    Bottom(Alignment.Top);
+    Bottom(Alignment.Top),
+    ;
 
     val shrinkTowards = expandFrom
 }
 
 @Composable
-fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalActions) {
+fun ModalBar(
+    position: ModalBarPosition,
+    treeState: TreeState,
+    actions: ModalActions,
+) {
     val preferences = Preferences(LocalContext.current)
     val spacing by preferences.nodeAppearance.spacing.state
 
@@ -84,7 +95,7 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalAct
             visible = true
         } else {
             visible = false
-            delay(ModalClearStateDelay)
+            delay(MODAL_CLEAR_STATE_DELAY)
         }
     }
 
@@ -110,14 +121,14 @@ fun ModalBar(position: ModalBarPosition, treeState: TreeState, actions: ModalAct
                         }
                         .conditional(position == ModalBarPosition.Bottom) {
                             absolutePadding(bottom = spacing / 2)
-                        }
+                        },
                 ) {
                     when (position) {
                         ModalBarPosition.Top ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
                                 ModalTopBarContent(it, actions)
                             }

@@ -29,66 +29,72 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import dev.fr33zing.launcher.ui.components.Notice
 import dev.fr33zing.launcher.ui.components.sendNotice
-import dev.fr33zing.launcher.ui.theme.Background
+import dev.fr33zing.launcher.ui.theme.background
 
 // https://stackoverflow.com/a/72554087
-fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier =
-    if (condition) then(modifier(Modifier)) else this
+fun Modifier.conditional(
+    condition: Boolean,
+    modifier: Modifier.() -> Modifier,
+): Modifier = if (condition) then(modifier(Modifier)) else this
 
-fun Modifier.blockPointerEvents() = composed {
-    this.clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = null,
-        onClick = {}
-    )
-}
-
-fun Modifier.longPressable(tapNotice: (() -> Notice)? = null, onLongPressed: () -> Unit) =
+fun Modifier.blockPointerEvents() =
     composed {
-        val haptics = LocalHapticFeedback.current
-        this.pointerInput(onLongPressed) {
-            detectTapGestures(
-                onTap = {
-                    tapNotice?.let {
-                        sendNotice(tapNotice())
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                },
-                onLongPress = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongPressed()
-                }
-            )
-        }
+        this.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {},
+        )
     }
 
-// TODO use this for NodeList?
-fun Modifier.verticalScrollShadows(height: Dp) = drawWithContent {
-    val h = height.toPx()
-    drawContent()
-    drawRect(
-        brush =
-            Brush.verticalGradient(
-                0.0f to Background,
-                1.0f to Color.Transparent,
-                endY = h,
-            ),
-        blendMode = BlendMode.SrcAtop,
-        size = Size(size.width, h),
-    )
-    drawRect(
-        brush =
-            Brush.verticalGradient(
-                0.0f to Color.Transparent,
-                1.0f to Background,
-                startY = size.height - h,
-                endY = size.height,
-            ),
-        blendMode = BlendMode.SrcAtop,
-        size = Size(size.width, h),
-        topLeft = Offset(0f, size.height - h),
-    )
+fun Modifier.longPressable(
+    tapNotice: (() -> Notice)? = null,
+    onLongPressed: () -> Unit,
+) = composed {
+    val haptics = LocalHapticFeedback.current
+    this.pointerInput(onLongPressed) {
+        detectTapGestures(
+            onTap = {
+                tapNotice?.let {
+                    sendNotice(tapNotice())
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            },
+            onLongPress = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                onLongPressed()
+            },
+        )
+    }
 }
+
+// TODO use this for NodeList?
+fun Modifier.verticalScrollShadows(height: Dp) =
+    drawWithContent {
+        val h = height.toPx()
+        drawContent()
+        drawRect(
+            brush =
+                Brush.verticalGradient(
+                    0.0f to background,
+                    1.0f to Color.Transparent,
+                    endY = h,
+                ),
+            blendMode = BlendMode.SrcAtop,
+            size = Size(size.width, h),
+        )
+        drawRect(
+            brush =
+                Brush.verticalGradient(
+                    0.0f to Color.Transparent,
+                    1.0f to background,
+                    startY = size.height - h,
+                    endY = size.height,
+                ),
+            blendMode = BlendMode.SrcAtop,
+            size = Size(size.width, h),
+            topLeft = Offset(0f, size.height - h),
+        )
+    }
 
 data class PaddingAndShadowHeight(val paddingHeight: Dp, val shadowHeight: Dp)
 
@@ -96,8 +102,7 @@ data class PaddingAndShadowHeight(val paddingHeight: Dp, val shadowHeight: Dp)
 fun rememberPaddingAndShadowHeight(): PaddingAndShadowHeight {
     val density = LocalDensity.current
     val statusBarsTop = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
-    val navigationBarsBottom =
-        with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
+    val navigationBarsBottom = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
     val verticalPadding =
         remember(WindowInsets.statusBars, WindowInsets.navigationBars) {
             listOf(statusBarsTop, navigationBarsBottom).max()

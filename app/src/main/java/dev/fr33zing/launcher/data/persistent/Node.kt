@@ -39,23 +39,30 @@ data class Node(
 interface NodeDao {
     @Insert suspend fun insert(node: Node)
 
-    @Transaction @Insert suspend fun insertMany(nodes: List<Node>)
+    @Transaction @Insert
+    suspend fun insertMany(nodes: List<Node>)
 
     @Update suspend fun update(node: Node)
 
-    @Transaction @Update suspend fun updateMany(nodes: List<Node>)
+    @Transaction @Update
+    suspend fun updateMany(nodes: List<Node>)
 
     @Delete suspend fun delete(node: Node)
 
-    @Transaction @Delete suspend fun deleteMany(nodes: List<Node>)
+    @Transaction @Delete
+    suspend fun deleteMany(nodes: List<Node>)
 
-    @Query("SELECT * FROM Node") suspend fun getAll(): List<Node>
+    @Query("SELECT * FROM Node")
+    suspend fun getAll(): List<Node>
 
-    @Query("SELECT nodeId, kind, label FROM Node") suspend fun getAllMinimal(): List<NodeMinimal>
+    @Query("SELECT nodeId, kind, label FROM Node")
+    suspend fun getAllMinimal(): List<NodeMinimal>
 
-    @Query("SELECT * FROM Node") fun getAllFlow(): Flow<List<Node>>
+    @Query("SELECT * FROM Node")
+    fun getAllFlow(): Flow<List<Node>>
 
-    @Query("SELECT * FROM Node WHERE nodeId == :nodeId") suspend fun getNodeById(nodeId: Int): Node?
+    @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
+    suspend fun getNodeById(nodeId: Int): Node?
 
     @Query("SELECT * FROM Node WHERE nodeId == :nodeId")
     fun getNodeFlowById(nodeId: Int): Flow<Node?>
@@ -69,11 +76,16 @@ interface NodeDao {
         }
 
     @Query("SELECT * FROM Node WHERE parentId == :parentId AND label == :label")
-    suspend fun getChildNodeByLabel(parentId: Int?, label: String): Node?
+    suspend fun getChildNodeByLabel(
+        parentId: Int?,
+        label: String,
+    ): Node?
 
-    @Query("SELECT * FROM Node ORDER BY nodeId DESC LIMIT 1") fun getLastNode(): Node
+    @Query("SELECT * FROM Node ORDER BY nodeId DESC LIMIT 1")
+    fun getLastNode(): Node
 
-    @Query("SELECT nodeId FROM Node ORDER BY nodeId DESC LIMIT 1") fun getLastNodeId(): Int
+    @Query("SELECT nodeId FROM Node ORDER BY nodeId DESC LIMIT 1")
+    fun getLastNodeId(): Int
 
     @Query("SELECT * FROM Node WHERE parentId == :nodeId ORDER BY Node.`order` ASC")
     suspend fun getChildNodes(nodeId: Int?): List<Node>
@@ -82,7 +94,7 @@ interface NodeDao {
     fun getChildNodesFlow(nodeId: Int): Flow<List<Node>>
 
     @Query(
-        "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1"
+        "SELECT Node.`order` FROM Node where parentId == :parentId ORDER BY Node.`order` DESC LIMIT 1",
     )
     suspend fun getLastNodeOrder(parentId: Int?): Int
 }

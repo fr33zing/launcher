@@ -32,8 +32,8 @@ import dev.fr33zing.launcher.data.viewmodel.state.ReferenceFollowingNodePayloadS
 import dev.fr33zing.launcher.data.viewmodel.state.TreeBrowserStateHolder
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
@@ -70,13 +70,13 @@ fun TreeBrowser(
             val children by targetState.children.flow.collectAsStateWithLifecycle(emptyArray())
             Column(
                 verticalArrangement = if (center) Arrangement.Center else Arrangement.Top,
-                modifier = if (center) Modifier.fillMaxSize() else Modifier.fillMaxWidth()
+                modifier = if (center) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
             ) {
                 if (targetState.canTraverseUpward) {
                     TraverseUpRow(
                         enabled = !transition.isRunning,
                         horizontalPadding = horizontalPadding,
-                        onTraverseUp = stateHolder::traverseUpward
+                        onTraverseUp = stateHolder::traverseUpward,
                     )
                 }
 
@@ -105,18 +105,21 @@ private fun TraverseUpRow(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val label = remember { ".." }
-    val color = remember { Foreground.dim() }
+    val color = remember { foreground.dim() }
     val icon =
         remember(layoutDirection) {
-            if (layoutDirection == LayoutDirection.Ltr) Icons.Outlined.SubdirectoryArrowLeft
-            else Icons.Outlined.SubdirectoryArrowRight
+            if (layoutDirection == LayoutDirection.Ltr) {
+                Icons.Outlined.SubdirectoryArrowLeft
+            } else {
+                Icons.Outlined.SubdirectoryArrowRight
+            }
         }
 
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication(color)
 
     NodeDetailContainer(
-        Modifier.clickable(interactionSource, indication) { if (enabled) onTraverseUp() }
+        Modifier.clickable(interactionSource, indication) { if (enabled) onTraverseUp() },
     ) {
         NodeDetail(
             label = label,
@@ -140,18 +143,18 @@ private fun TreeBrowserRow(
             rememberNodeAppearance(
                 nodePayload = state,
                 ignoreState = state.node.kind == NodeKind.Directory,
-            )
+            ),
     ) {
         val interactionSource = remember { MutableInteractionSource() }
         val indication = rememberCustomIndication(LocalNodeAppearance.current.color)
 
         NodeDetailContainer(
-            Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() }
+            Modifier.clickable(interactionSource, indication) { if (enabled) onNodeSelected() },
         ) {
             NodeDetail(
                 label = state.underlyingState.node.label,
                 isValidReference = state.isValidReference,
-                textModifier = Modifier.weight(1f)
+                textModifier = Modifier.weight(1f),
             )
 
             additionalContent()

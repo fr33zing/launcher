@@ -34,9 +34,9 @@ import dev.fr33zing.launcher.data.persistent.payloads.Reminder
 import dev.fr33zing.launcher.data.persistent.payloads.Setting
 import dev.fr33zing.launcher.data.persistent.payloads.Website
 import dev.fr33zing.launcher.data.utility.Converters
+import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KParameter
 import kotlin.reflect.typeOf
-import kotlinx.coroutines.flow.Flow
 
 @Suppress("UNCHECKED_CAST")
 @TypeConverters(Converters::class)
@@ -62,8 +62,8 @@ import kotlinx.coroutines.flow.Flow
             Reference::class,
             Reminder::class,
             Website::class,
-            Setting::class
-        ]
+            Setting::class,
+        ],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun nodeDao(): NodeDao
@@ -103,7 +103,10 @@ abstract class AppDatabase : RoomDatabase() {
             else -> throw Exception("Invalid payload class: ${T::class}")
         }
 
-    fun createDefaultPayloadForNode(nodeKind: NodeKind, nodeId: Int): Payload {
+    fun createDefaultPayloadForNode(
+        nodeKind: NodeKind,
+        nodeId: Int,
+    ): Payload {
         val payloadClass =
             when (nodeKind) {
                 NodeKind.Application -> Application::class
@@ -126,7 +129,10 @@ abstract class AppDatabase : RoomDatabase() {
         return with(constructor) { callBy(mapOf(parameters[0] to 0, parameters[1] to nodeId)) }
     }
 
-    suspend fun getPayloadByNodeId(nodeKind: NodeKind, nodeId: Int): Payload? =
+    suspend fun getPayloadByNodeId(
+        nodeKind: NodeKind,
+        nodeId: Int,
+    ): Payload? =
         when (nodeKind) {
             NodeKind.Application -> applicationDao().getPayloadByNodeId(nodeId)
             NodeKind.Checkbox -> checkboxDao().getPayloadByNodeId(nodeId)
@@ -140,7 +146,10 @@ abstract class AppDatabase : RoomDatabase() {
             NodeKind.Setting -> settingDao().getPayloadByNodeId(nodeId)
         }
 
-    fun getPayloadFlowByNodeId(nodeKind: NodeKind, nodeId: Int): Flow<Payload?> =
+    fun getPayloadFlowByNodeId(
+        nodeKind: NodeKind,
+        nodeId: Int,
+    ): Flow<Payload?> =
         when (nodeKind) {
             NodeKind.Application -> applicationDao().getPayloadFlowByNodeId(nodeId)
             NodeKind.Checkbox -> checkboxDao().getPayloadFlowByNodeId(nodeId)
@@ -262,31 +271,32 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    private fun preInsert(vararg entities: Any) =
-        entities.forEach { if (it is Payload) it.preInsert() }
+    private fun preInsert(vararg entities: Any) = entities.forEach { if (it is Payload) it.preInsert() }
 
-    private fun preUpdate(vararg entities: Any) =
-        entities.forEach { if (it is Payload) it.preUpdate() }
+    private fun preUpdate(vararg entities: Any) = entities.forEach { if (it is Payload) it.preUpdate() }
 
-    private fun preDelete(vararg entities: Any) =
-        entities.forEach { if (it is Payload) it.preDelete() }
+    private fun preDelete(vararg entities: Any) = entities.forEach { if (it is Payload) it.preDelete() }
 }
 
 @Dao
 interface ApplicationDao {
     @Insert suspend fun insert(entity: Application)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Application>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Application>)
 
     @Update suspend fun update(entity: Application)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Application>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Application>)
 
     @Delete suspend fun delete(entity: Application)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Application>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Application>)
 
-    @Query("SELECT * FROM Application") suspend fun getAllPayloads(): List<Application>
+    @Query("SELECT * FROM Application")
+    suspend fun getAllPayloads(): List<Application>
 
     @Query("SELECT * FROM Application WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Application?
@@ -299,17 +309,21 @@ interface ApplicationDao {
 interface CheckboxDao {
     @Insert suspend fun insert(entity: Checkbox)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Checkbox>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Checkbox>)
 
     @Update suspend fun update(entity: Checkbox)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Checkbox>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Checkbox>)
 
     @Delete suspend fun delete(entity: Checkbox)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Checkbox>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Checkbox>)
 
-    @Query("SELECT * FROM Checkbox") suspend fun getAllPayloads(): List<Checkbox>
+    @Query("SELECT * FROM Checkbox")
+    suspend fun getAllPayloads(): List<Checkbox>
 
     @Query("SELECT * FROM Checkbox WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Checkbox?
@@ -322,17 +336,21 @@ interface CheckboxDao {
 interface DirectoryDao {
     @Insert suspend fun insert(entity: Directory)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Directory>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Directory>)
 
     @Update suspend fun update(entity: Directory)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Directory>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Directory>)
 
     @Delete suspend fun delete(entity: Directory)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Directory>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Directory>)
 
-    @Query("SELECT * FROM Directory") suspend fun getAllPayloads(): List<Directory>
+    @Query("SELECT * FROM Directory")
+    suspend fun getAllPayloads(): List<Directory>
 
     @Query("SELECT * FROM Directory WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Directory?
@@ -348,17 +366,21 @@ interface DirectoryDao {
 interface FileDao {
     @Insert suspend fun insert(entity: File)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<File>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<File>)
 
     @Update suspend fun update(entity: File)
 
-    @Transaction @Update suspend fun updateMany(entities: List<File>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<File>)
 
     @Delete suspend fun delete(entity: File)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<File>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<File>)
 
-    @Query("SELECT * FROM File") suspend fun getAllPayloads(): List<File>
+    @Query("SELECT * FROM File")
+    suspend fun getAllPayloads(): List<File>
 
     @Query("SELECT * FROM File WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): File?
@@ -371,17 +393,21 @@ interface FileDao {
 interface LocationDao {
     @Insert suspend fun insert(entity: Location)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Location>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Location>)
 
     @Update suspend fun update(entity: Location)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Location>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Location>)
 
     @Delete suspend fun delete(entity: Location)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Location>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Location>)
 
-    @Query("SELECT * FROM Location") suspend fun getAllPayloads(): List<Location>
+    @Query("SELECT * FROM Location")
+    suspend fun getAllPayloads(): List<Location>
 
     @Query("SELECT * FROM Location WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Location?
@@ -394,17 +420,21 @@ interface LocationDao {
 interface NoteDao {
     @Insert suspend fun insert(entity: Note)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Note>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Note>)
 
     @Update suspend fun update(entity: Note)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Note>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Note>)
 
     @Delete suspend fun delete(entity: Note)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Note>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Note>)
 
-    @Query("SELECT * FROM Note") suspend fun getAllPayloads(): List<Note>
+    @Query("SELECT * FROM Note")
+    suspend fun getAllPayloads(): List<Note>
 
     @Query("SELECT * FROM Note WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Note?
@@ -417,17 +447,21 @@ interface NoteDao {
 interface ReferenceDao {
     @Insert suspend fun insert(entity: Reference)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Reference>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Reference>)
 
     @Update suspend fun update(entity: Reference)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Reference>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Reference>)
 
     @Delete suspend fun delete(entity: Reference)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Reference>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Reference>)
 
-    @Query("SELECT * FROM Reference") suspend fun getAllPayloads(): List<Reference>
+    @Query("SELECT * FROM Reference")
+    suspend fun getAllPayloads(): List<Reference>
 
     @Query("SELECT * FROM Reference WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Reference?
@@ -440,17 +474,21 @@ interface ReferenceDao {
 interface ReminderDao {
     @Insert suspend fun insert(entity: Reminder)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Reminder>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Reminder>)
 
     @Update suspend fun update(entity: Reminder)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Reminder>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Reminder>)
 
     @Delete suspend fun delete(entity: Reminder)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Reminder>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Reminder>)
 
-    @Query("SELECT * FROM Reminder") suspend fun getAllPayloads(): List<Reminder>
+    @Query("SELECT * FROM Reminder")
+    suspend fun getAllPayloads(): List<Reminder>
 
     @Query("SELECT * FROM Reminder WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Reminder?
@@ -463,17 +501,21 @@ interface ReminderDao {
 interface WebsiteDao {
     @Insert suspend fun insert(entity: Website)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Website>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Website>)
 
     @Update suspend fun update(entity: Website)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Website>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Website>)
 
     @Delete suspend fun delete(entity: Website)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Website>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Website>)
 
-    @Query("SELECT * FROM Website") suspend fun getAllPayloads(): List<Website>
+    @Query("SELECT * FROM Website")
+    suspend fun getAllPayloads(): List<Website>
 
     @Query("SELECT * FROM Website WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Website?
@@ -486,17 +528,21 @@ interface WebsiteDao {
 interface SettingDao {
     @Insert suspend fun insert(entity: Setting)
 
-    @Transaction @Insert suspend fun insertMany(entities: List<Setting>)
+    @Transaction @Insert
+    suspend fun insertMany(entities: List<Setting>)
 
     @Update suspend fun update(entity: Setting)
 
-    @Transaction @Update suspend fun updateMany(entities: List<Setting>)
+    @Transaction @Update
+    suspend fun updateMany(entities: List<Setting>)
 
     @Delete suspend fun delete(entity: Setting)
 
-    @Transaction @Delete suspend fun deleteMany(entities: List<Setting>)
+    @Transaction @Delete
+    suspend fun deleteMany(entities: List<Setting>)
 
-    @Query("SELECT * FROM Setting") suspend fun getAllPayloads(): List<Setting>
+    @Query("SELECT * FROM Setting")
+    suspend fun getAllPayloads(): List<Setting>
 
     @Query("SELECT * FROM Setting WHERE nodeId = :nodeId")
     suspend fun getPayloadByNodeId(nodeId: Int): Setting?

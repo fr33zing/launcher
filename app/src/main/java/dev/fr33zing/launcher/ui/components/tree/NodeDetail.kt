@@ -31,16 +31,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
+import dev.fr33zing.launcher.data.UNLABELED_NODE_TEXT
 import dev.fr33zing.launcher.data.UnlabeledNodeColor
-import dev.fr33zing.launcher.data.UnlabeledNodeText
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Foreground
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.dim
 
-private val irrelevantColor = Foreground.dim(0.8f)
+private val irrelevantColor = foreground.dim(0.8f)
 
 @Composable
 fun NodeDetailContainer(
@@ -48,7 +48,9 @@ fun NodeDetailContainer(
     depth: Int = 0,
     spacing: Dp = LocalNodeDimensions.current.spacing,
     indent: Dp = LocalNodeDimensions.current.indent,
-    content: @Composable() (RowScope.() -> Unit),
+    content:
+        @Composable()
+        (RowScope.() -> Unit),
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -60,7 +62,7 @@ fun NodeDetailContainer(
                     horizontal = ScreenHorizontalPadding,
                 )
                 .padding(start = indent * depth),
-        content = content
+        content = content,
     )
 }
 
@@ -77,7 +79,7 @@ fun NodeDetail(
     softWrap: Boolean = true,
     overflow: TextOverflow = TextOverflow.Visible,
     buildLabelString: (AnnotatedString.Builder.() -> Unit)? = null,
-    @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") textModifier: Modifier = Modifier,
 ) {
     val inlineContentMap =
         mapOf(
@@ -86,14 +88,17 @@ fun NodeDetail(
                     icon = NodeKind.Reference.icon,
                     color = NodeKind.Reference.color.copy(alpha = color.alpha),
                     contentDescription = "reference indicator",
-                    fontSize = fontSize
-                )
+                    fontSize = fontSize,
+                ),
         )
     val text =
         remember(label) {
             buildAnnotatedString {
-                if (label.isNotBlank()) buildLabelString?.let { it() } ?: append(label)
-                else withStyle(SpanStyle(color = UnlabeledNodeColor)) { append(UnlabeledNodeText) }
+                if (label.isNotBlank()) {
+                    buildLabelString?.let { it() } ?: append(label)
+                } else {
+                    withStyle(SpanStyle(color = UnlabeledNodeColor)) { append(UNLABELED_NODE_TEXT) }
+                }
 
                 if (isValidReference) {
                     withStyle(SpanStyle(textDecoration = TextDecoration.None)) { append("  ") }
@@ -107,7 +112,7 @@ fun NodeDetail(
         relevance?.let {
             animateColorAsState(
                 targetValue = if (relevance == NodeRelevance.Relevant) color else irrelevantColor,
-                label = "node relevance color"
+                label = "node relevance color",
             )
         }
     val finalColor = relevanceColor?.value ?: color
@@ -129,7 +134,7 @@ fun NodeDetail(
         softWrap = softWrap,
         overflow = overflow,
         textDecoration = textDecoration,
-        inlineContent = inlineContentMap
+        inlineContent = inlineContentMap,
     )
 }
 
@@ -148,14 +153,14 @@ private fun inlineLabelContent(
         Placeholder(
             width = size,
             height = size,
-            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-        )
+            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+        ),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = color,
-            modifier = Modifier.size(sizeDp)
+            modifier = Modifier.size(sizeDp),
         )
     }
 }

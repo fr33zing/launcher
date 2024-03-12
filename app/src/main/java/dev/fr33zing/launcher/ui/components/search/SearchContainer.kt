@@ -27,30 +27,34 @@ import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
 private val controlsVerticalPadding = 16.dp
 private val controlsSpacing = 24.dp
 
-private val requestFocusButtonMargin = 16.dp
-private const val requestFocusButtonFadeInDurationMs = 500
-private const val requestFocusButtonFadeInDelayMs = 500
+private const val FADE_IN_DURATION = 500
+private const val FADE_IN_DELAY = 500
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchContainer(
     requestFocus: () -> Unit,
     showRequestFocusButton: Boolean,
-    controls: @Composable() (ColumnScope.() -> Unit),
-    results: @Composable() (ColumnScope.() -> Unit)
+    controls:
+        @Composable()
+        (ColumnScope.() -> Unit),
+    results:
+        @Composable()
+        (ColumnScope.() -> Unit),
 ) {
     Scaffold(
         floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = { RequestFocusButton(showRequestFocusButton, requestFocus) }
-    ) { padding ->
+        floatingActionButton = { RequestFocusButton(showRequestFocusButton, requestFocus) },
+    ) { padding,
+        ->
         Column(Modifier.padding(padding).consumeWindowInsets(padding).imePadding()) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(controlsSpacing),
                 modifier =
                     Modifier.padding(
                         horizontal = ScreenHorizontalPadding,
-                        vertical = controlsVerticalPadding
-                    )
+                        vertical = controlsVerticalPadding,
+                    ),
             ) {
                 controls()
             }
@@ -61,14 +65,20 @@ fun SearchContainer(
 }
 
 @Composable
-private fun RequestFocusButton(visible: Boolean, requestFocus: () -> Unit) {
+private fun RequestFocusButton(
+    visible: Boolean,
+    requestFocus: () -> Unit,
+) {
     val alpha by
         animateFloatAsState(
             targetValue = if (visible) 1f else 0f,
             label = "focus search bar button alpha",
             animationSpec =
-                if (!visible) snap()
-                else tween(requestFocusButtonFadeInDurationMs, requestFocusButtonFadeInDelayMs),
+                if (!visible) {
+                    snap()
+                } else {
+                    tween(FADE_IN_DURATION, FADE_IN_DELAY)
+                },
         )
 
     Box(Modifier.padding(bottom = ActionButtonVerticalPadding).alpha(alpha)) {

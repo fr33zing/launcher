@@ -27,16 +27,16 @@ import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.components.tree.TreeBrowser
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
 @Composable
 fun ReferenceEditForm(
     arguments: EditFormArguments,
-    viewModel: EditReferenceViewModel = hiltViewModel()
+    viewModel: EditReferenceViewModel = hiltViewModel(),
 ) {
     val (padding, node, payload, _, disableSaving, enableSaving) = arguments
     val reference = payload as Reference
@@ -53,8 +53,11 @@ fun ReferenceEditForm(
     }
     LaunchedEffect(viewModel.selectedNode) { reference.targetId = viewModel.selectedNode?.nodeId }
     LaunchedEffect(viewModel.cyclic) {
-        if (!viewModel.cyclic) enableSaving()
-        else disableSaving("Cannot save a reference that would create an infinite loop.")
+        if (!viewModel.cyclic) {
+            enableSaving()
+        } else {
+            disableSaving("Cannot save a reference that would create an infinite loop.")
+        }
     }
 
     Column(
@@ -65,7 +68,7 @@ fun ReferenceEditForm(
             node::label,
             state = labelState,
             defaultValue = viewModel.selectedNode?.label,
-            userCanRevert = true
+            userCanRevert = true,
         )
         OutlinedValue(label = "Target", modifier = Modifier.fillMaxWidth()) { padding ->
             NodePath(viewModel.selectedNodePath, modifier = Modifier.padding(padding))
@@ -84,11 +87,13 @@ fun ReferenceEditForm(
                                     Icons.Filled.CheckCircle,
                                     contentDescription = "Selection indicator",
                                     tint =
-                                        if (node.nodeId == viewModel.selectedNode?.nodeId)
-                                            Catppuccin.Current.green
-                                        else Background.mix(Foreground, 0.2f)
+                                        if (node.nodeId == viewModel.selectedNode?.nodeId) {
+                                            Catppuccin.current.green
+                                        } else {
+                                            background.mix(foreground, 0.2f)
+                                        },
                                 )
-                            }
+                            },
                         )
                     }
                 }

@@ -20,15 +20,17 @@ import dev.fr33zing.launcher.ui.components.tree.modal.ModalActions
 import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
-private val closeButtonColor = Catppuccin.Current.red
+private val closeButtonColor = Catppuccin.current.red
 
 @Composable
-fun MoveTopBar(treeState: TreeState, actions: ModalActions) {
+fun MoveTopBar(
+    treeState: TreeState,
+    actions: ModalActions,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication =
         rememberCustomIndication(circular = true, circularSizeFactor = 1f, color = closeButtonColor)
-    val movingCount =
-        remember(treeState) { treeState.moveState?.movingKeys?.count { it.value } ?: 0 }
+    val movingCount = remember(treeState) { treeState.moveState?.movingKeys?.count { it.value } ?: 0 }
 
     Text("Moving $movingCount items", fontWeight = FontWeight.Bold)
     Box {
@@ -37,13 +39,16 @@ fun MoveTopBar(treeState: TreeState, actions: ModalActions) {
             contentDescription = "close button",
             tint = closeButtonColor,
             modifier =
-                Modifier.clickable(interactionSource, indication, onClick = actions.endBatchMove)
+                Modifier.clickable(interactionSource, indication, onClick = actions.endBatchMove),
         )
     }
 }
 
 @Composable
-fun MoveBottomBar(treeState: TreeState, actions: ModalActions) {
+fun MoveBottomBar(
+    treeState: TreeState,
+    actions: ModalActions,
+) {
     ModalActionButtonRow {
         ModalActionButton(
             label = "Selection",

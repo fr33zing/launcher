@@ -25,7 +25,7 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 enum class YesNoDialogBackAction {
     Dismiss,
     Yes,
-    No
+    No,
 }
 
 @Composable
@@ -78,8 +78,8 @@ private fun Option(
                     Log.d(TAG, "User selected YES: $text")
                     visible.value = false
                     onClick()
-                }
-            )
+                },
+            ),
     ) {
         NodeDetail(label = text, color = color, icon = icon)
     }

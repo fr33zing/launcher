@@ -55,7 +55,6 @@ import dev.fr33zing.launcher.ui.theme.Catppuccin
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import java.text.SimpleDateFormat
 import java.util.Date
-import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalTextApi::class)
 private fun makeFontFamily(weight: Int) =
@@ -67,7 +66,7 @@ private fun makeFontFamily(weight: Int) =
                     FontVariation.weight(weight),
                     FontVariation.width(110.0f),
                 ),
-        )
+        ),
     )
 
 private val noFontPaddingTextStyle =
@@ -78,7 +77,7 @@ private val dateSpanStyle = SpanStyle(fontSize = 32.sp, fontFamily = makeFontFam
 private val weekSpanStyle = SpanStyle(fontSize = 14.sp, fontFamily = makeFontFamily(400))
 private val spacerStyle = SpanStyle(fontSize = 42.sp, fontFamily = makeFontFamily(200))
 
-val nextAlarmColor = Catppuccin.Current.red
+val nextAlarmColor = Catppuccin.current.red
 private val nextAlarmSpanStyle =
     SpanStyle(fontSize = 16.sp, fontFamily = makeFontFamily(350), color = nextAlarmColor)
 private val nextAlarmAmPmSpanStyle =
@@ -89,13 +88,16 @@ private fun AnnotatedString.Builder.spacer() {
 }
 
 @Composable
-fun Clock(nextAlarmFlow: NextAlarmFlow, horizontalPadding: Dp) {
+fun Clock(
+    nextAlarmFlow: NextAlarmFlow,
+    horizontalPadding: Dp,
+) {
     val context = LocalContext.current
     val preferences = Preferences(context)
     val use24HourTime by preferences.home.use24HourTime.state
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
     val nextAlarm by
-        nextAlarmFlow.map { it?.run { Date(triggerTime) } }.collectAsStateWithLifecycle(null)
+        nextAlarmFlow.collectAsStateWithLifecycle(null)
 
     val timeFormat12Hour = remember(locale) { SimpleDateFormat("hh:mm", locale) }
     val timeFormat24Hour = remember(locale) { SimpleDateFormat("HH:mm", locale) }
@@ -108,44 +110,44 @@ fun Clock(nextAlarmFlow: NextAlarmFlow, horizontalPadding: Dp) {
 
     fun updateTime() {
         val now = Date()
-        currentTime = buildAnnotatedString {
-            withStyle(timeSpanStyle) {
-                append(
-                    (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
-                        .format(now)
-                        .trimStart('0')
-                )
-            }
-            if (!use24HourTime) {
-                spacer()
-                withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
-            }
-
-            nextAlarm?.let { nextAlarm ->
-                spacer()
-                withStyle(nextAlarmSpanStyle) {
-                    appendInlineContent("alarm")
+        currentTime =
+            buildAnnotatedString {
+                withStyle(timeSpanStyle) {
                     append(
-                        (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
-                            .format(nextAlarm)
-                            .trimStart('0')
+                        (if (use24HourTime) timeFormat24Hour else timeFormat12Hour).format(now).trimStart('0'),
                     )
                 }
                 if (!use24HourTime) {
-                    append(" ")
-                    withStyle(nextAlarmAmPmSpanStyle) { append(amPmFormat.format(nextAlarm)) }
+                    spacer()
+                    withStyle(amPmSpanStyle) { append(amPmFormat.format(now)) }
+                }
+
+                nextAlarm?.let { nextAlarm ->
+                    spacer()
+                    withStyle(nextAlarmSpanStyle) {
+                        appendInlineContent("alarm")
+                        append(
+                            (if (use24HourTime) timeFormat24Hour else timeFormat12Hour)
+                                .format(nextAlarm)
+                                .trimStart('0'),
+                        )
+                    }
+                    if (!use24HourTime) {
+                        append(" ")
+                        withStyle(nextAlarmAmPmSpanStyle) { append(amPmFormat.format(nextAlarm)) }
+                    }
                 }
             }
-        }
 
-        currentDate = buildAnnotatedString {
-            withStyle(dateSpanStyle) { append(dateFormat.format(now)) }
-            spacer()
-            withStyle(weekSpanStyle) {
-                append("Week ")
-                append(weekFormat.format(now))
+        currentDate =
+            buildAnnotatedString {
+                withStyle(dateSpanStyle) { append(dateFormat.format(now)) }
+                spacer()
+                withStyle(weekSpanStyle) {
+                    append("Week ")
+                    append(weekFormat.format(now))
+                }
             }
-        }
     }
 
     val clockPackage by preferences.home.defaultApplications.clock.state
@@ -155,7 +157,10 @@ fun Clock(nextAlarmFlow: NextAlarmFlow, horizontalPadding: Dp) {
     DisposableEffect(Unit) {
         val receiver =
             object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?,
+                ) {
                     updateTime()
                 }
             }
@@ -178,32 +183,33 @@ private fun Element(
     text: AnnotatedString,
     horizontalPadding: Dp,
     verticalPadding: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication()
-    val inlineContents = remember {
-        mapOf(
-            "alarm" to
-                InlineTextContent(
-                    Placeholder(
-                        width = 0.925.em,
-                        height = 1.em,
-                        placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-                    )
-                ) {
-                    Icon(
-                        Icons.Outlined.Alarm,
-                        contentDescription = "alarm",
-                        tint = nextAlarmColor,
-                        modifier =
-                            Modifier.fillMaxSize()
-                                // HACK to align icon
-                                .offset(x = (-1).dp, y = (-0.55).dp),
-                    )
-                }
-        )
-    }
+    val inlineContents =
+        remember {
+            mapOf(
+                "alarm" to
+                    InlineTextContent(
+                        Placeholder(
+                            width = 0.925.em,
+                            height = 1.em,
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                        ),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Alarm,
+                            contentDescription = "alarm",
+                            tint = nextAlarmColor,
+                            modifier =
+                                Modifier.fillMaxSize()
+                                    // HACK to align icon
+                                    .offset(x = (-1).dp, y = (-0.55).dp),
+                        )
+                    },
+            )
+        }
 
     Box(Modifier.fillMaxWidth().clickable(interactionSource, indication, onClick = onClick)) {
         Text(

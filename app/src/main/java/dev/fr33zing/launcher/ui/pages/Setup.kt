@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.viewmodel.SetupViewModel
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
@@ -41,26 +41,26 @@ fun Setup(
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Text(
                 buildString {
                     append("Automatically categorizing applications.")
                     append("\n\n")
                     append(
-                        "This is done slowly to reduce the load on any network services used to determine application categories."
+                        "This is done slowly to reduce the load on any network services used to determine application categories.",
                     )
                     append("\n\n")
                     append("Remaining: $remainingAppsToCategorize")
                 },
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(32.dp))
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(0.5f),
                 progress = progress,
-                color = Foreground,
-                trackColor = Background.mix(Foreground, 0.1f),
+                color = foreground,
+                trackColor = background.mix(foreground, 0.1f),
             )
         }
     }

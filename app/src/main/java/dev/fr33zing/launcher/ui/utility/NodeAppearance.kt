@@ -8,19 +8,21 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.Node
 import dev.fr33zing.launcher.data.persistent.payloads.Payload
 import dev.fr33zing.launcher.data.viewmodel.state.NodePayloadState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 
-val LocalNodeAppearance = compositionLocalOf {
-    NodeAppearance(
-        color = Foreground,
-        icon = Icons.Filled.QuestionMark,
-        lineThrough = false,
-    )
-}
+val LocalNodeAppearance =
+    compositionLocalOf {
+        NodeAppearance(
+            color = foreground,
+            icon = Icons.Filled.QuestionMark,
+            lineThrough = false,
+        )
+    }
 
 @Immutable
 data class NodeAppearance(
@@ -28,6 +30,20 @@ data class NodeAppearance(
     val icon: ImageVector,
     val lineThrough: Boolean,
 )
+
+@Composable
+fun rememberNodeAppearance(
+    kind: NodeKind,
+    ignoreState: Boolean = false,
+    showChildren: Boolean? = null,
+): NodeAppearance =
+    remember(kind, showChildren) {
+        NodeAppearance(
+            color = kind.color(null, ignoreState, showChildren ?: true),
+            icon = kind.icon(null, ignoreState, showChildren ?: true),
+            lineThrough = kind.lineThrough(null, ignoreState),
+        )
+    }
 
 @Composable
 fun rememberNodeAppearance(
@@ -40,7 +56,7 @@ fun rememberNodeAppearance(
         NodeAppearance(
             color = node.kind.color(payload, ignoreState, showChildren ?: true),
             icon = node.kind.icon(payload, ignoreState, showChildren ?: true),
-            lineThrough = node.kind.lineThrough(payload, ignoreState)
+            lineThrough = node.kind.lineThrough(payload, ignoreState),
         )
     }
 
@@ -60,11 +76,11 @@ fun rememberNodeAppearance(
 @Composable
 fun rememberNodeAppearance(
     treeNodeState: TreeNodeState,
-    ignoreState: Boolean = false
+    ignoreState: Boolean = false,
 ): NodeAppearance =
     rememberNodeAppearance(
         node = treeNodeState.value.node,
         payload = treeNodeState.value.payload,
         showChildren = treeNodeState.showChildren.value,
-        ignoreState = ignoreState
+        ignoreState = ignoreState,
     )

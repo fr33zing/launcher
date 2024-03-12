@@ -80,19 +80,23 @@ fun NodeInteractions(
             treeNodeState.key == treeState?.normalState?.selectedKey
         }
     val treeMode = remember(treeState) { treeState?.mode ?: TreeState.Mode.Normal }
-    val treeModeSpecificActions = remember { // TODO maybe move this to NodeRow?
-        ModalNodeActions(
-            activatePayload = onActivatePayload,
-            selectNode = onSelectNode,
-            clearSelectedNode = onClearSelectedNode,
-            toggleBatchSelected = onToggleNodeBatchSelected,
-            moveBatchSelectedNodes = onMoveBatchSelectedNodes,
-        )
-    }
+    val treeModeSpecificActions =
+        remember { // TODO maybe move this to NodeRow?
+            ModalNodeActions(
+                activatePayload = onActivatePayload,
+                selectNode = onSelectNode,
+                clearSelectedNode = onClearSelectedNode,
+                toggleBatchSelected = onToggleNodeBatchSelected,
+                moveBatchSelectedNodes = onMoveBatchSelectedNodes,
+            )
+        }
     val modalArguments =
         remember(treeState) {
-            if (treeState == null || relevance == null) null
-            else ModalNodeArguments(treeModeSpecificActions, treeState, treeNodeState, relevance)
+            if (treeState == null || relevance == null) {
+                null
+            } else {
+                ModalNodeArguments(treeModeSpecificActions, treeState, treeNodeState, relevance)
+            }
         }
 
     val activatePayload by rememberUpdatedState {
@@ -120,64 +124,58 @@ fun NodeInteractions(
                     treeNodeState.value.node.kind.requiresDoubleTapToActivate()
                 }
             val requireDoubleTapToActivate =
-                remember(requireDoubleTapToActivateMessage) {
-                    requireDoubleTapToActivateMessage != null
-                }
+                remember(requireDoubleTapToActivateMessage) { requireDoubleTapToActivateMessage != null }
 
             val contentContainerModifier =
                 Modifier.conditional(hasFeature.ACTIVATE && treeMode == TreeState.Mode.Normal) {
-                        combinedClickable(
-                            interactionSource = interactionSource,
-                            indication = indication,
-                            onClick = {
-                                onClearSelectedNode()
+                    combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = indication,
+                        onClick = {
+                            onClearSelectedNode()
 
-                                if (!requireDoubleTapToActivate) activatePayload()
-                                else
-                                    sendNotice(
-                                        "double-tap-to-activate-node",
-                                        requireDoubleTapToActivateMessage
-                                            ?: throw Exception(
-                                                "requireDoubleTapToActivateMessage is null"
-                                            )
-                                    )
-                            },
-                            onDoubleClick =
-                                if (requireDoubleTapToActivate) activatePayload else null,
-                            onLongClick = onSelectNode
-                        )
-                    }
-                    .conditional(modalArguments != null) {
-                        modalNodeContainerModifier(modalArguments!!)
-                    }
+                            if (!requireDoubleTapToActivate) {
+                                activatePayload()
+                            } else {
+                                sendNotice(
+                                    "double-tap-to-activate-node",
+                                    requireDoubleTapToActivateMessage
+                                        ?: throw Exception("requireDoubleTapToActivateMessage is null"),
+                                )
+                            }
+                        },
+                        onDoubleClick = if (requireDoubleTapToActivate) activatePayload else null,
+                        onLongClick = onSelectNode,
+                    )
+                }
+                    .conditional(modalArguments != null) { modalNodeContainerModifier(modalArguments!!) }
 
             if (hasFeature.MODAL && modalArguments != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = contentContainerModifier
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = contentContainerModifier) {
                     Box(Modifier.weight(1f)) { content() }
                     AnimatedVisibility(
                         visible = treeMode != TreeState.Mode.Normal,
                         enter = fadeIn() + expandHorizontally(expandFrom = AbsoluteAlignment.Right),
-                        exit =
-                            fadeOut() + shrinkHorizontally(shrinkTowards = AbsoluteAlignment.Right)
+                        exit = fadeOut() + shrinkHorizontally(shrinkTowards = AbsoluteAlignment.Right),
                     ) {
                         ModalNodeComponents(modalArguments)
                     }
                 }
-            } else Box(contentContainerModifier) { content() }
+            } else {
+                Box(contentContainerModifier) { content() }
+            }
 
-            if (hasFeature.ACTION_BUTTONS && nodeActions != null)
+            if (hasFeature.ACTION_BUTTONS && nodeActions != null) {
                 AnimatedVisibility(visible = selected, enter = fadeIn(), exit = fadeOut()) {
                     NodeActionButtonRow(nodeActions, treeNodeState)
                 }
+            }
         }
     }
 
-    if (!hasFeature.CREATE_ADJACENT || treeState == null || adjacentTreeNodeStates == null)
+    if (!hasFeature.CREATE_ADJACENT || treeState == null || adjacentTreeNodeStates == null) {
         nodeRow()
-    else {
+    } else {
         Column {
             val nodeKindPickerDialogVisible = remember { mutableStateOf(false) }
             var newNodePosition by remember { mutableStateOf<RelativeNodePosition?>(null) }
@@ -202,7 +200,7 @@ fun NodeInteractions(
             NodeKindPickerDialog(
                 visible = nodeKindPickerDialogVisible,
                 onDismissRequest = ::onCreateNodeDialogDismissed,
-                onKindChosen = ::onNewNodeKindChosen
+                onKindChosen = ::onNewNodeKindChosen,
             )
 
             NodeCreateButton(
@@ -210,7 +208,7 @@ fun NodeInteractions(
                 treeNodeState = treeNodeState,
                 adjacentTreeNodeStates = adjacentTreeNodeStates,
                 position = NodeCreateButtonPosition.Above,
-                onClick = ::showCreateNodeDialog
+                onClick = ::showCreateNodeDialog,
             )
 
             nodeRow()
@@ -220,7 +218,7 @@ fun NodeInteractions(
                 treeNodeState = treeNodeState,
                 adjacentTreeNodeStates = adjacentTreeNodeStates,
                 position = NodeCreateButtonPosition.Below,
-                onClick = ::showCreateNodeDialog
+                onClick = ::showCreateNodeDialog,
             )
 
             NodeCreateButton(
@@ -228,7 +226,7 @@ fun NodeInteractions(
                 treeNodeState = treeNodeState,
                 adjacentTreeNodeStates = adjacentTreeNodeStates,
                 position = NodeCreateButtonPosition.OutsideBelow,
-                onClick = ::showCreateNodeDialog
+                onClick = ::showCreateNodeDialog,
             )
         }
     }
@@ -243,8 +241,11 @@ private fun NodeInteractionsLayout(
         val nodeRow = measurables[nodeRowIndex].measure(constraints)
         val placeables =
             measurables.mapIndexed { index, measurable ->
-                if (index == nodeRowIndex) nodeRow
-                else measurable.measure(Constraints.fixed(nodeRow.width, nodeRow.height))
+                if (index == nodeRowIndex) {
+                    nodeRow
+                } else {
+                    measurable.measure(Constraints.fixed(nodeRow.width, nodeRow.height))
+                }
             }
         layout(nodeRow.width, nodeRow.height) {
             placeables.forEach { placeable -> placeable.placeRelative(x = 0, y = 0) }

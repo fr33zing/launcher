@@ -30,8 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fr33zing.launcher.data.viewmodel.ViewNoteViewModel
 import dev.fr33zing.launcher.ui.components.ActionButton
 import dev.fr33zing.launcher.ui.components.ActionButtonTotalHeight
-import dev.fr33zing.launcher.ui.theme.Dim
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
+import dev.fr33zing.launcher.ui.theme.dim
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,7 +60,7 @@ fun ViewNote(
                     if (viewModel.hasEditPermission) navigateToEdit(state.nodeId)
                 }
             }
-        }
+        },
     ) { padding ->
         Box(Modifier.padding(padding).verticalScrollShadows(bodyVerticalPadding)) {
             LazyColumn(
@@ -70,13 +70,16 @@ fun ViewNote(
                         start = ScreenHorizontalPadding,
                         end = ScreenHorizontalPadding,
                         top = bodyVerticalPadding,
-                        bottom = bodyVerticalPadding + ActionButtonTotalHeight
+                        bottom = bodyVerticalPadding + ActionButtonTotalHeight,
                     ),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 item {
-                    if (state.body.isBlank()) Text("This note has no body.", color = Dim)
-                    else Text(state.body)
+                    if (state.body.isBlank()) {
+                        Text("This note has no body.", color = dim)
+                    } else {
+                        Text(state.body)
+                    }
                 }
                 item { CreatedUpdatedText(state.created, state.updated) }
             }
@@ -85,7 +88,10 @@ fun ViewNote(
 }
 
 @Composable
-private fun CreatedUpdatedText(created: Date, updated: Date) {
+private fun CreatedUpdatedText(
+    created: Date,
+    updated: Date,
+) {
     val context = LocalContext.current
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
     val preferences = dev.fr33zing.launcher.data.persistent.Preferences(context)
@@ -109,5 +115,5 @@ private fun CreatedUpdatedText(created: Date, updated: Date) {
                 append(timeFormat.format(updated).trimStart('0'))
             }
         }
-    Text(dateText, color = Dim)
+    Text(dateText, color = dim)
 }

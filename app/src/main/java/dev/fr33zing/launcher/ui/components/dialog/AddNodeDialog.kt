@@ -2,88 +2,71 @@ package dev.fr33zing.launcher.ui.components.dialog
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import dev.fr33zing.launcher.data.NodeKind
-import dev.fr33zing.launcher.data.persistent.Preferences
-import dev.fr33zing.launcher.ui.components.tree.old.NodeIconAndText
+import dev.fr33zing.launcher.ui.components.tree.NodeDetail
+import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
+import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
+import dev.fr33zing.launcher.ui.components.tree.utility.rememberNodeDimensions
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
+import dev.fr33zing.launcher.ui.utility.rememberNodeAppearance
 
 @Composable
 fun NodeKindPickerDialog(
     visible: MutableState<Boolean>,
     onDismissRequest: () -> Unit,
-    onKindChosen: (NodeKind) -> Unit
+    onKindChosen: (NodeKind) -> Unit,
 ) {
-    val preferences = Preferences(LocalContext.current)
-    val localDensity = LocalDensity.current
-    val fontSize = preferences.nodeAppearance.fontSize.mappedDefault
-    val lineHeight = with(localDensity) { fontSize.toDp() }
-    val kinds = remember { NodeKind.entries }
+    CompositionLocalProvider(LocalNodeDimensions provides rememberNodeDimensions()) {
+        val spacing = LocalNodeDimensions.current.spacing
+        val kinds = remember { NodeKind.entries }
 
-    BaseDialog(
-        visible,
-        Icons.Filled.Add,
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.width(IntrinsicSize.Min)
-    ) { padding ->
-        val verticalPadding = remember {
-            padding - preferences.nodeAppearance.spacing.mappedDefault / 2
-        }
-        Column(modifier = Modifier.padding(vertical = verticalPadding)) {
-            kinds.forEach { Option(padding, fontSize, lineHeight, it) { onKindChosen(it) } }
+        BaseDialog(
+            visible,
+            Icons.Filled.Add,
+            onDismissRequest = onDismissRequest,
+            modifier = Modifier.width(IntrinsicSize.Min),
+        ) { padding ->
+            val verticalPadding =
+                remember {
+                    padding - spacing / 2
+                }
+            Column(modifier = Modifier.padding(vertical = verticalPadding)) {
+                kinds.forEach { Option(visible, it) { onKindChosen(it) } }
+            }
         }
     }
 }
 
 @Composable
 private fun Option(
-    padding: Dp,
-    fontSize: TextUnit,
-    lineHeight: Dp,
-    nodeKind: NodeKind,
-    onClick: () -> Unit
+    visible: MutableState<Boolean>,
+    kind: NodeKind,
+    onClick: () -> Unit,
 ) {
-    val preferences = Preferences(LocalContext.current)
+    val appearance = rememberNodeAppearance(kind)
     val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(color = nodeKind.color)
+    val indication = rememberCustomIndication(color = appearance.color)
 
-    Box(Modifier.clickable(interactionSource, indication, onClick = onClick)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(
-                        horizontal = padding,
-                        vertical = preferences.nodeAppearance.spacing.mappedDefault / 2
-                    )
-        ) {
-            NodeIconAndText(
-                fontSize = fontSize,
-                lineHeight = lineHeight,
-                label = nodeKind.label,
-                color =
-                    if (nodeKind.implemented()) nodeKind.color
-                    else nodeKind.color.copy(alpha = 0.5f),
-                icon = nodeKind.icon,
-                softWrap = false,
-            )
-        }
+    NodeDetailContainer(
+        modifier =
+            Modifier.clickable(
+                interactionSource,
+                indication,
+                onClick = onClick,
+            ),
+    ) {
+        NodeDetail(label = kind.label, color = appearance.color, icon = appearance.icon)
     }
 }

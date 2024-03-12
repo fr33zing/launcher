@@ -12,10 +12,10 @@ import dev.fr33zing.launcher.data.persistent.AppDatabase
 import dev.fr33zing.launcher.ui.components.NoticeKind
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.utility.UserEditable
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Keep
 @Entity
@@ -50,8 +50,7 @@ class File(
         try {
             val uri = Uri.parse(filePath)
             val inputStream =
-                mainContentResolver.openInputStream(uri)
-                    ?: throw Exception("failed to open input stream")
+                mainContentResolver.openInputStream(uri) ?: throw Exception("failed to open input stream")
             inputStream.close()
         } catch (e: Exception) {
             return false
@@ -73,7 +72,10 @@ class File(
         return Status.Valid
     }
 
-    override fun activate(db: AppDatabase, context: Context) {
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) {
         if (!fileExists()) {
             filePath = ""
             _status = Status.MissingFile
@@ -85,12 +87,9 @@ class File(
     private fun open(context: Context) {
         _status = computeStatus()
 
-        if (_status != Status.Valid)
-            sendNotice(
-                "file-open-invalid:${nodeId}",
-                "Cannot open file because ${_status!!.reason}."
-            )
-        else {
+        if (_status != Status.Valid) {
+            sendNotice("file-open-invalid:$nodeId", "Cannot open file because ${_status!!.reason}.")
+        } else {
             try {
                 val uri = Uri.parse(filePath)
                 val mimeType = context.contentResolver.getType(uri)
@@ -104,9 +103,9 @@ class File(
                 context.startActivity(intent)
             } catch (e: Exception) {
                 sendNotice(
-                    "file-open-failed:${nodeId}",
+                    "file-open-failed:$nodeId",
                     "Failed to open file. Error: ${e.message}.",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             }
         }

@@ -51,15 +51,15 @@ import dev.fr33zing.launcher.ui.components.tree.NodeDetailContainer
 import dev.fr33zing.launcher.ui.components.tree.NodeRow
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Dim
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.dim
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import dev.fr33zing.launcher.ui.utility.verticalScrollShadows
 
-val removeHistoryColor = Catppuccin.Current.red.mix(Background, 0.25f)
+val removeHistoryColor = Catppuccin.current.red.mix(background, 0.25f)
 const val MAX_SEARCH_RESULTS = 50
 
 @Immutable
@@ -127,15 +127,16 @@ private class SearchAction(
                         listOf(Pair(hours, "h"), Pair(minutes, "m"), Pair(seconds, "s"))
                             .filter { it.first > 0 }
                             .joinToString(separator = " ") { "${it.first}${it.second}" }
-                    val text = buildString {
-                        append("Set timer: ")
-                        append(durationText)
-                        timerParts.getOrNull(1)?.let { timerLabel ->
-                            append(", \"")
-                            append(timerLabel)
-                            append("\"")
+                    val text =
+                        buildString {
+                            append("Set timer: ")
+                            append(durationText)
+                            timerParts.getOrNull(1)?.let { timerLabel ->
+                                append(", \"")
+                                append(timerLabel)
+                                append("\"")
+                            }
                         }
-                    }
 
                     Result(text) {
                         Intent(AlarmClock.ACTION_SET_TIMER)
@@ -144,8 +145,7 @@ private class SearchAction(
                                 timerParts.getOrNull(1)?.let { timerLabel ->
                                     putExtra(AlarmClock.EXTRA_MESSAGE, timerLabel)
                                 }
-                                if (timerApplication?.isNotBlank() == true)
-                                    `package` = timerApplication
+                                if (timerApplication?.isNotBlank() == true) `package` = timerApplication
                             }
                             .also { context.startActivity(it) }
                     }
@@ -154,10 +154,13 @@ private class SearchAction(
     }
 
     @Composable
-    fun SearchActionComponent(result: Result, onTapSearchAction: () -> Unit) {
+    fun SearchActionComponent(
+        result: Result,
+        onTapSearchAction: () -> Unit,
+    ) {
         val haptics = LocalHapticFeedback.current
         val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(color = Dim)
+        val indication = rememberCustomIndication(color = dim)
 
         NodeDetailContainer(
             Modifier.conditional(result.onClick != null) {
@@ -166,11 +169,11 @@ private class SearchAction(
                     onTapSearchAction()
                     result.onClick!!()
                 }
-            }
+            },
         ) {
             NodeDetail(
                 label = result.text,
-                color = Dim,
+                color = dim,
                 icon = icon,
                 lineThrough = false,
             )
@@ -197,9 +200,7 @@ fun SearchResults(
     val preferences = Preferences(context)
     val timerApplication by preferences.search.timerApplication.state
     val searchActionArguments =
-        remember(timerApplication) {
-            SearchAction.Arguments(context, onWebSearch, timerApplication)
-        }
+        remember(timerApplication) { SearchAction.Arguments(context, onWebSearch, timerApplication) }
 
     Box(Modifier.verticalScrollShadows(shadowHeight)) {
         LazyColumn(
@@ -226,14 +227,14 @@ private fun LazyListScope.historyItems(
             Modifier.clickable {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 onTapHistoricalQuery(recentSearch)
-            }
+            },
         ) {
             NodeDetail(
                 label = recentSearch,
-                color = Dim,
+                color = dim,
                 icon = Icons.Outlined.Search,
                 lineThrough = false,
-                textModifier = Modifier.weight(1f)
+                textModifier = Modifier.weight(1f),
             )
 
             val interactionSource = remember { MutableInteractionSource() }
@@ -270,20 +271,20 @@ private fun LazyListScope.resultItems(
     onActivateSearchResult: (TreeNodeState) -> Unit,
     onActivateDirectorySearchResult: (TreeNodeState) -> Unit,
 ) {
-    if (results.isEmpty())
+    if (results.isEmpty()) {
         item {
             var visible by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) { visible = true }
             AnimatedVisibility(visible, enter = fadeIn(tween(1000))) {
                 Text(
                     text = "No results.",
-                    color = Dim,
+                    color = dim,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().absolutePadding(top = 16.dp)
+                    modifier = Modifier.fillMaxWidth().absolutePadding(top = 16.dp),
                 )
             }
         }
-    else
+    } else {
         itemsIndexed(results, key = { _, result -> Pair(result.element, query) }) { index, result ->
             if (index >= MAX_SEARCH_RESULTS) return@itemsIndexed
 
@@ -298,9 +299,8 @@ private fun LazyListScope.resultItems(
                         withStyle(
                             SpanStyle(
                                 background =
-                                    if (it.matches) color.copy(alpha = 0.25f)
-                                    else Color.Transparent,
-                            )
+                                    if (it.matches) color.copy(alpha = 0.25f) else Color.Transparent,
+                            ),
                         ) {
                             append(it.text)
                         }
@@ -308,16 +308,12 @@ private fun LazyListScope.resultItems(
                 },
                 textModifier = { Modifier.weight(1f) },
                 textEndContent =
-                    if (index > 0) null
-                    else {
-                        {
-                            Icon(
-                                Icons.Outlined.KeyboardReturn,
-                                "keyboard return symbol",
-                                tint = Dim
-                            )
-                        }
-                    }
+                    if (index > 0) {
+                        null
+                    } else {
+                        { Icon(Icons.Outlined.KeyboardReturn, "keyboard return symbol", tint = dim) }
+                    },
             )
         }
+    }
 }

@@ -17,35 +17,35 @@ import dev.fr33zing.launcher.ui.utility.mix
 private val catppuccinDark = Catppuccin.Frappe
 private val catppuccinLight = Catppuccin.Latte
 
-var Background: Color = Color.Black
-var Foreground: Color = Color.White
-var Dim: Color = Foreground.dim()
+var background: Color = Color.Black
+var foreground: Color = Color.White
+var dim: Color = foreground.dim()
 
 fun colorScheme(darkTheme: Boolean): ColorScheme {
-    Catppuccin.Current = if (darkTheme) catppuccinDark else catppuccinLight
+    Catppuccin.current = if (darkTheme) catppuccinDark else catppuccinLight
     val baseColorScheme = if (darkTheme) darkColorScheme() else lightColorScheme()
 
     if (!darkTheme) {
-        val temp = Background
-        Background = Foreground
-        Foreground = temp
+        val temp = background
+        background = foreground
+        foreground = temp
     }
 
-    with(Catppuccin.Current) {
+    with(Catppuccin.current) {
         return baseColorScheme.copy(
-            background = Background,
+            background = background,
             error = red,
             errorContainer = base,
-            onPrimary = Background,
+            onPrimary = background,
             onPrimaryContainer = crust,
             primary = pink,
             primaryContainer = mauve,
             secondaryContainer = yellow,
-            surface = Background,
-            onSurface = Foreground,
-            onSurfaceVariant = Foreground.mix(Background, 0.25f),
+            surface = background,
+            onSurface = foreground,
+            onSurfaceVariant = foreground.mix(background, 0.25f),
             tertiaryContainer = teal,
-            outline = Foreground,
+            outline = foreground,
         )
     }
 }

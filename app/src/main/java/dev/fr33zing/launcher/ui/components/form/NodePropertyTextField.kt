@@ -30,17 +30,17 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import dev.fr33zing.launcher.ui.components.Notice
 import dev.fr33zing.launcher.ui.theme.DisabledTextFieldColor
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.getUserEditableAnnotation
 import dev.fr33zing.launcher.ui.utility.longPressable
 import io.reactivex.rxjava3.subjects.PublishSubject
-import kotlin.reflect.KMutableProperty0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.reflect.KMutableProperty0
 
 private val refresh = PublishSubject.create<Unit>()
 
@@ -123,11 +123,13 @@ fun NodePropertyTextField(
         supportingText =
             if (annotation.supportingText.isNotEmpty()) {
                 { Text(annotation.supportingText) }
-            } else null,
+            } else {
+                null
+            },
         trailingIcon = {
             AnimatedContent(
                 targetState = userCanRevert && input.value != initialValue,
-                label = "node property text field: lock/revert button"
+                label = "node property text field: lock/revert button",
             ) { showRevertButton ->
                 if (showRevertButton) {
                     RevertButton {
@@ -140,12 +142,15 @@ fun NodePropertyTextField(
                 }
             }
         },
-        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
     )
 }
 
 @Composable
-private fun ToggleLockedButton(locked: MutableState<Boolean>, userCanUnlock: Boolean) {
+private fun ToggleLockedButton(
+    locked: MutableState<Boolean>,
+    userCanUnlock: Boolean,
+) {
     Icon(
         if (locked.value) Icons.Filled.Lock else Icons.Filled.LockOpen,
         contentDescription = if (locked.value) "closed lock" else "open lock",
@@ -155,14 +160,14 @@ private fun ToggleLockedButton(locked: MutableState<Boolean>, userCanUnlock: Boo
                     tapNotice = {
                         Notice(
                             "toggle-lock",
-                            "Long press to ${if (locked.value) "unlock" else  "lock"} this field."
+                            "Long press to ${if (locked.value) "unlock" else "lock"} this field.",
                         )
-                    }
+                    },
                 ) {
                     locked.value = !locked.value
                 }
             },
-        tint = if (userCanUnlock) Foreground else DisabledTextFieldColor
+        tint = if (userCanUnlock) foreground else DisabledTextFieldColor,
     )
 }
 
@@ -174,7 +179,7 @@ private fun RevertButton(onLongPressed: () -> Unit) {
         modifier =
             Modifier.longPressable(
                 tapNotice = { Notice("revert", "Long press to revert this field.") },
-                onLongPressed = onLongPressed
-            )
+                onLongPressed = onLongPressed,
+            ),
     )
 }

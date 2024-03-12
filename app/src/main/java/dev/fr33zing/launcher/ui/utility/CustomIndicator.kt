@@ -19,32 +19,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
+import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.concurrent.timerTask
 import kotlin.math.hypot
-import kotlinx.coroutines.launch
 
 @Composable
 fun rememberCustomIndication(
-    color: Color = Foreground,
+    color: Color = foreground,
     overrideAlpha: Float = 0.333f,
     useHaptics: Boolean = true,
     circular: Boolean = false,
     circularSizeFactor: Float = 1.0f,
     longPressable: Boolean = false,
-) =
-    remember(color, overrideAlpha) {
-        CustomIndication(
-            color,
-            overrideAlpha,
-            useHaptics,
-            circular,
-            circularSizeFactor,
-            longPressable
-        )
-    }
+) = remember(color, overrideAlpha) {
+    CustomIndication(
+        color,
+        overrideAlpha,
+        useHaptics,
+        circular,
+        circularSizeFactor,
+        longPressable,
+    )
+}
 
 class CustomIndication(
     private val color: Color,
@@ -63,14 +62,15 @@ class CustomIndication(
         private val circularSizeFactor: Float,
         private val colorState: State<Color>,
     ) : IndicationInstance {
-
         override fun ContentDrawScope.drawIndication() {
-            if (circular)
+            if (circular) {
                 drawCircle(
                     color = colorState.value,
-                    radius = (hypot(size.width, size.height) / 2) * circularSizeFactor
+                    radius = (hypot(size.width, size.height) / 2) * circularSizeFactor,
                 )
-            else drawRect(color = colorState.value, size = size)
+            } else {
+                drawRect(color = colorState.value, size = size)
+            }
             drawContent()
         }
     }
@@ -88,8 +88,7 @@ class CustomIndication(
             if (!pressed) return
             pressed = false
             coroutineScope.launch {
-                if (useHaptics && !cancelled)
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                if (useHaptics && !cancelled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 animatedColor.animateTo(Color.Transparent, animationSpec = tween(1000))
             }
         }

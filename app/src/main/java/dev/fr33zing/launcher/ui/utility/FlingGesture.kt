@@ -36,9 +36,13 @@ suspend fun PointerInputScope.detectFling(
             val change = event.changes[0]
             val dragAmountPx = change.position.y - change.previousPosition.y
 
-            if (dragAmountPx == 0f) continue
-            else if (dragAmountPx < 0 && !flingUpEnabled()) continue
-            else if (dragAmountPx > 0 && !flingDownEnabled()) continue
+            if (dragAmountPx == 0f) {
+                continue
+            } else if (dragAmountPx < 0 && !flingUpEnabled()) {
+                continue
+            } else if (dragAmountPx > 0 && !flingDownEnabled()) {
+                continue
+            }
 
             val elapsedMillis = change.uptimeMillis - change.previousUptimeMillis
             val dragAmount = dragAmountPx.toDp()
@@ -95,13 +99,16 @@ suspend fun PointerInputScope.detectZoom(
             if (pastTouchSlop) {
                 if (zoomChange != 1f) {
                     val scaledChange =
-                        if (changeScale == 1f) zoomChange
-                        else {
-                            (if (zoomChange > 1) {
-                                1 + ((zoomChange - 1) * changeScale)
-                            } else {
-                                1 - ((1 - zoomChange) * changeScale)
-                            })
+                        if (changeScale == 1f) {
+                            zoomChange
+                        } else {
+                            (
+                                if (zoomChange > 1) {
+                                    1 + ((zoomChange - 1) * changeScale)
+                                } else {
+                                    1 - ((1 - zoomChange) * changeScale)
+                                }
+                            )
                         }
                     onGesture(scaledChange)
                     event.changes.forEach { it.consume() }

@@ -24,10 +24,10 @@ import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import java.net.URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.net.URL
 
 @Composable
 fun WebsiteEditForm(arguments: EditFormArguments) {
@@ -54,26 +54,24 @@ fun WebsiteEditForm(arguments: EditFormArguments) {
                     append("Valid URL: ")
                     withStyle(
                         SpanStyle(
-                            color =
-                                if (isValidUrl) Catppuccin.Current.green else Catppuccin.Current.red
-                        )
+                            color = if (isValidUrl) Catppuccin.current.green else Catppuccin.current.red,
+                        ),
                     ) {
                         append(if (isValidUrl) "Yes" else "No")
                     }
-                }
+                },
             )
             Text(
                 buildAnnotatedString {
                     append("Uses HTTPS: ")
                     withStyle(
                         SpanStyle(
-                            color =
-                                if (isHttpsUrl) Catppuccin.Current.green else Catppuccin.Current.red
-                        )
+                            color = if (isHttpsUrl) Catppuccin.current.green else Catppuccin.current.red,
+                        ),
                     ) {
                         append(if (isHttpsUrl) "Yes" else "No")
                     }
-                }
+                },
             )
         }
 
@@ -88,7 +86,7 @@ fun WebsiteEditForm(arguments: EditFormArguments) {
                         node.label = title
                         labelState.value = title
                     }
-                }
+                },
             ) {
                 Text("Derive label from webpage title")
             }
@@ -96,7 +94,10 @@ fun WebsiteEditForm(arguments: EditFormArguments) {
     }
 }
 
-private fun getWebpageTitle(url: String, setLabel: (String) -> Unit) {
+private fun getWebpageTitle(
+    url: String,
+    setLabel: (String) -> Unit,
+) {
     CoroutineScope(Dispatchers.IO).launch {
         val html = URL(url).readText()
         val regex = "<title>(.*?)</title>".toRegex()

@@ -9,7 +9,10 @@ import dev.fr33zing.launcher.ui.components.sendNotice
 
 // TODO add setting to choose default clock and calendar app
 
-fun launchClockApplication(context: Context, applicationPreference: String) {
+fun launchClockApplication(
+    context: Context,
+    applicationPreference: String,
+) {
     if (applicationPreference.isNotEmpty()) {
         mainPackageManager.getLaunchIntentForPackage(applicationPreference)?.let {
             context.startActivity(it)
@@ -17,7 +20,7 @@ fun launchClockApplication(context: Context, applicationPreference: String) {
             ?: sendNotice(
                 "invalid-clock-application",
                 "Invalid clock application: $applicationPreference",
-                NoticeKind.Error
+                NoticeKind.Error,
             )
     } else {
         val clockIntent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
@@ -26,7 +29,10 @@ fun launchClockApplication(context: Context, applicationPreference: String) {
     }
 }
 
-fun launchCalendarApplication(context: Context, applicationPreference: String) {
+fun launchCalendarApplication(
+    context: Context,
+    applicationPreference: String,
+) {
     if (applicationPreference.isNotEmpty()) {
         mainPackageManager.getLaunchIntentForPackage(applicationPreference)?.let {
             context.startActivity(it)
@@ -34,7 +40,7 @@ fun launchCalendarApplication(context: Context, applicationPreference: String) {
             ?: sendNotice(
                 "invalid-calendar-application",
                 "Invalid calendar application: $applicationPreference",
-                NoticeKind.Error
+                NoticeKind.Error,
             )
     } else {
         val calendarIntent = Intent(Intent.ACTION_MAIN)

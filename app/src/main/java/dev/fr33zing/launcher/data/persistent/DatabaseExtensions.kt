@@ -58,8 +58,8 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                         parentId = newApplicationsDirectory.nodeId,
                         kind = NodeKind.Application,
                         order = index,
-                        label = activityInfo.label.toString()
-                    )
+                        label = activityInfo.label.toString(),
+                    ),
                 )
             applicationDao()
                 .insert(
@@ -67,7 +67,7 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
                         payloadId = 0,
                         nodeId = nodeDao().getLastNodeId(),
                         activityInfo = activityInfo,
-                    )
+                    ),
                 )
             newApps++
         }
@@ -77,7 +77,10 @@ suspend fun AppDatabase.createNewApplications(activityInfos: List<LauncherActivi
 }
 
 // TODO make this handle interruption gracefully
-suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCategorized: () -> Unit) {
+suspend fun AppDatabase.autoCategorizeNewApplications(
+    context: Context,
+    onCategorized: () -> Unit,
+) {
     withTransaction {
         val newApplicationsDirectory =
             getOrCreateSingletonDirectory(Directory.SpecialMode.NewApplications)
@@ -94,11 +97,7 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
 
         nodesWithPayloads.forEach { (node, payload) ->
             val category =
-                getApplicationCategoryName(
-                    context,
-                    payload.packageName,
-                    applicationCategoryOverrides
-                )
+                getApplicationCategoryName(context, payload.packageName, applicationCategoryOverrides)
             val (directory, order) =
                 categoryDirectories[category]
                     ?: Pair(
@@ -106,7 +105,7 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
                             it.initialVisibility = Directory.InitialVisibility.Remember
                             it.collapsed = true
                         },
-                        0
+                        0,
                     )
 
             node.parentId = directory.nodeId
@@ -130,24 +129,34 @@ suspend fun AppDatabase.autoCategorizeNewApplications(context: Context, onCatego
 }
 
 /** Create a new node relative to another node. Returns the new node's id. */
-suspend fun AppDatabase.createNode(position: RelativeNodePosition, newNodeKind: NodeKind): Int {
+suspend fun AppDatabase.createNode(
+    position: RelativeNodePosition,
+    newNodeKind: NodeKind,
+): Int {
     val relativeToNode =
         nodeDao().getNodeById(position.relativeToNodeId) ?: throw Exception("Node does not exist")
     val parentId =
-        if (position.offset == RelativeNodeOffset.Within) position.relativeToNodeId
-        else relativeToNode.parentId
+        if (position.offset == RelativeNodeOffset.Within) {
+            position.relativeToNodeId
+        } else {
+            relativeToNode.parentId
+        }
     val order =
-        if (position.offset == RelativeNodeOffset.Within) 0
-        else relativeToNode.order + position.offset.orderOffset
-    val createdNodeId = withTransaction {
-        val siblings = nodeDao().getChildNodes(parentId).fixOrder()
-        siblings.filter { it.order >= order }.forEach { it.order++ }
-        updateMany(siblings)
-        insert(Node(nodeId = 0, parentId = parentId, kind = newNodeKind, order = order, label = ""))
-        val lastNodeId = nodeDao().getLastNodeId()
-        insert(createDefaultPayloadForNode(newNodeKind, lastNodeId))
-        lastNodeId
-    }
+        if (position.offset == RelativeNodeOffset.Within) {
+            0
+        } else {
+            relativeToNode.order + position.offset.orderOffset
+        }
+    val createdNodeId =
+        withTransaction {
+            val siblings = nodeDao().getChildNodes(parentId).fixOrder()
+            siblings.filter { it.order >= order }.forEach { it.order++ }
+            updateMany(siblings)
+            insert(Node(nodeId = 0, parentId = parentId, kind = newNodeKind, order = order, label = ""))
+            val lastNodeId = nodeDao().getLastNodeId()
+            insert(createDefaultPayloadForNode(newNodeKind, lastNodeId))
+            lastNodeId
+        }
     return createdNodeId
 }
 
@@ -155,26 +164,27 @@ suspend inline fun <reified T : Payload> AppDatabase.createNodeWithPayload(
     parentId: Int,
     label: String,
     crossinline nodeMutateFunction: (Node) -> Unit = {},
-    crossinline payloadMutateFunction: (T) -> Unit = {}
-): Node = withTransaction {
-    val nodeKind = nodeKindForPayloadClass<T>()
-    val node =
-        Node(
-            nodeId = 0,
-            parentId = parentId,
-            kind = nodeKind,
-            order = nodeDao().getLastNodeOrder(parentId),
-            label = label,
-        )
-    nodeMutateFunction(node)
-    insert(node)
-    val lastNodeId = nodeDao().getLastNodeId()
-    val payload = createDefaultPayloadForNode(nodeKind, lastNodeId)
-    payloadMutateFunction(payload as T)
-    insert(payload)
+    crossinline payloadMutateFunction: (T) -> Unit = {},
+): Node =
+    withTransaction {
+        val nodeKind = nodeKindForPayloadClass<T>()
+        val node =
+            Node(
+                nodeId = 0,
+                parentId = parentId,
+                kind = nodeKind,
+                order = nodeDao().getLastNodeOrder(parentId),
+                label = label,
+            )
+        nodeMutateFunction(node)
+        insert(node)
+        val lastNodeId = nodeDao().getLastNodeId()
+        val payload = createDefaultPayloadForNode(nodeKind, lastNodeId)
+        payloadMutateFunction(payload as T)
+        insert(payload)
 
-    nodeDao().getNodeById(lastNodeId)!!
-}
+        nodeDao().getNodeById(lastNodeId)!!
+    }
 
 suspend fun AppDatabase.getOrCreateDirectoryByPath(
     vararg path: String,
@@ -209,7 +219,7 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             kind = NodeKind.Directory,
                             order = -1,
                             label = specialMode.defaultDirectoryName,
-                        )
+                        ),
                     )
                     val lastNodeId = if (isRoot) ROOT_NODE_ID else nodeDao().getLastNodeId()
                     insert(
@@ -217,8 +227,8 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
                             payloadId = 0,
                             nodeId = lastNodeId,
                             specialMode = specialMode,
-                            collapsed = specialMode.initiallyCollapsed
-                        )
+                            collapsed = specialMode.initiallyCollapsed,
+                        ),
                     )
                     nodeDao().getChildNodes(parentId).fixOrder().let { updateMany(it) }
                     lastNodeId
@@ -227,10 +237,12 @@ suspend fun AppDatabase.getOrCreateSingletonDirectory(specialMode: Directory.Spe
     }
 
 /** Convenience function to get or create the root node. */
-suspend fun AppDatabase.getRootNode(): Node =
-    getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
+suspend fun AppDatabase.getRootNode(): Node = getOrCreateSingletonDirectory(Directory.SpecialMode.Root)
 
-suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int) = withTransaction {
+suspend fun AppDatabase.moveNode(
+    node: Node,
+    newParentNodeId: Int,
+) = withTransaction {
     val oldParentNodeId = node.parentId
     node.parentId = newParentNodeId
     node.order = -1
@@ -240,7 +252,10 @@ suspend fun AppDatabase.moveNode(node: Node, newParentNodeId: Int) = withTransac
     updateMany(oldSiblings + newSiblings)
 }
 
-suspend fun AppDatabase.moveNodes(nodes: List<Node>, newParentNodeId: Int) = withTransaction {
+suspend fun AppDatabase.moveNodes(
+    nodes: List<Node>,
+    newParentNodeId: Int,
+) = withTransaction {
     if (nodes.isEmpty()) throw Exception("List of nodes to move is empty")
 
     val oldParentNodeIds = nodes.map { it.parentId }.toSet()
@@ -281,7 +296,7 @@ suspend fun AppDatabase.deleteRecursively(node: Node) {
 suspend fun AppDatabase.traverseUpward(
     node: Node,
     includeFirst: Boolean = false,
-    action: (Node) -> Boolean
+    action: (Node) -> Boolean,
 ) {
     if (includeFirst) {
         val shouldContinue = action(node)
@@ -298,7 +313,7 @@ suspend fun AppDatabase.traverseUpward(
 suspend fun AppDatabase.traverseUpwardWithPayload(
     startNode: Node,
     includeFirst: Boolean = false,
-    action: (Node, Payload) -> Boolean
+    action: (Node, Payload) -> Boolean,
 ) {
     traverseUpward(startNode, includeFirst) { node ->
         val payload =
@@ -318,19 +333,19 @@ suspend fun AppDatabase.checkPermission(
     scope: PermissionScope,
     node: Node,
 ): Boolean {
-    val selfPayload =
-        getPayloadByNodeId(node.kind, node.nodeId) ?: throw Exception("Payload is null")
+    val selfPayload = getPayloadByNodeId(node.kind, node.nodeId) ?: throw Exception("Payload is null")
     if (selfPayload is Directory && !selfPayload.hasPermission(kind, scope)) return false
 
     var parentsAllow = true
     traverseUpwardWithPayload(node) { _, parentPayload ->
-        if (
-            parentPayload is Directory &&
-                !parentPayload.hasPermission(kind, PermissionScope.Recursive)
+        if (parentPayload is Directory &&
+            !parentPayload.hasPermission(kind, PermissionScope.Recursive)
         ) {
             parentsAllow = false
             false
-        } else true
+        } else {
+            true
+        }
     }
     return parentsAllow
 }
@@ -345,12 +360,12 @@ suspend fun AppDatabase.nodeLineage(node: Node): ArrayDeque<Node> =
         }
     }
 
-suspend fun AppDatabase.nodeLineage(nodeId: Int): ArrayDeque<Node> =
-    nodeDao().getNodeById(nodeId).notNull().let { nodeLineage(it) }
+suspend fun AppDatabase.nodeLineage(nodeId: Int): ArrayDeque<Node> = nodeDao().getNodeById(nodeId).notNull().let { nodeLineage(it) }
 
 fun AppDatabase.checkpoint() {
-    if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst())
+    if (!query("PRAGMA wal_checkpoint", arrayOf()).moveToFirst()) {
         throw Exception("Database checkpoint failed")
+    }
 }
 
 fun AppDatabase.getDatabaseFile(): File {

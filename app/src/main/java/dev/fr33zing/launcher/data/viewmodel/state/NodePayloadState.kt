@@ -53,10 +53,9 @@ class ReferenceFollowingNodePayloadState(
     targetState: NodePayloadState?,
 ) :
     NodePayloadState(
-        node = (targetState ?: underlyingState).node,
-        payload = (targetState ?: underlyingState).payload,
-    ) {
-
+            node = (targetState ?: underlyingState).node,
+            payload = (targetState ?: underlyingState).payload,
+        ) {
     val isValidReference = targetState != null
 
     companion object {
@@ -89,8 +88,9 @@ class NodePayloadStateHolder(
     val flowWithReferenceTarget: Flow<ReferenceFollowingNodePayloadState> =
         flow.transform { state ->
             val targetFlow: Flow<ReferenceFollowingNodePayloadState>? =
-                if (node.kind != NodeKind.Reference) null
-                else {
+                if (node.kind != NodeKind.Reference) {
+                    null
+                } else {
                     (state.payload as? Reference ?: throw PayloadClassMismatchException(state.node))
                         .targetId
                         ?.let { targetId -> db.nodeDao().getNodeById(targetId) }
@@ -100,14 +100,17 @@ class NodePayloadStateHolder(
                                 .map { targetPayload ->
                                     ReferenceFollowingNodePayloadState(
                                         underlyingState = state,
-                                        targetState = NodePayloadState(targetNode, targetPayload)
+                                        targetState = NodePayloadState(targetNode, targetPayload),
                                     )
                                 }
                         }
                 }
 
-            if (targetFlow != null) emitAll(targetFlow)
-            else emit(ReferenceFollowingNodePayloadState(state, null))
+            if (targetFlow != null) {
+                emitAll(targetFlow)
+            } else {
+                emit(ReferenceFollowingNodePayloadState(state, null))
+            }
         }
 }
 
@@ -119,10 +122,8 @@ class NodePayloadListStateHolder(
     val flow =
         combine(
             nodes.map { node ->
-                NodePayloadStateHolder(db, node)
-                    .flowWithReferenceTarget
-                    .maybeFilter(filterPredicate)
+                NodePayloadStateHolder(db, node).flowWithReferenceTarget.maybeFilter(filterPredicate)
             },
-            transform = { it }
+            transform = { it },
         )
 }

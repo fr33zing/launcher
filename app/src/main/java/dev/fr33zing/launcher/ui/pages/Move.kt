@@ -86,7 +86,7 @@ fun Move(
         visible = cancelDialogVisible,
         icon = Icons.Filled.Close,
         yesText = "Cancel move",
-        yesColor = Catppuccin.Current.red,
+        yesColor = Catppuccin.current.red,
         yesIcon = Icons.Filled.Close,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
@@ -98,7 +98,7 @@ fun Move(
         visible = saveDialogVisible,
         icon = Icons.Filled.Check,
         yesText = "Confirm move",
-        yesColor = Catppuccin.Current.green,
+        yesColor = Catppuccin.current.green,
         yesIcon = Icons.Filled.Check,
         noText = "Continue browsing",
         noIcon = Icons.Filled.ArrowBack,
@@ -118,22 +118,16 @@ fun Move(
                         buildAnnotatedString {
                             append("Moving ")
                             if (viewModel.nodeToMove != null) {
-                                withStyle(
-                                    SpanStyle(color = viewModel.nodeToMove.notNull().kind.color)
-                                ) {
+                                withStyle(SpanStyle(color = viewModel.nodeToMove.notNull().kind.color)) {
                                     append(viewModel.nodeToMove!!.kind.label)
                                 }
                             }
-                        }
+                        },
                     )
                 },
                 actions = {
-                    CancelButton {
-                        if (askOnReject) cancelDialogVisible.value = true else cancelMove()
-                    }
-                    FinishButton {
-                        if (askOnAccept) saveDialogVisible.value = true else commitMove()
-                    }
+                    CancelButton { if (askOnReject) cancelDialogVisible.value = true else cancelMove() }
+                    FinishButton { if (askOnAccept) saveDialogVisible.value = true else commitMove() }
                 },
             )
         },
@@ -146,19 +140,21 @@ fun Move(
                 verticalArrangement =
                     Arrangement.spacedBy(preferences.nodeAppearance.spacing.mappedDefault),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.absolutePadding(top = topPadding, bottom = bottomPadding)
+                modifier = Modifier.absolutePadding(top = topPadding, bottom = bottomPadding),
             ) {
-                val valueModifier = remember {
-                    Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxWidth()
-                }
+                val valueModifier =
+                    remember {
+                        Modifier.padding(horizontal = ScreenHorizontalPadding).fillMaxWidth()
+                    }
 
                 OutlinedValue(label = "Current path", modifier = valueModifier) { padding ->
                     NodePath(viewModel.nodeToMoveLineage, modifier = Modifier.padding(padding))
                 }
 
                 OutlinedValue(label = "Destination path", modifier = valueModifier) { padding ->
-                    if (selectedNode != null && treeBrowserState != null)
+                    if (selectedNode != null && treeBrowserState != null) {
                         NodePath(treeBrowserState!!.stack, modifier = Modifier.padding(padding))
+                    }
                 }
 
                 val verticalPadding = spacing / 2
@@ -167,12 +163,9 @@ fun Move(
                         modifier =
                             Modifier.fillMaxWidth()
                                 .verticalScroll(rememberScrollState())
-                                .padding(vertical = verticalPadding)
+                                .padding(vertical = verticalPadding),
                     ) {
-                        TreeBrowser(
-                            viewModel.treeBrowser,
-                            horizontalPadding = ScreenHorizontalPadding
-                        )
+                        TreeBrowser(viewModel.treeBrowser, horizontalPadding = ScreenHorizontalPadding)
                     }
                 }
             }

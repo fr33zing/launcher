@@ -28,8 +28,9 @@ class Preference<UnderlyingType, MappedType>(
 ) {
     val flow: Flow<UnderlyingType> =
         context.preferencesDataStore.data.map {
-            if (it[key] == null)
+            if (it[key] == null) {
                 context.preferencesDataStore.edit { preferences -> preferences[key] = default }
+            }
             it[key] ?: default
         }
     private val mappedFlow: Flow<MappedType> = flow.map(map)
@@ -49,7 +50,6 @@ class Preferences(context: Context) {
     val home = HomePreferences(context)
     val search = SearchPreferences(context)
     val notices = NoticePreferences(context)
-    val debug = DebugPreferences(context)
 }
 
 class NodeAppearancePreferences(context: Context) {
@@ -60,8 +60,10 @@ class NodeAppearancePreferences(context: Context) {
 
 class HomePreferences(context: Context) {
     class DefaultApplicationPreferences(context: Context) {
-        private fun defaultApplicationPreference(context: Context, key: String) =
-            Preference(context, stringPreferencesKey("home.defaultApps.$key"), "", ::noMap)
+        private fun defaultApplicationPreference(
+            context: Context,
+            key: String,
+        ) = Preference(context, stringPreferencesKey("home.defaultApps.$key"), "", ::noMap)
 
         val clock = defaultApplicationPreference(context, "clock")
         val calendar = defaultApplicationPreference(context, "calendar")
@@ -98,10 +100,6 @@ class NoticePreferences(context: Context) {
         Preference(context, booleanPreferencesKey("notices.positionAtTop"), false, ::noMap)
     val durationSeconds =
         Preference(context, intPreferencesKey("notices.durationSeconds"), 3, ::noMap)
-}
-
-class DebugPreferences(context: Context) {
-    val useNewTree = Preference(context, booleanPreferencesKey("useNewTree"), true, ::noMap)
 }
 
 private fun <T> noMap(value: T): T = value

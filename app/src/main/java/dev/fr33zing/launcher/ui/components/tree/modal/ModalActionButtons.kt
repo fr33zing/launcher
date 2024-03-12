@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.dim
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import kotlin.math.roundToInt
@@ -41,9 +41,9 @@ private const val ANIMATION_DURATION = 125
 fun ModalActionButton(
     label: String,
     icon: ImageVector,
-    color: Color = Foreground,
+    color: Color = foreground,
     enabled: Boolean = true,
-    action: () -> Unit
+    action: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication =
@@ -62,15 +62,15 @@ fun ModalActionButton(
             enabled = enabled,
             interactionSource = interactionSource,
             indication = indication,
-            onClick = action
-        )
+            onClick = action,
+        ),
     ) {
         AnimatedContent(
             targetState = icon,
             label = "modal action button icon",
             transitionSpec = {
                 fadeIn(tween(ANIMATION_DURATION)).togetherWith(fadeOut(tween(ANIMATION_DURATION)))
-            }
+            },
         ) { icon ->
             Icon(
                 icon,
@@ -85,7 +85,7 @@ fun ModalActionButton(
             label = "modal action button label",
             transitionSpec = {
                 fadeIn(tween(ANIMATION_DURATION)).togetherWith(fadeOut(tween(ANIMATION_DURATION)))
-            }
+            },
         ) { label ->
             Text(
                 label,
@@ -112,13 +112,12 @@ private fun ModalActionButtonLayout(
     content: @Composable () -> Unit,
 ) {
     Layout(modifier = modifier, content = content) { measurables, constraints ->
-        val placeables =
-            measurables.map { it.measure(Constraints(maxHeight = constraints.minHeight)) }
+        val placeables = measurables.map { it.measure(Constraints(maxHeight = constraints.minHeight)) }
         layout(constraints.maxWidth, constraints.minHeight) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
                     x = constraints.maxWidth / 2 - placeable.width / 2,
-                    y = if (index == 0) 0 else constraints.maxHeight - placeable.height
+                    y = if (index == 0) 0 else constraints.maxHeight - placeable.height,
                 )
             }
         }
@@ -138,10 +137,9 @@ private fun ModalActionButtonRowLayout(
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
                     x =
-                        (constraints.maxWidth / placeables.size * (index + 0.5f) -
-                                placeable.width / 2)
+                        (constraints.maxWidth / placeables.size * (index + 0.5f) - placeable.width / 2)
                             .toInt(),
-                    y = constraints.maxHeight / 2 - placeable.height / 2
+                    y = constraints.maxHeight / 2 - placeable.height / 2,
                 )
             }
         }

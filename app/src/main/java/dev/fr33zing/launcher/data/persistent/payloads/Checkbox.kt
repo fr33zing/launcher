@@ -19,7 +19,10 @@ class Checkbox(
     var uncheckedOn: Date? = null,
     var checkedOn: Date? = null,
 ) : Payload(payloadId, nodeId) {
-    override fun activate(db: AppDatabase, context: Context) {
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) {
         checked = !checked
         if (checked) checkedOn = Date() else uncheckedOn = Date()
         this.let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }

@@ -26,12 +26,12 @@ fun SearchFilters(
     nodeKindFilter: Map<NodeKind, Boolean>,
     updateFilter: (nodeKind: NodeKind, enabled: Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    lineHeight: Dp = LocalNodeDimensions.current.lineHeight
+    lineHeight: Dp = LocalNodeDimensions.current.lineHeight,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         NodeKind.entries.forEach { nodeKind ->
             key(nodeKind) {
@@ -48,8 +48,8 @@ fun SearchFilters(
 
                 Box(
                     Modifier.clickable(interactionSource, indication) {
-                            updateFilter(nodeKind, !enabled)
-                        }
+                        updateFilter(nodeKind, !enabled)
+                    }
                         .drawBehind {
                             if (enabled) {
                                 val radius = 2.5.dp
@@ -61,16 +61,16 @@ fun SearchFilters(
                                         Offset(
                                             x = size.width / 2,
                                             y = size.height + offsetY.toPx(),
-                                        )
+                                        ),
                                 )
                             }
-                        }
+                        },
                 ) {
                     Icon(
                         icon,
                         contentDescription = null,
                         tint = if (enabled) color else color.copy(alpha = 0.5f),
-                        modifier = Modifier.size(lineHeight)
+                        modifier = Modifier.size(lineHeight),
                     )
                 }
             }

@@ -13,8 +13,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import dev.fr33zing.launcher.data.utility.getActivityInfos
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 
 @Composable
@@ -40,7 +40,7 @@ fun ApplicationPickerDialog(
                 val labelStyle = SpanStyle(color = color, fontSize = fontSize)
                 val packageNameStyle =
                     SpanStyle(
-                        color = Foreground.mix(Background, 0.4f),
+                        color = foreground.mix(background, 0.4f),
                         fontSize = fontSize * 0.65f,
                     )
 

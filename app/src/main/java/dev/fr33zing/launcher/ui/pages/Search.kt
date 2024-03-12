@@ -105,7 +105,7 @@ fun Search(
                     updateQuery = viewModel.updateQuery,
                     focusRequester = focusRequester,
                     focusManager = focusManager,
-                    keyboardController = keyboardController
+                    keyboardController = keyboardController,
                 ) {
                     results.getOrNull(0)?.let { topResult -> activatePayload(topResult.element) }
                 }
@@ -114,7 +114,7 @@ fun Search(
                     nodeKindFilter = state.nodeKindFilter,
                     updateFilter = viewModel.updateFilter,
                 )
-            }
+            },
         ) {
             SearchResults(
                 query = state.query,
@@ -129,7 +129,7 @@ fun Search(
                 onRemoveHistoricalQuery = viewModel::removeQueryFromSearchHistory,
                 onWebSearch = ::onWebSearch,
                 onActivateSearchResult = ::activatePayload,
-                onActivateDirectorySearchResult = ::activateDirectory
+                onActivateDirectorySearchResult = ::activateDirectory,
             )
         }
     }

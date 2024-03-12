@@ -19,5 +19,5 @@ data class ModalNodeArguments(
     val actions: ModalNodeActions,
     val treeState: TreeState,
     val treeNodeState: TreeNodeState,
-    val relevance: NodeRelevance
+    val relevance: NodeRelevance,
 )

@@ -42,14 +42,14 @@ class Application(
         appName = activityInfo.label.toString(),
         packageName = activityInfo.applicationInfo.packageName,
         activityClassName = activityInfo.componentName.className,
-        userHandle = activityInfo.user.toString()
+        userHandle = activityInfo.user.toString(),
     )
 
     enum class Status(val reason: String) {
         Valid("<valid>"),
         MissingPackage("the package is missing"),
         MissingActivity("the activity class name is invalid"),
-        MissingProfile("the user profile is missing")
+        MissingProfile("the user profile is missing"),
     }
 
     @Ignore private var _status: Status? = null
@@ -68,19 +68,21 @@ class Application(
                 return Status.MissingPackage
             }
 
-        if (userManager.userProfiles.none { it.toString() == userHandle })
-            return Status.MissingProfile
+        if (userManager.userProfiles.none { it.toString() == userHandle }) return Status.MissingProfile
 
-        if (
-            packageInfo.activities == null ||
-                packageInfo.activities.none { it.name == activityClassName }
-        )
+        if (packageInfo.activities == null ||
+            packageInfo.activities.none { it.name == activityClassName }
+        ) {
             return Status.MissingActivity
+        }
 
         return Status.Valid
     }
 
-    override fun activate(db: AppDatabase, context: Context) = launch()
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) = launch()
 
     fun launch() {
         _status = computeStatus()
@@ -91,20 +93,19 @@ class Application(
                     userManager.userProfiles.first { it.toString() == userHandle }
                         ?: throw Exception("Missing user profile")
                 val activityList = launcherApps.getActivityList(packageName, foundUserHandle)
-                val componentName =
-                    ComponentName(packageName, activityList[activityList.size - 1].name)
+                val componentName = ComponentName(packageName, activityList[activityList.size - 1].name)
                 launcherApps.startMainActivity(componentName, foundUserHandle, null, null)
             } catch (e: Exception) {
                 sendNotice(
-                    "app-launch-failed:${nodeId}",
+                    "app-launch-failed:$nodeId",
                     "Failed to launch application. Error: ${e.message}.",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             }
         } else {
             sendNotice(
-                "app-launch-invalid:${nodeId}",
-                "Cannot launch application because ${status.reason}."
+                "app-launch-invalid:$nodeId",
+                "Cannot launch application because ${status.reason}.",
             )
         }
     }
@@ -121,15 +122,15 @@ class Application(
                 launcherApps.startAppDetailsActivity(intent.component, foundUserHandle, null, null)
             } catch (e: Exception) {
                 sendNotice(
-                    "app-info-failed:${nodeId}",
+                    "app-info-failed:$nodeId",
                     "Failed to open application info. Error: ${e.message}",
-                    NoticeKind.Error
+                    NoticeKind.Error,
                 )
             }
         } else {
             sendNotice(
-                "app-info-invalid:${nodeId}",
-                "Cannot open application info because ${status.reason}."
+                "app-info-invalid:$nodeId",
+                "Cannot open application info because ${status.reason}.",
             )
         }
     }

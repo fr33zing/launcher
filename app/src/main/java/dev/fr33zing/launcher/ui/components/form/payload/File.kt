@@ -34,11 +34,10 @@ import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.form.refreshNodePropertyTextFields
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
-import dev.fr33zing.launcher.ui.theme.Dim
+import dev.fr33zing.launcher.ui.theme.dim
 import dev.fr33zing.launcher.ui.theme.typography
 
-private fun uriLabel(uri: Uri) =
-    uri.pathSegments.lastOrNull()?.split(java.io.File.separatorChar)?.last() ?: ""
+private fun uriLabel(uri: Uri) = uri.pathSegments.lastOrNull()?.split(java.io.File.separatorChar)?.last() ?: ""
 
 private fun uriFilePath(uri: Uri) = uri.toString()
 
@@ -58,8 +57,7 @@ fun FileEditForm(arguments: EditFormArguments) {
     fun onUriChanged() {
         val uri = Uri.parse(filePathState.value)
         defaultLabel = uriLabel(uri)
-        contentUriActivities =
-            context.queryContentUriActivities(uri).toLauncherActivityInfos(context)
+        contentUriActivities = context.queryContentUriActivities(uri).toLauncherActivityInfos(context)
     }
     LaunchedEffect(Unit) { onUriChanged() }
 
@@ -71,7 +69,7 @@ fun FileEditForm(arguments: EditFormArguments) {
             file.openWithPackageName = openWithPackageNameState.value
             refreshNodePropertyTextFields()
         },
-        overrideActivityInfos = contentUriActivities
+        overrideActivityInfos = contentUriActivities,
     )
 
     EditFormColumn(padding) {
@@ -82,7 +80,7 @@ fun FileEditForm(arguments: EditFormArguments) {
                     // TODO remove unused permissions
                     context.contentResolver.takePersistableUriPermission(
                         uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
                     )
 
                     labelState.value = uriLabel(uri)
@@ -94,13 +92,13 @@ fun FileEditForm(arguments: EditFormArguments) {
                 },
                 dialog = { dialogVisible, onPicked ->
                     val openDocumentLauncher =
-                        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                            uri ->
+                        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                             uri?.let { onPicked(uri) }
-                                ?: sendNotice( // TODO revise wording, maybe delete altogether
+                                ?: sendNotice(
+                                    // TODO revise wording, maybe delete altogether
                                     "file-edit-form-picker-failed-uri-null",
                                     "File picker failed: No file path was provided.",
-                                    NoticeKind.Error
+                                    NoticeKind.Error,
                                 )
                             dialogVisible.value = false
                         }
@@ -111,7 +109,7 @@ fun FileEditForm(arguments: EditFormArguments) {
                         doNotGoHomeOnNextPause()
                         openDocumentLauncher.launch(arrayOf("*/*"))
                     }
-                }
+                },
             )
         }
 
@@ -122,24 +120,25 @@ fun FileEditForm(arguments: EditFormArguments) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth()
+            modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
         ) {
-            if (filePathState.value.isEmpty())
+            if (filePathState.value.isEmpty()) {
                 Text(
                     "No file selected.",
                     style = typography.labelMedium,
-                    color = Dim,
+                    color = dim,
                 )
-            else
+            } else {
                 Text(
                     "${contentUriActivities.size} applications can open this file.",
                     style = typography.labelMedium,
                 )
+            }
             Button(
                 onClick = {
                     onUriChanged()
                     applicationPickerVisible.value = true
-                }
+                },
             ) {
                 Text("Pick app")
             }

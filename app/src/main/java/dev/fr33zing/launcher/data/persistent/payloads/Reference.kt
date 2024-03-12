@@ -14,8 +14,10 @@ import kotlinx.coroutines.launch
 @Entity
 class Reference(payloadId: Int, nodeId: Int, var targetId: Int? = null) :
     Payload(payloadId, nodeId) {
-
-    override fun activate(db: AppDatabase, context: Context) {
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) {
         if (targetId == null) return
 
         CoroutineScope(Dispatchers.IO).launch {

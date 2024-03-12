@@ -14,15 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.mix
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 private const val ICON_SIZE_RATIO = 0.375f
 private const val BACKGROUND_ALPHA = 0.625f
-private val BACKGROUND_COLOR = Background.copy(alpha = BACKGROUND_ALPHA)
-private val ICON_COLOR = Foreground.mix(Background, 0.3f)
+private val BACKGROUND_COLOR = background.copy(alpha = BACKGROUND_ALPHA)
+private val ICON_COLOR = foreground.mix(background, 0.3f)
 
 val ActionButtonSize = 64.dp
 val ActionButtonVerticalPadding = 24.dp
@@ -34,7 +34,7 @@ fun ActionButton(
     icon: ImageVector,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = rememberCustomIndication()
@@ -45,13 +45,13 @@ fun ActionButton(
             Modifier.size(ActionButtonSize)
                 .background(BACKGROUND_COLOR, shape = CircleShape)
                 .clip(CircleShape)
-                .clickable(interactionSource, indication, onClick = onClick)
+                .clickable(interactionSource, indication, onClick = onClick),
     ) {
         Icon(
             icon,
             contentDescription,
             Modifier.size(ActionButtonSize * ICON_SIZE_RATIO),
-            ICON_COLOR
+            ICON_COLOR,
         )
     }
 }

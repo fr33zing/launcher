@@ -30,9 +30,7 @@ fun ApplicationEditForm(arguments: EditFormArguments) {
                     node.label = application.appName
                     refreshNodePropertyTextFields()
                 },
-                dialog = { dialogVisible, onPicked ->
-                    ApplicationPickerDialog(dialogVisible, onPicked)
-                }
+                dialog = { dialogVisible, onPicked -> ApplicationPickerDialog(dialogVisible, onPicked) },
             )
         }
 
@@ -40,9 +38,6 @@ fun ApplicationEditForm(arguments: EditFormArguments) {
         NodePropertyTextField(application::appName)
         NodePropertyTextField(application::packageName)
         NodePropertyTextField(application::activityClassName, userCanRevert = true)
-        NodePropertyTextField(
-            application::userHandle,
-            defaultValue = Process.myUserHandle().toString()
-        )
+        NodePropertyTextField(application::userHandle, defaultValue = Process.myUserHandle().toString())
     }
 }

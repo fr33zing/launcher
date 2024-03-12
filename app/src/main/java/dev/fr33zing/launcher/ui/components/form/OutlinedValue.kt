@@ -26,8 +26,8 @@ import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.fr33zing.launcher.ui.theme.Background
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
 import dev.fr33zing.launcher.ui.utility.conditional
 import dev.fr33zing.launcher.ui.utility.mix
@@ -37,7 +37,7 @@ fun OutlinedValue(
     label: String,
     modifier: Modifier = Modifier,
     readOnly: Boolean = true,
-    content: @Composable (PaddingValues) -> Unit
+    content: @Composable (PaddingValues) -> Unit,
 ) {
     val density = LocalDensity.current
     var contentHeight by remember { mutableStateOf<Dp?>(null) }
@@ -54,8 +54,8 @@ fun OutlinedValue(
             enabled = !readOnly,
             modifier =
                 Modifier.conditional(condition = contentHeight != null) {
-                        animateContentSize().height(contentHeight!! + 42.dp)
-                    }
+                    animateContentSize().height(contentHeight!! + 42.dp)
+                }
                     .focusProperties { canFocus = false }
                     .then(modifier),
             prefix = {
@@ -66,10 +66,10 @@ fun OutlinedValue(
                             contentWidth = with(density) { it.size.width.toDp() }
                         }
                         .offset(x = (-7).dp)
-                        .conditional(contentWidth != null) { requiredWidth(contentWidth!! + 16.dp) }
+                        .conditional(contentWidth != null) { requiredWidth(contentWidth!! + 16.dp) },
                 ) {
                     CompositionLocalProvider(
-                        LocalContentColor provides Foreground.mix(Background, 0.25f)
+                        LocalContentColor provides foreground.mix(background, 0.25f),
                     ) {
                         content(contentPadding)
                     }

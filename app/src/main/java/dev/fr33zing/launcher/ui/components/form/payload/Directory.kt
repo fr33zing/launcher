@@ -28,7 +28,7 @@ import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.components.form.OutlinedValue
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
 @Composable
@@ -58,8 +58,9 @@ private fun InitialState(directory: Directory) {
     OutlinedValue(
         "Initial visibility behavior",
         readOnly = false,
-        modifier = Modifier.selectableGroup()
-    ) { padding ->
+        modifier = Modifier.selectableGroup(),
+    ) {
+            padding ->
         Column {
             radioOptions.forEach { option ->
                 InitialStateOption(padding, option, selectedOption.value) {
@@ -79,7 +80,7 @@ private fun InitialStateOption(
     onOptionSelected: (Directory.InitialVisibility) -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(color = Catppuccin.Current.pink)
+    val indication = rememberCustomIndication(color = Catppuccin.current.pink)
     Box(
         modifier =
             Modifier.selectable(
@@ -87,19 +88,19 @@ private fun InitialStateOption(
                 onClick = { onOptionSelected(option) },
                 interactionSource = interactionSource,
                 indication = indication,
-                role = Role.RadioButton
-            )
+                role = Role.RadioButton,
+            ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(padding).padding(vertical = 10.dp)
+            modifier = Modifier.fillMaxWidth().padding(padding).padding(vertical = 10.dp),
         ) {
             RadioButton(selected = (option == selectedOption), onClick = null)
             Text(
                 text = option.text(),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 12.dp),
-                color = Foreground
+                color = foreground,
             )
         }
     }

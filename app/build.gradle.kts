@@ -1,9 +1,23 @@
 plugins {
+    alias(libs.plugins.com.diffplug.spotless)
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
     alias(libs.plugins.com.google.devtools.ksp)
     alias(libs.plugins.com.google.dagger.hilt.android)
+}
+
+configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    kotlin {
+        target("src/*/java/**/*.kt")
+        ktlint()
+            .customRuleSets(
+                listOf("com.twitter.compose.rules:ktlint:0.0.26"),
+            ).editorConfigOverride(
+                mapOf("ktlint_code_style" to "ktlint_official", "ktlint_function_naming_ignore_when_annotated_with" to "Composable"),
+            )
+    }
+    kotlinGradle { ktlint() }
 }
 
 android {
@@ -26,7 +40,7 @@ android {
         debug {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -35,7 +49,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("debug")
         }

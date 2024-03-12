@@ -32,8 +32,7 @@ data class SearchState(
     val query
         get() = rawQuery.trim()
 
-    fun filterPredicate(nodeKind: NodeKind): Boolean =
-        nodeKindFilter.getOrDefault(nodeKind, false) || nodeKindFilter.all { !it.value }
+    fun filterPredicate(nodeKind: NodeKind): Boolean = nodeKindFilter.getOrDefault(nodeKind, false) || nodeKindFilter.all { !it.value }
 }
 
 class SearchStateHolder(private val db: AppDatabase) {
@@ -57,48 +56,49 @@ class SearchStateHolder(private val db: AppDatabase) {
                     .onEach(::removeTreeNodeStateFlowsIfMissingFromResults)
             }
             .flatMapLatest { results ->
-                if (results.isEmpty()) flowOf(emptyList())
-                else
+                if (results.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
                     combine(
                         results.map { result ->
                             getTreeNodeStateFlow(result.element).map { treeNodeState ->
                                 result.transform { treeNodeState }
                             }
-                        }
+                        },
                     ) {
                         it.toList()
                     }
+                }
             }
 
     fun updateQuery(query: String) = _stateFlow.update { state -> state.copy(rawQuery = query) }
 
-    fun updateFilter(nodeKind: NodeKind, enabled: Boolean) =
-        _stateFlow.update { state ->
-            state.copy(
-                nodeKindFilter =
-                    state.nodeKindFilter.toMutableMap().also { map -> map[nodeKind] = enabled }
-            )
-        }
+    fun updateFilter(
+        nodeKind: NodeKind,
+        enabled: Boolean,
+    ) = _stateFlow.update { state ->
+        state.copy(
+            nodeKindFilter =
+                state.nodeKindFilter.toMutableMap().also { map -> map[nodeKind] = enabled },
+        )
+    }
 
-    private fun removeTreeNodeStateFlowsIfMissingFromResults(
-        results: List<FuzzyMatcher.Result<Node>>
-    ) {
+    private fun removeTreeNodeStateFlowsIfMissingFromResults(results: List<FuzzyMatcher.Result<Node>>) {
         treeNodeStateFlows.keys.forEach { key ->
             if (key !in results.map { it.element.nodeId }) treeNodeStateFlows.remove(key)
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTreeNodeStateFlow(
-        node: Node,
-    ): Flow<TreeNodeState> =
+    private fun getTreeNodeStateFlow(node: Node): Flow<TreeNodeState> =
         treeNodeStateFlows.computeIfAbsent(node.nodeId) {
             val parentStateHolder = NodePayloadStateHolder(db, node)
 
             parentStateHolder.flowWithReferenceTarget.mapLatest { value ->
-                val flow = lazy { // TODO reuse current flow somehow
-                    getTreeNodeStateFlow(node)
-                }
+                val flow =
+                    lazy { // TODO reuse current flow somehow
+                        getTreeNodeStateFlow(node)
+                    }
 
                 TreeNodeState(
                     key = TreeNodeKey.rootKey(value.node.nodeId),

@@ -27,11 +27,11 @@ import dev.fr33zing.launcher.ui.components.form.EditFormColumn
 import dev.fr33zing.launcher.ui.components.form.NodePropertyTextField
 import dev.fr33zing.launcher.ui.pages.EditFormArguments
 import dev.fr33zing.launcher.ui.theme.outlinedTextFieldColors
-import kotlin.text.Typography.degree
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.text.Typography.degree
 
 // TODO support more coordinate formats and cleanup detection code
 private val osmandCoordinatesRegex =
@@ -92,16 +92,13 @@ fun LocationEditForm(arguments: EditFormArguments) {
 
         // TODO get consent to check clipboard first
         clipboardLocation(clipboardManager)?.let { clipboardLocation ->
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = {
                         clearFocus()
                         location.refresh(clipboardLocation, except = listOf("zoom", "query"))
                         geoUriState.value = location.geoUri
-                    }
+                    },
                 ) {
                     Text("Use location from clipboard:\n${clipboardManager.getText()?.text}")
                 }
@@ -126,7 +123,7 @@ fun LocationEditForm(arguments: EditFormArguments) {
                     keyboardType = KeyboardType.Decimal,
                 ),
             keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -147,7 +144,7 @@ fun LocationEditForm(arguments: EditFormArguments) {
                     keyboardType = KeyboardType.Decimal,
                 ),
             keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -168,7 +165,7 @@ fun LocationEditForm(arguments: EditFormArguments) {
                     keyboardType = KeyboardType.Decimal,
                 ),
             keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -189,7 +186,7 @@ fun LocationEditForm(arguments: EditFormArguments) {
                     keyboardType = KeyboardType.Text,
                 ),
             keyboardActions = KeyboardActions(onDone = { clearFocus() }),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

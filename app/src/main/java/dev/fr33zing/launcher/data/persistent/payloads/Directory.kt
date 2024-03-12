@@ -35,9 +35,8 @@ class Directory(
     nodeId: Int,
     var specialMode: SpecialMode? = null,
     var collapsed: Boolean? = null,
-    var initialVisibility: InitialVisibility = InitialVisibility.Preference
+    var initialVisibility: InitialVisibility = InitialVisibility.Preference,
 ) : Payload(payloadId, nodeId) {
-
     //
     // Permissions
     //
@@ -54,15 +53,15 @@ class Directory(
          */
         val isChildValid: ((child: NodePayloadState) -> Boolean)? = null,
         /**
-         * Check if the special directory is valid. If it returns false, the directory is delete.
-         * This runs **after** [isChildValid].
+         * Check if the special directory is valid. If it returns false, the directory is delete. This
+         * runs **after** [isChildValid].
          */
         val isValid: ((children: List<NodePayloadState>) -> Boolean)? = null,
     ) {
         Root(
             defaultDirectoryName = "<Root>",
             icon = Icons.Rounded.DeviceHub,
-            permissions = AllPermissions
+            permissions = AllPermissions,
         ),
         Home(
             defaultDirectoryName = "Home",
@@ -76,7 +75,7 @@ class Directory(
                         mutableSetOf(PermissionScope.Self, PermissionScope.Recursive)
                     permissions[PermissionKind.Delete] = mutableSetOf(PermissionScope.Recursive)
                     permissions
-                }
+                },
         ),
         NewApplications(
             defaultDirectoryName = "New Applications",
@@ -110,7 +109,10 @@ class Directory(
         ),
     }
 
-    fun hasPermission(kind: PermissionKind, scope: PermissionScope): Boolean {
+    fun hasPermission(
+        kind: PermissionKind,
+        scope: PermissionScope,
+    ): Boolean {
         return (specialMode ?: return true).permissions.hasPermission(kind, scope)
     }
 
@@ -122,7 +124,8 @@ class Directory(
         Preference,
         Remember,
         Collapsed,
-        Expanded;
+        Expanded,
+        ;
 
         fun text(): String =
             when (this) {
@@ -149,7 +152,10 @@ class Directory(
             if (initialVisibility == InitialVisibility.Remember) collapsed else initiallyCollapsed
     }
 
-    override fun activate(db: AppDatabase, context: Context) {
+    override fun activate(
+        db: AppDatabase,
+        context: Context,
+    ) {
         collapsed = collapsed != true
         let { payload -> CoroutineScope(Dispatchers.IO).launch { db.update(payload) } }
     }

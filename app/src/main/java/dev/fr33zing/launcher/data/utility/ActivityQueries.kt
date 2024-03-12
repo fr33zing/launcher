@@ -15,10 +15,11 @@ private fun Intent.queryActivities(context: Context) =
         it.activityInfo
     }
 
-fun List<ActivityInfo>.toLauncherActivityInfos(context: Context) = map {
-    val intent = context.packageManager.getLaunchIntentForPackage(it.packageName)
-    launcherApps.resolveActivity(intent, Process.myUserHandle())
-}
+fun List<ActivityInfo>.toLauncherActivityInfos(context: Context) =
+    map {
+        val intent = context.packageManager.getLaunchIntentForPackage(it.packageName)
+        launcherApps.resolveActivity(intent, Process.myUserHandle())
+    }
 
 fun Context.queryContentUriActivities(uri: Uri): List<ActivityInfo> =
     Intent()

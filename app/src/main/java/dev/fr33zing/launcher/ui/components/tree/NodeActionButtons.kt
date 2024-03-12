@@ -47,9 +47,9 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.ui.components.dialog.YesNoDialog
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
-import dev.fr33zing.launcher.ui.theme.Background
 import dev.fr33zing.launcher.ui.theme.Catppuccin
-import dev.fr33zing.launcher.ui.theme.Foreground
+import dev.fr33zing.launcher.ui.theme.background
+import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.blockPointerEvents
 import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 
@@ -69,9 +69,9 @@ class NodeActions(
 class NodeActionButtonKind(
     val label: String,
     val icon: ImageVector,
-    val color: Color = Foreground,
+    val color: Color = foreground,
     val visible: (TreeNodeState) -> Boolean,
-    val component: @Composable NodeActionButtonKind.(ComponentArguments) -> Unit
+    val component: @Composable NodeActionButtonKind.(ComponentArguments) -> Unit,
 ) {
     data class ComponentArguments(
         val state: TreeNodeState,
@@ -89,7 +89,6 @@ class NodeActionButtonKind(
                 ) { (_, actions) ->
                     ActionButton { actions.beginBatchSelect() }
                 },
-
                 // Move node to trash
                 NodeActionButtonKind(
                     label = "Trash",
@@ -102,17 +101,16 @@ class NodeActionButtonKind(
                     ActionButton {
                         sendNotice(
                             "moved-to-trash:${node.nodeId}",
-                            "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash."
+                            "Moved ${node.kind.label.lowercase()} \"${node.label}\" to the trash.",
                         )
                         actions.trash(state.underlyingNodeId)
                     }
                 },
-
                 // Empty trash
                 NodeActionButtonKind(
                     label = "Empty",
                     icon = Icons.Outlined.DeleteForever,
-                    color = Catppuccin.Current.red,
+                    color = Catppuccin.current.red,
                     visible = { state ->
                         state.value.payload.castOrNull<Directory>()?.specialMode ==
                             Directory.SpecialMode.Trash
@@ -123,7 +121,7 @@ class NodeActionButtonKind(
                         visible = dialogVisible,
                         icon = Icons.Outlined.DeleteForever,
                         yesText = "Delete trash forever",
-                        yesColor = Catppuccin.Current.red,
+                        yesColor = Catppuccin.current.red,
                         yesIcon = Icons.Filled.Dangerous,
                         noText = "Don't empty trash",
                         noIcon = Icons.Filled.ArrowBack,
@@ -131,29 +129,21 @@ class NodeActionButtonKind(
                     )
                     ActionButton { dialogVisible.value = true }
                 },
-
                 // Move node
                 NodeActionButtonKind(
                     label = "Move",
                     icon = Icons.Outlined.DriveFileMove,
                     visible = { state ->
-                        state.permissions.hasPermission(
-                            PermissionKind.Move,
-                            PermissionScope.Self
-                        ) ||
+                        state.permissions.hasPermission(PermissionKind.Move, PermissionScope.Self) ||
                             state.permissions.hasPermission(
                                 PermissionKind.MoveIn,
-                                PermissionScope.Self
+                                PermissionScope.Self,
                             ) ||
-                            state.permissions.hasPermission(
-                                PermissionKind.MoveOut,
-                                PermissionScope.Self
-                            )
+                            state.permissions.hasPermission(PermissionKind.MoveOut, PermissionScope.Self)
                     },
                 ) { (state, actions) ->
                     ActionButton { actions.move(state.underlyingNodeId) }
                 },
-
                 // Reorder nodes
                 NodeActionButtonKind(
                     label = "Reorder",
@@ -162,7 +152,6 @@ class NodeActionButtonKind(
                 ) { (state, actions) ->
                     ActionButton { actions.reorder(state.underlyingNodeId) }
                 },
-
                 // Edit node
                 NodeActionButtonKind(
                     label = "Edit",
@@ -173,7 +162,6 @@ class NodeActionButtonKind(
                 ) { (state, actions) ->
                     ActionButton { actions.edit(state.underlyingNodeId) }
                 },
-
                 // Jump to reference target
                 NodeActionButtonKind(
                     label = "Jump",
@@ -187,11 +175,10 @@ class NodeActionButtonKind(
                     ActionButton {
                         sendJumpToNode(
                             state.value.underlyingState.payload.cast<Reference>().targetId!!,
-                            snap = false
+                            snap = false,
                         )
                     }
                 },
-
                 // View application info
                 NodeActionButtonKind(
                     label = "Info",
@@ -200,7 +187,7 @@ class NodeActionButtonKind(
                 ) { (state) ->
                     val context = LocalContext.current
                     ActionButton { state.value.payload.cast<Application>().openInfo(context) }
-                }
+                },
             )
     }
 
@@ -216,8 +203,8 @@ class NodeActionButtonKind(
             Modifier.clickable(
                 interactionSource = interactionSource,
                 indication = indication,
-                onClick = action
-            )
+                onClick = action,
+            ),
         ) {
             Icon(
                 icon,
@@ -244,13 +231,12 @@ private fun NodeActionButtonLayout(
     content: @Composable () -> Unit,
 ) {
     Layout(modifier = modifier, content = content) { measurables, constraints ->
-        val placeables =
-            measurables.map { it.measure(Constraints(maxHeight = constraints.minHeight)) }
+        val placeables = measurables.map { it.measure(Constraints(maxHeight = constraints.minHeight)) }
         layout(constraints.maxWidth, constraints.minHeight) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
                     x = constraints.maxWidth / 2 - placeable.width / 2,
-                    y = if (index == 0) 0 else constraints.maxHeight - placeable.height
+                    y = if (index == 0) 0 else constraints.maxHeight - placeable.height,
                 )
             }
         }
@@ -272,7 +258,7 @@ fun NodeActionButtonRow(
         }
 
     NodeActionButtonRowLayout(
-        Modifier.fillMaxHeight().background(Background.copy(alpha = 0.75f)).blockPointerEvents()
+        Modifier.fillMaxHeight().background(background.copy(alpha = 0.75f)).blockPointerEvents(),
     ) {
         visibleActions.forEach { it.component(it, componentArguments) }
     }
@@ -293,10 +279,9 @@ private fun NodeActionButtonRowLayout(
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(
                     x =
-                        (constraints.maxWidth / placeables.size * (index + 0.5f) -
-                                placeable.width / 2)
+                        (constraints.maxWidth / placeables.size * (index + 0.5f) - placeable.width / 2)
                             .toInt(),
-                    y = constraints.maxHeight / 2 - placeable.height / 2
+                    y = constraints.maxHeight / 2 - placeable.height / 2,
                 )
             }
         }

@@ -17,7 +17,7 @@ val MainFontFamily =
                     FontVariation.weight(300),
                     FontVariation.width(110.0f),
                 ),
-        )
+        ),
     )
 
 // Set of Material typography styles to start with
@@ -38,5 +38,5 @@ val typography =
         bodySmall = defaultTypography.bodySmall.copy(fontFamily = MainFontFamily),
         labelLarge = defaultTypography.labelLarge.copy(fontFamily = MainFontFamily),
         labelMedium = defaultTypography.labelMedium.copy(fontFamily = MainFontFamily),
-        labelSmall = defaultTypography.labelSmall.copy(fontFamily = MainFontFamily)
+        labelSmall = defaultTypography.labelSmall.copy(fontFamily = MainFontFamily),
     )
