@@ -5,7 +5,13 @@ dependencies { implementation(gradleApi()) }
 plugins { `kotlin-dsl` }
 
 tasks {
-    named("compileKotlin") { dependsOn("generateDatabase") }
+    named("compileKotlin") { dependsOn("copyGitHooks", "generateDatabase") }
+
+    register<Copy>("copyGitHooks") {
+        from("../hooks")
+        into ("../.git/hooks")
+    }
+
     register("generateDatabase") {
         // Update these variables when project details change.
         val thisFile = "buildSrc/build.gradle.kts"
