@@ -6,9 +6,6 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +27,6 @@ import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
-import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalNodeComponents
 import dev.fr33zing.launcher.ui.components.tree.modal.modalNodeContainerModifier
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeActions
@@ -39,12 +35,10 @@ import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
 import dev.fr33zing.launcher.ui.utility.conditional
-import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NodeInteractions(
     treeState: TreeState?,
@@ -63,12 +57,9 @@ fun NodeInteractions(
     color: Color = LocalNodeAppearance.current.color,
     content: @Composable () -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = rememberCustomIndication(color, longPressable = true)
     val hasFeature =
         remember(features) {
             object {
-                val ACTIVATE = features.contains(NodeRowFeatures.ACTIVATE)
                 val EXPAND_DIRECTORIES = features.contains(NodeRowFeatures.RECURSIVE)
                 val CREATE_ADJACENT = features.contains(NodeRowFeatures.CREATE_ADJACENT)
                 val ACTION_BUTTONS = features.contains(NodeRowFeatures.ACTION_BUTTONS)
@@ -79,26 +70,6 @@ fun NodeInteractions(
         remember(treeNodeState, treeState) {
             treeNodeState.key == treeState?.normalState?.selectedKey
         }
-    val treeMode = remember(treeState) { treeState?.mode ?: TreeState.Mode.Normal }
-    val treeModeSpecificActions =
-        remember { // TODO maybe move this to NodeRow?
-            ModalNodeActions(
-                activatePayload = onActivatePayload,
-                selectNode = onSelectNode,
-                clearSelectedNode = onClearSelectedNode,
-                toggleBatchSelected = onToggleNodeBatchSelected,
-                moveBatchSelectedNodes = onMoveBatchSelectedNodes,
-            )
-        }
-    val modalArguments =
-        remember(treeState) {
-            if (treeState == null || relevance == null) {
-                null
-            } else {
-                ModalNodeArguments(treeModeSpecificActions, treeState, treeNodeState, relevance)
-            }
-        }
-
     val activatePayload by rememberUpdatedState {
         when (treeNodeState.value.node.kind) {
             NodeKind.Directory -> {
@@ -113,42 +84,30 @@ fun NodeInteractions(
         }
         Unit
     }
+    val treeMode = remember(treeState) { treeState?.mode ?: TreeState.Mode.Normal }
+    val modalNodeActions =
+        remember { // TODO maybe move this to NodeRow?
+            ModalNodeActions(
+                activatePayload = activatePayload,
+                selectNode = onSelectNode,
+                clearSelectedNode = onClearSelectedNode,
+                toggleBatchSelected = onToggleNodeBatchSelected,
+                moveBatchSelectedNodes = onMoveBatchSelectedNodes,
+            )
+        }
+    val modalArguments =
+        remember(treeState) {
+            treeState?.let {
+                ModalNodeArguments(modalNodeActions, treeState, treeNodeState, relevance ?: NodeRelevance.Relevant)
+            }
+        }
 
     BackHandler(enabled = selected) { onClearSelectedNode() }
 
     @Composable
     fun nodeRow() {
         NodeInteractionsLayout {
-            val requireDoubleTapToActivateMessage =
-                remember(treeNodeState.value.node.kind) {
-                    treeNodeState.value.node.kind.requiresDoubleTapToActivate()
-                }
-            val requireDoubleTapToActivate =
-                remember(requireDoubleTapToActivateMessage) { requireDoubleTapToActivateMessage != null }
-
-            val contentContainerModifier =
-                Modifier.conditional(hasFeature.ACTIVATE && treeMode == TreeState.Mode.Normal) {
-                    combinedClickable(
-                        interactionSource = interactionSource,
-                        indication = indication,
-                        onClick = {
-                            onClearSelectedNode()
-
-                            if (!requireDoubleTapToActivate) {
-                                activatePayload()
-                            } else {
-                                sendNotice(
-                                    "double-tap-to-activate-node",
-                                    requireDoubleTapToActivateMessage
-                                        ?: throw Exception("requireDoubleTapToActivateMessage is null"),
-                                )
-                            }
-                        },
-                        onDoubleClick = if (requireDoubleTapToActivate) activatePayload else null,
-                        onLongClick = onSelectNode,
-                    )
-                }
-                    .conditional(modalArguments != null) { modalNodeContainerModifier(modalArguments!!) }
+            val contentContainerModifier = Modifier.conditional(modalArguments != null) { modalNodeContainerModifier(modalArguments!!) }
 
             if (hasFeature.MODAL && modalArguments != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = contentContainerModifier) {
