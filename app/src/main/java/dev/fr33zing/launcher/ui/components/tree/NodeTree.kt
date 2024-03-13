@@ -40,6 +40,8 @@ import dev.fr33zing.launcher.data.NodeKind
 import dev.fr33zing.launcher.data.persistent.RelativeNodePosition
 import dev.fr33zing.launcher.data.utility.unreachable
 import dev.fr33zing.launcher.data.viewmodel.ScrollToKeyEvent
+import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
+import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevanceWithHiddenChildren
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeKey
 import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
@@ -146,6 +148,33 @@ fun NodeTree(
     val highlightKey by
         highlightKeyFlow.collectAsStateWithLifecycle(null)
 
+    val relevanceWithHiddenChildrenMap =
+        remember(treeState, animatedTreeNodeList, features) {
+            if (!features.contains(NodeRowFeatures.MODAL)) {
+                null
+            } else {
+                val relevanceMap =
+                    animatedTreeNodeList.map { (treeNodeState) ->
+                        val relevance = treeState.mode.relevance(treeState, treeNodeState)
+                        Pair(treeNodeState.key, relevance)
+                    }
+                val hiddenChildrenMap =
+                    relevanceMap.associate { (key) ->
+                        Pair(key, 0)
+                    }.toMutableMap()
+                relevanceMap.forEach { (key, relevance) ->
+                    if (relevance != NodeRelevance.Disruptive) return@forEach
+                    hiddenChildrenMap.compute(key.parentKey()) { _, v ->
+                        (v ?: 0) + 1
+                    }
+                }
+                relevanceMap.associate { (key, relevance) ->
+                    val relevanceWithHiddenChildren = NodeRelevanceWithHiddenChildren(relevance, hiddenChildrenMap[key]!!)
+                    Pair(key, relevanceWithHiddenChildren)
+                }
+            }
+        }
+
     LaunchedEffect(Unit) { onClearSelectedNode() }
 
     BackHandler(enabled = treeState.mode != TreeState.Mode.Normal) {
@@ -188,10 +217,15 @@ fun NodeTree(
 
             @Composable
             fun nodeRow() {
+                val relevanceWithHiddenChildren =
+                    remember(relevanceWithHiddenChildrenMap) {
+                        relevanceWithHiddenChildrenMap?.get(treeNodeState.key)
+                    }
                 NodeRow(
                     treeState = treeState,
                     treeNodeState = treeNodeState,
                     adjacentTreeNodeStates = adjacentTreeNodeStates,
+                    relevanceWithHiddenChildren = relevanceWithHiddenChildren,
                     nodeActions = nodeActions,
                     onSelectNode = { onSelectNode(treeNodeState.key) },
                     onClearSelectedNode = onClearSelectedNode,

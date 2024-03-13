@@ -36,11 +36,7 @@ import dev.fr33zing.launcher.data.UnlabeledNodeColor
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
 import dev.fr33zing.launcher.ui.components.tree.utility.LocalNodeDimensions
 import dev.fr33zing.launcher.ui.theme.ScreenHorizontalPadding
-import dev.fr33zing.launcher.ui.theme.foreground
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
-import dev.fr33zing.launcher.ui.utility.dim
-
-private val irrelevantColor = foreground.dim(0.8f)
 
 @Composable
 fun NodeDetailContainer(
@@ -111,7 +107,7 @@ fun NodeDetail(
     val relevanceColor =
         relevance?.let {
             animateColorAsState(
-                targetValue = if (relevance == NodeRelevance.Relevant) color else irrelevantColor,
+                targetValue = if (relevance == NodeRelevance.Relevant) color else irrelevantNodeColor,
                 label = "node relevance color",
             )
         }

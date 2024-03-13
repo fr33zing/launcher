@@ -1,5 +1,8 @@
 package dev.fr33zing.launcher.data.viewmodel.state
 
+// TODO think of a better name for this
+data class NodeRelevanceWithHiddenChildren(val relevance: NodeRelevance, val hiddenChildren: Int)
+
 enum class NodeRelevance {
     /** Node is relevant to the current mode. Client should display mode-specific controls. */
     Relevant,
