@@ -312,7 +312,13 @@ class TreeStateHolder(
             }
         }
 
-    fun onEndBatchSelect() = _stateFlow.update { it.changeMode(from = TreeState.Mode.Batch, to = TreeState.Mode.Normal) }
+    fun onEndBatchSelect() =
+        _stateFlow.update {
+            it.changeMode(
+                from = TreeState.Mode.Batch,
+                to = TreeState.Mode.Normal,
+            )
+        }
 
     fun onToggleNodeBatchSelected(key: TreeNodeKey) =
         _stateFlow.update { treeState ->

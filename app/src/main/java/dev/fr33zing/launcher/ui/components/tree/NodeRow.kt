@@ -169,7 +169,12 @@ fun NodeRow(
                                         append(if (relevanceWithHiddenChildren.hiddenChildren != 1) "s" else "")
                                     }
                                 }
-                            NodeDetail(label, color = irrelevantNodeColor, icon = Icons.Filled.VisibilityOff, lineThrough = false)
+                            NodeDetail(
+                                label,
+                                color = irrelevantNodeColor,
+                                icon = Icons.Filled.VisibilityOff,
+                                lineThrough = false,
+                            )
                         }
                     }
                 }

@@ -24,7 +24,11 @@ const val MODAL_CLEAR_STATE_DELAY = OUT_DELAY_LONG.toLong()
 fun <S> modalFiniteAnimationSpec(
     mode: TreeState.Mode,
     modeChangeDelay: Boolean = false,
-): FiniteAnimationSpec<S> = tween(durationMillis = IN_DURATION, delayMillis = if (modeChangeDelay) outDelay(mode) else 0)
+): FiniteAnimationSpec<S> =
+    tween(
+        durationMillis = IN_DURATION,
+        delayMillis = if (modeChangeDelay) outDelay(mode) else 0,
+    )
 
 private fun <S> modalAnimatedContentTransitionSpec(
     mode: (S) -> TreeState.Mode,

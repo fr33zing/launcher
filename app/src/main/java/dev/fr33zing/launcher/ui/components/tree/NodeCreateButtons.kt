@@ -62,7 +62,8 @@ fun NodeCreateButton(
             if (treeState.normalState.selectedKey != treeNodeState.key) {
                 false
             } else {
-                fun TreeNodeState.canCreate(scope: PermissionScope) = permissions.hasPermission(PermissionKind.Create, scope)
+                fun TreeNodeState.canCreate(scope: PermissionScope) =
+                    permissions.hasPermission(PermissionKind.Create, scope)
                 val hasPermission =
                     when (position) {
                         NodeCreateButtonPosition.Above -> treeNodeState.canCreate(PermissionScope.Self)

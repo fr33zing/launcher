@@ -100,7 +100,8 @@ class Location(
 
     val status: Status
         get() {
-            fun coordinateValid(coordinate: Double?): Boolean = coordinate != null && coordinate >= -180 && coordinate <= 180
+            fun coordinateValid(coordinate: Double?): Boolean =
+                coordinate != null && coordinate >= -180 && coordinate <= 180
 
             fun stringCoordinateValid(coordinate: String?): Boolean = coordinateValid(coordinate?.toDoubleOrNull())
 

@@ -48,7 +48,7 @@ fun Setup(
                     append("Automatically categorizing applications.")
                     append("\n\n")
                     append(
-                        "This is done slowly to reduce the load on any network services used to determine application categories.",
+                        "This is done slowly to reduce the load on services used to determine application categories.",
                     )
                     append("\n\n")
                     append("Remaining: $remainingAppsToCategorize")

@@ -111,7 +111,12 @@ fun NodeInteractions(
                 if (modalArguments != null) {
                     Modifier.modalNodeContainerModifier(modalArguments)
                 } else {
-                    Modifier.normalNodeContainerModifier(treeNodeState, activatePayload, onSelectNode, onClearSelectedNode)
+                    Modifier.normalNodeContainerModifier(
+                        treeNodeState,
+                        activatePayload,
+                        onSelectNode,
+                        onClearSelectedNode,
+                    )
                 }
 
             if (hasFeature.MODAL && modalArguments != null) {

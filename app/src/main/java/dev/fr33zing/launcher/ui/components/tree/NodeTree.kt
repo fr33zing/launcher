@@ -169,7 +169,8 @@ fun NodeTree(
                     }
                 }
                 relevanceMap.associate { (key, relevance) ->
-                    val relevanceWithHiddenChildren = NodeRelevanceWithHiddenChildren(relevance, hiddenChildrenMap[key]!!)
+                    val relevanceWithHiddenChildren =
+                        NodeRelevanceWithHiddenChildren(relevance, hiddenChildrenMap[key]!!)
                     Pair(key, relevanceWithHiddenChildren)
                 }
             }
