@@ -29,12 +29,12 @@ import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.dialog.NodeKindPickerDialog
 import dev.fr33zing.launcher.ui.components.tree.modal.ModalNodeComponents
 import dev.fr33zing.launcher.ui.components.tree.modal.modalNodeContainerModifier
+import dev.fr33zing.launcher.ui.components.tree.modal.normalNodeContainerModifier
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeActions
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatureSet
 import dev.fr33zing.launcher.ui.components.tree.utility.NodeRowFeatures
 import dev.fr33zing.launcher.ui.utility.LocalNodeAppearance
-import dev.fr33zing.launcher.ui.utility.conditional
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -107,7 +107,12 @@ fun NodeInteractions(
     @Composable
     fun nodeRow() {
         NodeInteractionsLayout {
-            val contentContainerModifier = Modifier.conditional(modalArguments != null) { modalNodeContainerModifier(modalArguments!!) }
+            val contentContainerModifier =
+                if (modalArguments != null) {
+                    Modifier.modalNodeContainerModifier(modalArguments)
+                } else {
+                    Modifier.normalNodeContainerModifier(treeNodeState, activatePayload, onSelectNode, onClearSelectedNode)
+                }
 
             if (hasFeature.MODAL && modalArguments != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = contentContainerModifier) {

@@ -11,6 +11,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import dev.fr33zing.launcher.data.viewmodel.state.NodeRelevance
+import dev.fr33zing.launcher.data.viewmodel.state.TreeNodeState
 import dev.fr33zing.launcher.data.viewmodel.state.TreeState
 import dev.fr33zing.launcher.ui.components.sendNotice
 import dev.fr33zing.launcher.ui.components.tree.modal.utility.ModalNodeArguments
@@ -31,39 +32,48 @@ fun Modifier.modalNodeContainerModifier(arguments: ModalNodeArguments) =
 // Normal
 //
 
+fun Modifier.normalModifier(arguments: ModalNodeArguments): Modifier {
+    val (actions, _, treeNodeState) = arguments
+    val (onActivatePayload, onSelectNode, onClearSelectedNode) = actions
+    return normalNodeContainerModifier(treeNodeState, onActivatePayload, onSelectNode, onClearSelectedNode)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
-private fun Modifier.normalModifier(arguments: ModalNodeArguments) =
-    composed {
-        val (actions, _, treeNodeState, _) = arguments
-        val interactionSource = remember { MutableInteractionSource() }
-        val indication = rememberCustomIndication(LocalNodeAppearance.current.color, longPressable = true)
-        val requireDoubleTapToActivateMessage =
-            remember(treeNodeState.value.node.kind) {
-                treeNodeState.value.node.kind.requiresDoubleTapToActivate()
+fun Modifier.normalNodeContainerModifier(
+    treeNodeState: TreeNodeState,
+    onActivatePayload: () -> Unit = {},
+    onSelectNode: () -> Unit = {},
+    onClearSelectedNode: () -> Unit = {},
+) = composed {
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberCustomIndication(LocalNodeAppearance.current.color, longPressable = true)
+    val requireDoubleTapToActivateMessage =
+        remember(treeNodeState.value.node.kind) {
+            treeNodeState.value.node.kind.requiresDoubleTapToActivate()
+        }
+    val requireDoubleTapToActivate =
+        remember(requireDoubleTapToActivateMessage) { requireDoubleTapToActivateMessage != null }
+
+    this.combinedClickable(
+        interactionSource = interactionSource,
+        indication = indication,
+        onClick = {
+            onClearSelectedNode()
+
+            if (!requireDoubleTapToActivate) {
+                onActivatePayload()
+            } else {
+                sendNotice(
+                    "double-tap-to-activate-node",
+                    requireDoubleTapToActivateMessage
+                        ?: throw Exception("requireDoubleTapToActivateMessage is null"),
+                )
             }
-        val requireDoubleTapToActivate =
-            remember(requireDoubleTapToActivateMessage) { requireDoubleTapToActivateMessage != null }
-
-        this.combinedClickable(
-            interactionSource = interactionSource,
-            indication = indication,
-            onClick = {
-                actions.clearSelectedNode()
-
-                if (!requireDoubleTapToActivate) {
-                    actions.activatePayload()
-                } else {
-                    sendNotice(
-                        "double-tap-to-activate-node",
-                        requireDoubleTapToActivateMessage
-                            ?: throw Exception("requireDoubleTapToActivateMessage is null"),
-                    )
-                }
-            },
-            onDoubleClick = if (requireDoubleTapToActivate) actions.activatePayload else null,
-            onLongClick = actions.selectNode,
-        )
-    }
+        },
+        onDoubleClick = if (requireDoubleTapToActivate) onActivatePayload else null,
+        onLongClick = onSelectNode,
+    )
+}
 
 //
 // Batch
