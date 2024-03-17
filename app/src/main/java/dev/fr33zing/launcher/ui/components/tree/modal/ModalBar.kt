@@ -65,8 +65,8 @@ data class ModalActions(
     val endBatchSelect: () -> Unit,
     val batchSelectAll: () -> Unit,
     val batchDeselectAll: () -> Unit,
-    val beginBatchMove: () -> Unit,
-    val endBatchMove: () -> Unit,
+    val beginMove: () -> Unit,
+    val cancelMove: () -> Unit,
 )
 
 enum class ModalBarPosition(

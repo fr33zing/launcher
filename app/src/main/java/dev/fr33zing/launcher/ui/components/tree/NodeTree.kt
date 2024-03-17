@@ -182,7 +182,7 @@ fun NodeTree(
         when (treeState.mode) {
             TreeState.Mode.Normal -> unreachable { "BackHandler should be disabled" }
             TreeState.Mode.Batch -> modalActions?.endBatchSelect?.invoke()
-            TreeState.Mode.Move -> modalActions?.endBatchMove?.invoke()
+            TreeState.Mode.Move -> modalActions?.cancelMove?.invoke()
         }
     }
 

@@ -133,6 +133,7 @@ data class TreeState(
 
     @Immutable
     data class MoveState(
+        val previousMode: Mode,
         val parentKey: TreeNodeKey = TreeNodeKey.emptyKey(),
         val movingKeys: Map<TreeNodeKey, Boolean> = emptyMap(),
     )
@@ -170,7 +171,7 @@ data class TreeState(
         return changeMode(to)
     }
 
-    private fun changeMode(nextMode: Mode): TreeState =
+    fun changeMode(nextMode: Mode): TreeState =
         when (mode) {
             Mode.Normal -> {
                 when (nextMode) {
@@ -181,7 +182,19 @@ data class TreeState(
                             mode = Mode.Batch,
                             batchState = BatchState(),
                         )
-                    else -> invalidModeChange(nextMode)
+                    Mode.Move ->
+                        normalState.selectedKey?.let { selectedKey ->
+                            copy(
+                                normalState = NormalState(),
+                                mode = Mode.Move,
+                                moveState =
+                                    MoveState(
+                                        previousMode = mode,
+                                        parentKey = selectedKey.parentKey(),
+                                        movingKeys = mapOf(selectedKey to true),
+                                    ),
+                            )
+                        } ?: invalidModeChange(nextMode, "normalState.selectedKey is null")
                 }
             }
             Mode.Batch -> {
@@ -199,6 +212,7 @@ data class TreeState(
                             mode = Mode.Move,
                             moveState =
                                 MoveState(
+                                    previousMode = mode,
                                     parentKey = batchState!!.parentKey,
                                     movingKeys = batchState.selectedKeys,
                                 ),
@@ -228,7 +242,15 @@ data class TreeState(
 
     private fun sameMode(): Nothing = throw SameModeException(mode)
 
-    private fun invalidModeChange(nextMode: Mode): Nothing = throw InvalidModeChangeException(mode, nextMode)
+    private fun invalidModeChange(
+        nextMode: Mode,
+        reason: String? = null,
+    ): Nothing =
+        throw InvalidModeChangeException(
+            mode,
+            nextMode,
+            reason,
+        )
 
     //
     // Exceptions
@@ -239,8 +261,21 @@ data class TreeState(
 
     class SameModeException(mode: Mode) : Exception("Tree is already in $mode mode")
 
-    class InvalidModeChangeException(mode: Mode, nextMode: Mode) :
-        Exception("Tree cannot change from $mode mode to $nextMode mode")
+    class InvalidModeChangeException(mode: Mode, nextMode: Mode, reason: String? = null) :
+        Exception(
+            buildString {
+                append("Tree cannot change from ")
+                append(mode)
+                append(" mode to ")
+                append(nextMode)
+                append(" mode")
+                reason?.let {
+                    append(" (Reason: ")
+                    append(reason)
+                    append(")")
+                }
+            },
+        )
 
     class InvalidModeStateValueException(mode: Mode) : Exception("Invalid state for $mode mode")
 
@@ -357,17 +392,17 @@ class TreeStateHolder(
             )
         }
 
-    fun onBeginBatchMove() =
+    fun onBeginMove() =
         _stateFlow.update { treeState ->
-            treeState.changeMode(TreeState.Mode.Batch, TreeState.Mode.Move)
+            treeState.changeMode(TreeState.Mode.Move)
         }
 
-    fun onEndBatchMove() =
+    fun onCancelMove() =
         _stateFlow.update { treeState ->
-            treeState.changeMode(TreeState.Mode.Move, TreeState.Mode.Batch)
+            treeState.changeMode(TreeState.Mode.Move, treeState.modeState<TreeState.MoveState>().previousMode)
         }
 
-    fun onMoveBatchSelectedNodes(
+    fun onConfirmMove(
         newParent: TreeNodeState,
         scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ) = _stateFlow.update { treeState ->

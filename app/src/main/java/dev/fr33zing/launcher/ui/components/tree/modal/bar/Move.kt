@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.West
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +39,7 @@ fun MoveTopBar(
             contentDescription = "close button",
             tint = closeButtonColor,
             modifier =
-                Modifier.clickable(interactionSource, indication, onClick = actions.endBatchMove),
+                Modifier.clickable(interactionSource, indication, onClick = actions.cancelMove),
         )
     }
 }
@@ -52,7 +52,7 @@ fun MoveBottomBar(
     ModalActionButtonRow {
         ModalActionButton(
             label = "Selection",
-            icon = Icons.Outlined.West,
+            icon = Icons.Outlined.SelectAll,
         ) {}
         ModalActionButton(
             label = "Browse",

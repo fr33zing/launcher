@@ -70,7 +70,7 @@ fun BatchBottomBar(
             label = "Move",
             icon = Icons.Outlined.DriveFileMove,
             enabled = anySelected,
-            action = actions.beginBatchMove,
+            action = actions.beginMove,
         )
         ModalActionButton(
             label = "Trash",

@@ -57,7 +57,7 @@ import dev.fr33zing.launcher.ui.utility.rememberCustomIndication
 class NodeActions(
     val trash: (Int) -> Unit,
     val delete: (Int) -> Unit,
-    val move: (Int) -> Unit,
+    val move: () -> Unit,
     val reorder: (Int) -> Unit,
     val edit: (Int) -> Unit,
     val create: (Int) -> Unit,
@@ -141,8 +141,8 @@ class NodeActionButtonKind(
                             ) ||
                             state.permissions.hasPermission(PermissionKind.MoveOut, PermissionScope.Self)
                     },
-                ) { (state, actions) ->
-                    ActionButton { actions.move(state.underlyingNodeId) }
+                ) { (_, actions) ->
+                    ActionButton { actions.move() }
                 },
                 // Reorder nodes
                 NodeActionButtonKind(

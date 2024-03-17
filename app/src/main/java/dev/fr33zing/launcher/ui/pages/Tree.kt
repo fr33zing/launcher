@@ -38,7 +38,7 @@ fun Tree(
             NodeActions(
                 trash = viewModel::moveNodeToTrash,
                 delete = viewModel::deleteNode,
-                move = navigateTo.move,
+                move = viewModel::beginMove,
                 reorder = navigateTo.reorder,
                 edit = navigateTo.edit,
                 create = navigateTo.create,
@@ -52,8 +52,8 @@ fun Tree(
                 endBatchSelect = viewModel::endBatchSelect,
                 batchSelectAll = viewModel::batchSelectAll,
                 batchDeselectAll = viewModel::batchDeselectAll,
-                beginBatchMove = viewModel::beginBatchMove,
-                endBatchMove = viewModel::endBatchMove,
+                beginMove = viewModel::beginMove,
+                cancelMove = viewModel::cancelMove,
             )
         }
     val features = remember { NodeRowFeatures.All }
@@ -104,7 +104,7 @@ fun Tree(
             onSelectNode = viewModel::selectNode,
             onClearSelectedNode = viewModel::clearSelectedNode,
             onToggleNodeBatchSelected = viewModel::toggleNodeBatchSelected,
-            onMoveBatchSelectedNodes = viewModel::moveBatchSelectedNodes,
+            onMoveBatchSelectedNodes = viewModel::confirmMove,
             onClearHighlightedNode = viewModel::clearHighlightedNode,
             onCreateNode = ::createNode,
             nodeActions = nodeActions,

@@ -140,11 +140,11 @@ class TreeViewModel
 
         fun toggleNodeBatchSelected(key: TreeNodeKey) = stateHolder.onToggleNodeBatchSelected(key)
 
-        fun beginBatchMove() = stateHolder.onBeginBatchMove()
+        fun beginMove() = stateHolder.onBeginMove()
 
-        fun endBatchMove() = stateHolder.onEndBatchMove()
+        fun cancelMove() = stateHolder.onCancelMove()
 
-        fun moveBatchSelectedNodes(newParent: TreeNodeState) = stateHolder.onMoveBatchSelectedNodes(newParent)
+        fun confirmMove(newParent: TreeNodeState) = stateHolder.onConfirmMove(newParent)
 
         fun createNode(
             position: RelativeNodePosition,
