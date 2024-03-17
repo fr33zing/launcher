@@ -32,7 +32,7 @@ fun MoveTopBar(
         rememberCustomIndication(circular = true, circularSizeFactor = 1f, color = closeButtonColor)
     val movingCount = remember(treeState) { treeState.moveState?.movingKeys?.count { it.value } ?: 0 }
 
-    Text("Moving $movingCount items", fontWeight = FontWeight.Bold)
+    Text("Moving $movingCount item${if (movingCount != 1) "s" else ""}", fontWeight = FontWeight.Bold)
     Box {
         Icon(
             Icons.Filled.Close,

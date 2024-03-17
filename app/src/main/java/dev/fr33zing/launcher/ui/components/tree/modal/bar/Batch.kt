@@ -36,7 +36,7 @@ fun BatchTopBar(
     val selectedCount =
         remember(treeState) { treeState.batchState?.selectedKeys?.count { it.value } ?: 0 }
 
-    Text("$selectedCount items selected", fontWeight = FontWeight.Bold)
+    Text("$selectedCount item${if (selectedCount != 1) "s" else ""} selected", fontWeight = FontWeight.Bold)
     Box {
         Icon(
             Icons.Filled.Close,
