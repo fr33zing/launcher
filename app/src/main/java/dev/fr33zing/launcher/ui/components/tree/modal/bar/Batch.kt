@@ -56,15 +56,17 @@ fun BatchTopBar(
 fun BatchBottomBar(
     treeState: TreeState,
     actions: ModalActions,
+    selectableKeys: Int,
 ) {
     val selectedCount = remember(treeState) { treeState.batchState.selectedCount() }
     val anySelected = remember(selectedCount) { selectedCount > 0 }
+    val allSelected = remember(selectedCount) { selectedCount == selectableKeys }
 
     ModalActionButtonRow {
         ModalActionButton(
-            label = if (anySelected) "Deselect all" else "Select all",
-            icon = if (anySelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll,
-            action = if (anySelected) actions.batchDeselectAll else actions.batchSelectAll,
+            label = if (allSelected) "Deselect all" else "Select all",
+            icon = if (allSelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll,
+            action = if (allSelected) actions.batchDeselectAll else actions.batchSelectAll,
         )
         ModalActionButton(
             label = "Move",

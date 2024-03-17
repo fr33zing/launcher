@@ -53,9 +53,10 @@ private fun ModalTopBarContent(
 private fun ModalBottomBarContent(
     treeState: TreeState,
     actions: ModalActions,
+    selectableKeys: Int,
 ): Unit =
     when (treeState.mode) {
-        TreeState.Mode.Batch -> BatchBottomBar(treeState, actions)
+        TreeState.Mode.Batch -> BatchBottomBar(treeState, actions, selectableKeys)
         TreeState.Mode.Move -> MoveBottomBar(treeState, actions)
         else -> {}
     }
@@ -84,6 +85,7 @@ fun ModalBar(
     position: ModalBarPosition,
     treeState: TreeState,
     actions: ModalActions,
+    selectableKeys: Int = 0,
 ) {
     val preferences = Preferences(LocalContext.current)
     val spacing by preferences.nodeAppearance.spacing.state
@@ -132,7 +134,7 @@ fun ModalBar(
                             ) {
                                 ModalTopBarContent(it, actions)
                             }
-                        ModalBarPosition.Bottom -> ModalBottomBarContent(it, actions)
+                        ModalBarPosition.Bottom -> ModalBottomBarContent(it, actions, selectableKeys)
                     }
                 }
             }

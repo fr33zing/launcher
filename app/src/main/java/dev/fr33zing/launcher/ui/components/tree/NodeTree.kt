@@ -301,6 +301,18 @@ fun NodeTree(
             performQueuedScrollToKey()
         }
 
-        modalActions?.let { ModalBar(ModalBarPosition.Bottom, treeState, modalActions) }
+        modalActions?.let {
+            val selectableKeys =
+                remember(treeState) {
+                    treeState.batchState?.parentKey?.let { parentKey ->
+                        animatedTreeNodeList.count {
+                                (treeNode) ->
+                            treeNode.key.parentKey() == parentKey
+                        }
+                    } ?: 0
+                }
+
+            ModalBar(ModalBarPosition.Bottom, treeState, modalActions, selectableKeys)
+        }
     }
 }
